@@ -50,4 +50,4 @@ EXPOSE 3000
 ENV PORT 3000
 
 # Run database migrations and start server
-CMD npx prisma migrate deploy && node server.js
+CMD if [ -n "$DATABASE_URL" ]; then npx prisma migrate deploy; fi && node server.js
