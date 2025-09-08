@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["...", "nodejs-18_x"]
+
+[phases.install]
+cmds = ["npm run railway:install"]
+
+[phases.build]
+cmds = ["npm run build:railway"]
+
+[start]
+cmd = "npx prisma migrate deploy && npm run start"

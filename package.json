@@ -10,6 +10,7 @@
     "build": "next build",
     "build:railway": "rm -rf .next node_modules/.cache && next build",
     "start": "next start",
+    "railway:install": "./scripts/railway-install.sh",
     "lint": "eslint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
