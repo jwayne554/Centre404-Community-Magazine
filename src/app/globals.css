@@ -2,96 +2,392 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 211 100% 43%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 39 85% 50%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 211 100% 43%;
-    --radius: 0.5rem;
-  }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-  }
+:root {
+  /* EXACT colors from Centre404 HTML */
+  --primary-color: #2c5aa0;
+  --secondary-color: #f39c12;
+  --success-color: #27ae60;
+  --danger-color: #e74c3c;
+  --bg-color: #ffffff;
+  --text-color: #2c3e50;
+  --border-color: #ddd;
+  --shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
 
-  .high-contrast {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
-    --card: 0 0% 0%;
-    --card-foreground: 0 0% 100%;
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
-    --border: 0 0% 100%;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  line-height: 1.6;
+  color: #2c3e50;
+  background: #ffffff;
+  min-height: 100vh;
+}
+
+/* Exact button styles from original HTML */
+.btn-large {
+  padding: 15px 30px;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary {
+  background: #2c5aa0;
+  color: white;
+}
+
+.btn-secondary {
+  background: #f39c12;
+  color: white;
+}
+
+.btn-large:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.btn-large:active {
+  transform: translateY(0);
+}
+
+/* Category cards exactly as original */
+.category-card {
+  display: block;
+  padding: 20px;
+  background: #f8f9fa;
+  border: 3px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.category-card:hover {
+  background: #e3f2fd;
+}
+
+.category-card.selected {
+  background: #e3f2fd;
+  border-color: #2c5aa0;
+}
+
+/* Tool buttons exactly as original */
+.tool-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background: #f8f9fa;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tool-button:hover {
+  background: #e3f2fd;
+  border-color: #2c5aa0;
+}
+
+.tool-button.active {
+  background: #e74c3c;
+  color: white;
+  border-color: #e74c3c;
+}
+
+/* Symbol board exactly as original */
+.symbol-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+.symbol-btn {
+  padding: 15px;
+  background: white;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 30px;
+  transition: all 0.2s ease;
+}
+
+.symbol-btn:hover {
+  background: #e3f2fd;
+  border-color: #2c5aa0;
+  transform: scale(1.1);
+}
+
+/* Success message exactly as original */
+.success-message {
+  background: #27ae60;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  margin: 20px 0;
+  font-size: 18px;
+  animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn {
+  from { 
+    transform: translateY(-20px); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0); 
+    opacity: 1; 
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(10px); 
   }
-  body {
-    @apply bg-background text-foreground;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-      sans-serif;
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
   }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-  
-  .animate-in {
-    animation: animateIn 0.3s ease-out;
-  }
-  
-  @keyframes animateIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  .focus-visible-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
-  }
+.animate-in {
+  animation: fadeIn 0.3s ease;
+}
+
+/* High contrast mode exactly as original */
+.high-contrast {
+  --bg-color: #000000;
+  --text-color: #ffffff;
+  --border-color: #ffffff;
+  --primary-color: #ffffff;
+  --secondary-color: #ffff00;
+}
+
+.high-contrast,
+.high-contrast body {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Ensure text is visible in dark mode */
+.high-contrast h1,
+.high-contrast h2, 
+.high-contrast h3,
+.high-contrast p,
+.high-contrast span,
+.high-contrast label,
+.high-contrast div {
+  color: #ffffff;
+}
+
+/* Force white text for all paragraphs and headings */
+.high-contrast h1:not([style*="color"]),
+.high-contrast p:not([style*="color"]) {
+  color: #ffffff !important;
+}
+
+.high-contrast .btn-primary {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+.high-contrast .btn-primary:hover {
+  background: #ffff00 !important;
+}
+
+.high-contrast .btn-secondary {
+  background: #ffff00 !important;
+  color: #000000 !important;
+}
+
+.high-contrast .btn-secondary:hover {
+  background: #ffffff !important;
+}
+
+.high-contrast .tool-button,
+.high-contrast .symbol-btn {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+.high-contrast .tool-button.active {
+  background: #ffff00 !important;
+  color: #000000 !important;
+  border-color: #ffff00 !important;
+}
+
+.high-contrast .tool-button:hover {
+  background: #333333 !important;
+  border-color: #ffff00 !important;
+}
+
+.high-contrast .category-card {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+.high-contrast .category-card.selected {
+  background: #222222 !important;
+  border-color: #ffff00 !important;
+}
+
+.high-contrast textarea,
+.high-contrast input[type="text"],
+.high-contrast input[type="file"] {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+.high-contrast textarea::placeholder {
+  color: #cccccc !important;
+}
+
+/* Fix for text in divs with inline styles */
+.high-contrast div[style*="color"] {
+  color: #ffffff !important;
+}
+
+/* Ensure form labels are visible */
+.high-contrast label[style] {
+  color: #ffffff !important;
+}
+
+.high-contrast .symbol-board {
+  background: #222222 !important;
+}
+
+.high-contrast .success-message {
+  background: #ffff00 !important;
+  color: #000000 !important;
+}
+
+.high-contrast .magazine-item {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+}
+
+.high-contrast .magazine-item-header {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Fix for magazine viewer cards */
+.high-contrast .magazine-card {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+}
+
+.high-contrast .magazine-card p,
+.high-contrast .magazine-card strong,
+.high-contrast .magazine-card > div:last-child {
+  color: #ffffff !important;
+}
+
+.high-contrast .magazine-card > div:last-child > div {
+  color: #ffffff !important;
+}
+
+/* Keep category headers with their original colors */
+.high-contrast .magazine-card > div:first-child {
+  opacity: 1 !important;
+}
+
+/* Like and Listen buttons in magazine */
+.high-contrast .magazine-card .tool-button {
+  background: #222222 !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+.high-contrast .magazine-card .tool-button:hover {
+  background: #444444 !important;
+  border-color: #ffff00 !important;
+}
+
+/* Main header banner - keep blue background with white text */
+.high-contrast .main-header {
+  background: #2c5aa0 !important;
+}
+
+.high-contrast .main-header h1,
+.high-contrast .main-header p {
+  color: #ffffff !important;
+}
+
+/* Fix for image upload area text */
+.high-contrast div[style*="dashed"] p {
+  color: #ffffff !important;
+}
+
+.high-contrast canvas {
+  background: #ffffff !important;
+}
+
+/* Image upload area exactly as original */
+.image-upload {
+  border: 3px dashed #ddd;
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+}
+
+.high-contrast .image-upload {
+  background: #000000 !important;
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+.image-upload:hover {
+  border-color: #2c5aa0;
+  background: #e3f2fd;
+}
+
+/* Magazine item cards */
+.magazine-item {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.magazine-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.magazine-item-header {
+  padding: 15px;
+  background: #2c5aa0;
+  color: white;
+  font-weight: 600;
 }

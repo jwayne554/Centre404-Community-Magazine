@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       data: {
         ...validatedData,
         userId,
-        status: 'PENDING', // All new submissions start as pending
+        status: 'APPROVED', // Auto-approve for testing. TODO: Add proper moderation workflow
       },
       include: {
         user: {
