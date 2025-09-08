@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centre404 Community Magazine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #f39c12;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --bg-color: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #ddd;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: var(--bg-color);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--primary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        /* Navigation */
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .category-selector {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .category-option {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .category-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .category-option label {
+            display: block;
+            padding: 20px;
+            background: #f8f9fa;
+            border: 3px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .category-option input[type="radio"]:checked + label {
+            background: #e3f2fd;
+            border-color: var(--primary-color);
+        }
+
+        .category-option label:hover {
+            background: #e3f2fd;
+        }
+
+        /* Text Input */
+        .text-input-container {
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .input-tools {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tool-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #f8f9fa;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tool-btn:hover {
+            background: #e3f2fd;
+            border-color: var(--primary-color);
+        }
+
+        .tool-btn.active {
+            background: var(--danger-color);
+            color: white;
+            border-color: var(--danger-color);
+        }
+
+        /* Symbol Board */
+        .symbol-board {
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .symbol-board.active {
+            display: grid;
+        }
+
+        .symbol {
+            padding: 15px;
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 30px;
+            transition: all 0.2s ease;
+        }
+
+        .symbol:hover {
+            background: #e3f2fd;
+            border-color: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        /* Image Upload */
+        .image-upload {
+            border: 3px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .image-upload:hover {
+            border-color: var(--primary-color);
+            background: #e3f2fd;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        /* Drawing Canvas */
+        .drawing-container {
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        #drawingCanvas {
+            display: block;
+            cursor: crosshair;
+            background: white;
+        }
+
+        .drawing-tools {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .color-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .color-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .color-btn.active {
+            border-color: #333;
+        }
+
+        /* Magazine Grid */
+        .magazine-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .magazine-item {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .magazine-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .magazine-item-header {
+            padding: 15px;
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .magazine-item-content {
+            padding: 20px;
+        }
+
+        .magazine-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 100%;
+            padding: 30px;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 30px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: #f8f9fa;
+        }
+
+        /* Accessibility Features */
+        .a11y-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .a11y-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--primary-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .a11y-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* High Contrast Mode */
+        body.high-contrast {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --border-color: #ffffff;
+            background: #000000;
+        }
+
+        body.high-contrast .header {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        body.high-contrast .btn-primary {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        body.high-contrast textarea,
+        body.high-contrast .tool-btn,
+        body.high-contrast .symbol,
+        body.high-contrast .magazine-item {
+            background: #000000;
+            color: #ffffff;
+            border-color: #ffffff;
+        }
+
+        /* Success Message */
+        .success-message {
+            background: var(--success-color);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 18px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .category-option {
+                min-width: 100%;
+            }
+
+            .magazine-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Accessibility Controls -->
+    <div class="a11y-controls">
+        <button class="a11y-btn" onclick="toggleHighContrast()" title="Toggle High Contrast">
+            ◐
+        </button>
+        <button class="a11y-btn" onclick="changeFontSize(1)" title="Increase Font Size">
+            A+
+        </button>
+        <button class="a11y-btn" onclick="changeFontSize(-1)" title="Decrease Font Size">
+            A-
+        </button>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Centre404 Community Magazine</h1>
+            <p>Your Voice, Your Stories</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-buttons">
+            <button class="btn btn-primary" onclick="showSection('contribute')">
+                📝 Contribute
+            </button>
+            <button class="btn btn-secondary" onclick="showSection('magazine')">
+                📖 View Magazine
+            </button>
+        </nav>
+
+        <!-- Success Message -->
+        <div id="successMessage" class="success-message">
+            ✓ Thank you! Your contribution has been submitted.
+        </div>
+
+        <!-- Contribute Section -->
+        <section id="contribute" class="section">
+            <h2>Share Your Story</h2>
+            
+            <form id="contributionForm" onsubmit="handleSubmit(event)">
+                <!-- Category Selection -->
+                <div class="form-group">
+                    <label>Choose a category:</label>
+                    <div class="category-selector">
+                        <div class="category-option">
+                            <input type="radio" id="myNews" name="category" value="My News" required>
+                            <label for="myNews">
+                                📰 My News
+                                <p style="font-size: 14px; margin-top: 5px;">Share your updates</p>
+                            </label>
+                        </div>
+                        <div class="category-option">
+                            <input type="radio" id="sayingHello" name="category" value="Saying Hello">
+                            <label for="sayingHello">
+                                👋 Saying Hello
+                                <p style="font-size: 14px; margin-top: 5px;">Connect with friends</p>
+                            </label>
+                        </div>
+                        <div class="category-option">
+                            <input type="radio" id="mySay" name="category" value="My Say">
+                            <label for="mySay">
+                                💬 My Say
+                                <p style="font-size: 14px; margin-top: 5px;">Share your thoughts</p>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Text Input -->
+                <div class="form-group">
+                    <label for="textContent">Write your message:</label>
+                    <div class="text-input-container">
+                        <textarea id="textContent" name="textContent" 
+                                  placeholder="Type your message here..."
+                                  maxlength="500"></textarea>
+                        <div class="input-tools">
+                            <button type="button" class="tool-btn" onclick="startSpeechRecognition()">
+                                🎤 Speak
+                            </button>
+                            <button type="button" class="tool-btn" onclick="toggleSymbolBoard()">
+                                😊 Symbols
+                            </button>
+                            <button type="button" class="tool-btn" onclick="clearText()">
+                                🗑️ Clear
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Symbol Board -->
+                    <div id="symbolBoard" class="symbol-board">
+                        <div class="symbol" onclick="addSymbol('😊')">😊</div>
+                        <div class="symbol" onclick="addSymbol('❤️')">❤️</div>
+                        <div class="symbol" onclick="addSymbol('👍')">👍</div>
+                        <div class="symbol" onclick="addSymbol('🎉')">🎉</div>
+                        <div class="symbol" onclick="addSymbol('🌟')">🌟</div>
+                        <div class="symbol" onclick="addSymbol('☀️')">☀️</div>
+                        <div class="symbol" onclick="addSymbol('🌈')">🌈</div>
+                        <div class="symbol" onclick="addSymbol('🎵')">🎵</div>
+                        <div class="symbol" onclick="addSymbol('🏠')">🏠</div>
+                        <div class="symbol" onclick="addSymbol('🚗')">🚗</div>
+                        <div class="symbol" onclick="addSymbol('🍕')">🍕</div>
+                        <div class="symbol" onclick="addSymbol('⚽')">⚽</div>
+                    </div>
+                </div>
+
+                <!-- Image Upload -->
+                <div class="form-group">
+                    <label>Add a photo (optional):</label>
+                    <div class="image-upload" onclick="document.getElementById('imageInput').click()">
+                        <p style="font-size: 20px;">📷 Click to add a photo</p>
+                        <p>or drag and drop here</p>
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+                    </div>
+                    <img id="imagePreview" class="image-preview" style="display: none;">
+                </div>
+
+                <!-- Drawing Tool -->
+                <div class="form-group">
+                    <label>Or draw a picture (optional):</label>
+                    <button type="button" class="tool-btn" onclick="toggleDrawing()">
+                        ✏️ Open Drawing Tool
+                    </button>
+                    <div id="drawingContainer" class="drawing-container" style="display: none;">
+                        <canvas id="drawingCanvas" width="600" height="400"></canvas>
+                        <div class="drawing-tools">
+                            <button class="color-btn active" style="background: #000000" onclick="changeColor('#000000')"></button>
+                            <button class="color-btn" style="background: #FF0000" onclick="changeColor('#FF0000')"></button>
+                            <button class="color-btn" style="background: #00FF00" onclick="changeColor('#00FF00')"></button>
+                            <button class="color-btn" style="background: #0000FF" onclick="changeColor('#0000FF')"></button>
+                            <button class="color-btn" style="background: #FFFF00" onclick="changeColor('#FFFF00')"></button>
+                            <button class="tool-btn" onclick="clearCanvas()">Clear</button>
+                            <button class="tool-btn" onclick="saveDrawing()">Save Drawing</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 30px;">
+                    ✓ Submit My Contribution
+                </button>
+            </form>
+        </section>
+
+        <!-- Magazine Section -->
+        <section id="magazine" class="section">
+            <h2>Community Magazine</h2>
+            
+            <!-- Filter Buttons -->
+            <div class="nav-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-secondary" onclick="filterMagazine('all')">All Stories</button>
+                <button class="btn btn-secondary" onclick="filterMagazine('My News')">📰 My News</button>
+                <button class="btn btn-secondary" onclick="filterMagazine('Saying Hello')">👋 Saying Hello</button>
+                <button class="btn btn-secondary" onclick="filterMagazine('My Say')">💬 My Say</button>
+            </div>
+
+            <div id="magazineGrid" class="magazine-grid">
+                <!-- Magazine items will be dynamically added here -->
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal for viewing full content -->
+    <div id="contentModal" class="modal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <div id="modalBody"></div>
+            <button class="tool-btn" onclick="speakContent()" style="margin-top: 20px;">
+                🔊 Read Aloud
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize storage
+        let submissions = JSON.parse(localStorage.getItem('magazineSubmissions') || '[]');
+        let currentFontSize = 18;
+        let isRecording = false;
+        let recognition = null;
+        let drawingContext = null;
+        let isDrawing = false;
+        let currentColor = '#000000';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDrawingCanvas();
+            showSection('contribute');
+            updateMagazineGrid();
+            
+            // Check for speech recognition support
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                
+                recognition.onresult = function(event) {
+                    let finalTranscript = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        if (event.results[i].isFinal) {
+                            finalTranscript += event.results[i][0].transcript;
+                        }
+                    }
+                    if (finalTranscript) {
+                        document.getElementById('textContent').value += finalTranscript + ' ';
+                    }
+                };
+            }
+        });
+
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            
+            if (sectionId === 'magazine') {
+                updateMagazineGrid();
+            }
+        }
+
+        // Form Submission
+        function handleSubmit(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const submission = {
+                id: Date.now(),
+                category: formData.get('category'),
+                text: formData.get('textContent'),
+                image: document.getElementById('imagePreview').src || null,
+                drawing: null, // Would capture canvas data here
+                timestamp: new Date().toISOString(),
+                approved: true // Auto-approve for demo
+            };
+            
+            // Add to submissions
+            submissions.unshift(submission);
+            
+            // Limit to 10 submissions for demo
+            if (submissions.length > 10) {
+                submissions = submissions.slice(0, 10);
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('magazineSubmissions', JSON.stringify(submissions));
+            
+            // Show success message
+            const successMsg = document.getElementById('successMessage');
+            successMsg.classList.add('show');
+            
+            // Reset form
+            event.target.reset();
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('symbolBoard').classList.remove('active');
+            
+            // Hide success message after 3 seconds
+            setTimeout(() => {
+                successMsg.classList.remove('show');
+            }, 3000);
+        }
+
+        // Speech Recognition
+        function startSpeechRecognition() {
+            if (!recognition) {
+                alert('Speech recognition is not supported in your browser.');
+                return;
+            }
+            
+            const btn = event.target;
+            
+            if (!isRecording) {
+                recognition.start();
+                isRecording = true;
+                btn.classList.add('active');
+                btn.textContent = '⏹️ Stop';
+            } else {
+                recognition.stop();
+                isRecording = false;
+                btn.classList.remove('active');
+                btn.textContent = '🎤 Speak';
+            }
+        }
+
+        // Symbol Board
+        function toggleSymbolBoard() {
+            const board = document.getElementById('symbolBoard');
+            board.classList.toggle('active');
+        }
+
+        function addSymbol(symbol) {
+            const textarea = document.getElementById('textContent');
+            textarea.value += symbol + ' ';
+            textarea.focus();
+        }
+
+        // Text Functions
+        function clearText() {
+            if (confirm('Are you sure you want to clear your message?')) {
+                document.getElementById('textContent').value = '';
+            }
+        }
+
+        // Image Upload
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('imagePreview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Drawing Functions
+        function setupDrawingCanvas() {
+            const canvas = document.getElementById('drawingCanvas');
+            drawingContext = canvas.getContext('2d');
+            
+            // Responsive canvas size
+            function resizeCanvas() {
+                const container = canvas.parentElement;
+                canvas.width = container.offsetWidth - 4;
+                canvas.height = 400;
+            }
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Mouse events
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            
+            // Touch events
+            canvas.addEventListener('touchstart', handleTouch);
+            canvas.addEventListener('touchmove', handleTouch);
+            canvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function toggleDrawing() {
+            const container = document.getElementById('drawingContainer');
+            container.style.display = container.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const rect = e.target.getBoundingClientRect();
+            drawingContext.beginPath();
+            drawingContext.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const rect = e.target.getBoundingClientRect();
+            drawingContext.lineWidth = 3;
+            drawingContext.lineCap = 'round';
+            drawingContext.strokeStyle = currentColor;
+            drawingContext.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+            drawingContext.stroke();
+        }
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 
+                                            e.type === 'touchmove' ? 'mousemove' : 'mouseup', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            e.target.dispatchEvent(mouseEvent);
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function changeColor(color) {
+            currentColor = color;
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function clearCanvas() {
+            const canvas = document.getElementById('drawingCanvas');
+            drawingContext.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function saveDrawing() {
+            // In a real app, this would save the canvas data
+            alert('Drawing saved! (Demo only - not actually saved)');
+        }
+
+        // Magazine Functions
+        function updateMagazineGrid() {
+            const grid = document.getElementById('magazineGrid');
+            grid.innerHTML = '';
+            
+            if (submissions.length === 0) {
+                grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1;">No stories yet. Be the first to contribute!</p>';
+                return;
+            }
+            
+            submissions.forEach(item => {
+                if (item.approved) {
+                    const card = createMagazineCard(item);
+                    grid.appendChild(card);
+                }
+            });
+        }
+
+        function createMagazineCard(item) {
+            const card = document.createElement('div');
+            card.className = 'magazine-item';
+            card.dataset.category = item.category;
+            card.onclick = () => openModal(item);
+            
+            let content = `
+                <div class="magazine-item-header">${item.category}</div>
+                <div class="magazine-item-content">
+            `;
+            
+            if (item.image) {
+                content += `<img src="${item.image}" alt="User submitted image">`;
+            }
+            
+            if (item.text) {
+                const preview = item.text.length > 100 ? item.text.substring(0, 100) + '...' : item.text;
+                content += `<p>${preview}</p>`;
+            }
+            
+            content += `
+                    <small style="color: #666;">
+                        ${new Date(item.timestamp).toLocaleDateString()}
+                    </small>
+                </div>
+            `;
+            
+            card.innerHTML = content;
+            return card;
+        }
+
+        function filterMagazine(category) {
+            const items = document.querySelectorAll('.magazine-item');
+            items.forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Modal Functions
+        function openModal(item) {
+            const modal = document.getElementById('contentModal');
+            const modalBody = document.getElementById('modalBody');
+            
+            let content = `<h2>${item.category}</h2>`;
+            
+            if (item.image) {
+                content += `<img src="${item.image}" style="width: 100%; margin: 20px 0; border-radius: 8px;">`;
+            }
+            
+            if (item.text) {
+                content += `<p style="font-size: 20px; line-height: 1.8;">${item.text}</p>`;
+            }
+            
+            content += `<p style="color: #666; margin-top: 20px;">
+                        Shared on ${new Date(item.timestamp).toLocaleString()}
+                       </p>`;
+            
+            modalBody.innerHTML = content;
+            modal.classList.add('active');
+            
+            // Store current content for text-to-speech
+            modal.dataset.content = item.text || '';
+        }
+
+        function closeModal(event) {
+            if (!event || event.target.id === 'contentModal' || event.target.className === 'modal-close') {
+                document.getElementById('contentModal').classList.remove('active');
+            }
+        }
+
+        // Text-to-Speech
+        function speakContent() {
+            const content = document.getElementById('contentModal').dataset.content;
+            if ('speechSynthesis' in window && content) {
+                // Cancel any ongoing speech
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(content);
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('Text-to-speech is not supported in your browser.');
+            }
+        }
+
+        // Accessibility Functions
+        function toggleHighContrast() {
+            document.body.classList.toggle('high-contrast');
+            localStorage.setItem('highContrast', document.body.classList.contains('high-contrast'));
+        }
+
+        function changeFontSize(delta) {
+            currentFontSize += delta * 2;
+            currentFontSize = Math.max(14, Math.min(24, currentFontSize));
+            document.documentElement.style.fontSize = currentFontSize + 'px';
+            localStorage.setItem('fontSize', currentFontSize);
+        }
+
+        // Load accessibility preferences
+        if (localStorage.getItem('highContrast') === 'true') {
+            document.body.classList.add('high-contrast');
+        }
+        
+        const savedFontSize = localStorage.getItem('fontSize');
+        if (savedFontSize) {
+            currentFontSize = parseInt(savedFontSize);
+            document.documentElement.style.fontSize = currentFontSize + 'px';
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
