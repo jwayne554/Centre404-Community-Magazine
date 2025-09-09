@@ -51,5 +51,5 @@ EXPOSE 3000
 
 ENV PORT 3000
 
-# Run database migrations and start server
-CMD if [ -n "$DATABASE_URL" ]; then npx prisma migrate deploy; fi && npm start
+# Push schema to database and start server (using db push to avoid migration conflicts)
+CMD if [ -n "$DATABASE_URL" ]; then npx prisma db push --accept-data-loss; fi && npm start
