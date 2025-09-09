@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  // Remove standalone mode to ensure API routes work
   eslint: {
     ignoreDuringBuilds: true,
   },

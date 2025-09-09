@@ -65,8 +65,10 @@ export async function GET(request: NextRequest) {
 
 // POST /api/submissions - Create a new submission
 export async function POST(request: NextRequest) {
+  console.log('POST /api/submissions - Request received');
   try {
     const body = await request.json();
+    console.log('Request body:', body);
     const validatedData = createSubmissionSchema.parse(body);
     
     // Get user ID from header (set by middleware) or allow anonymous

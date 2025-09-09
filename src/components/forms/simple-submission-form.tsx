@@ -50,9 +50,14 @@ export function SimpleSubmissionForm() {
         setTextContent('');
         setImagePreview('');
         setTimeout(() => setSuccessMessage(''), 5000);
+      } else {
+        const errorData = await response.text();
+        console.error('Submission failed:', response.status, errorData);
+        alert(`Submission failed: ${response.status}. Please try again.`);
       }
     } catch (error) {
       console.error('Submission error:', error);
+      alert('Failed to submit. Please check your connection and try again.');
     }
   };
 
