@@ -74,6 +74,8 @@ export async function POST(request: NextRequest) {
     // Get user ID from header (set by middleware) or allow anonymous
     const userId = request.headers.get('x-user-id') || null;
 
+    console.log('Creating submission with data:', { ...validatedData, userId, status: 'APPROVED' });
+    
     const submission = await prisma.submission.create({
       data: {
         ...validatedData,
@@ -89,6 +91,8 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+    
+    console.log('Submission created successfully:', submission.id);
 
     // Log the submission creation
     if (userId) {
@@ -115,9 +119,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Failed to create submission:', error);
+    console.error('Failed to create submission - Full error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to create submission' },
+      { error: 'Failed to create submission', details: errorMessage },
       { status: 500 }
     );
   }

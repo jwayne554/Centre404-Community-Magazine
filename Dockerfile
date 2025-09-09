@@ -14,7 +14,8 @@ COPY prisma ./prisma/
 RUN rm -rf node_modules .next
 RUN npm install --legacy-peer-deps
 
-# Generate Prisma Client
+# Generate Prisma Client for PostgreSQL
+ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"
 RUN npx prisma generate
 
 # Rebuild the source code only when needed
