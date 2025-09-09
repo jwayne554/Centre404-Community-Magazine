@@ -18,6 +18,7 @@ export function SimpleMagazineViewer() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
+  const [modalImage, setModalImage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSubmissions();
@@ -181,17 +182,33 @@ export function SimpleMagazineViewer() {
                 {/* Content */}
                 <div style={{ padding: '20px' }}>
                   {submission.mediaUrl && (
-                    <img
-                      src={submission.mediaUrl}
-                      alt="Story image"
-                      style={{
-                        width: '100%',
-                        height: '150px',
-                        objectFit: 'cover',
-                        borderRadius: '6px',
-                        marginBottom: '15px'
+                    <div 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setModalImage(submission.mediaUrl);
                       }}
-                    />
+                      style={{ cursor: 'pointer', marginBottom: '15px' }}
+                    >
+                      <img
+                        src={submission.mediaUrl}
+                        alt="Story image"
+                        style={{
+                          width: '100%',
+                          height: '200px',
+                          objectFit: 'cover',
+                          borderRadius: '6px',
+                          border: '2px solid #e0e0e0'
+                        }}
+                      />
+                      <p style={{ 
+                        fontSize: '12px', 
+                        color: '#666', 
+                        textAlign: 'center',
+                        marginTop: '5px'
+                      }}>
+                        🔍 Click to view larger
+                      </p>
+                    </div>
                   )}
                   
                   <div style={{ marginBottom: '10px' }}>
@@ -239,6 +256,79 @@ export function SimpleMagazineViewer() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Image Modal */}
+      {modalImage && (
+        <div 
+          onClick={() => setModalImage(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            cursor: 'pointer',
+            padding: '20px'
+          }}
+        >
+          <div style={{
+            position: 'relative',
+            maxWidth: '90%',
+            maxHeight: '90%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
+          }}>
+            <img 
+              src={modalImage} 
+              alt="Full size image"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '85vh',
+                objectFit: 'contain',
+                borderRadius: '8px',
+                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              style={{
+                position: 'absolute',
+                top: '-40px',
+                right: '0',
+                background: 'white',
+                border: 'none',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                fontSize: '24px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.3)'
+              }}
+              onClick={() => setModalImage(null)}
+              aria-label="Close modal"
+            >
+              ×
+            </button>
+            <p style={{
+              color: 'white',
+              marginTop: '15px',
+              fontSize: '14px',
+              textAlign: 'center'
+            }}>
+              Click anywhere outside to close
+            </p>
+          </div>
         </div>
       )}
     </div>

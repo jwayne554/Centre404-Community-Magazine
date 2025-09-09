@@ -28,19 +28,27 @@ export function SimpleSubmissionForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!category || !textContent) {
-      alert('Please choose a category and add some content');
+    if (!category || (!textContent && !imagePreview && !drawingData)) {
+      alert('Please choose a category and add some content (text, image, or drawing)');
       return;
     }
 
     try {
+      // Determine content type based on what's provided
+      let contentType = 'TEXT';
+      if (imagePreview || drawingData) {
+        contentType = imagePreview && textContent ? 'MIXED' : (imagePreview ? 'IMAGE' : 'DRAWING');
+      }
+
       const response = await fetch('/api/submissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           category,
-          textContent,
-          contentType: 'TEXT',
+          textContent: textContent || '',
+          contentType,
+          mediaUrl: imagePreview || drawingData || null,
+          drawingData: drawingData || null,
         }),
       });
 
@@ -49,6 +57,12 @@ export function SimpleSubmissionForm() {
         setCategory('');
         setTextContent('');
         setImagePreview('');
+        setDrawingData('');
+        // Clear canvas if it exists
+        if (canvasRef.current) {
+          const ctx = canvasRef.current.getContext('2d');
+          if (ctx) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        }
         setTimeout(() => setSuccessMessage(''), 5000);
       } else {
         const errorData = await response.text();
