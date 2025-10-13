@@ -1,0 +1,283 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { ArrowLeft, Calendar, Heart, Volume2, RefreshCw } from 'lucide-react';
+
+interface Magazine {
+  id: string;
+  title: string;
+  description: string | null;
+  version: string | null;
+  publishedAt: string | null;
+  items: {
+    id: string;
+    displayOrder: number;
+    submission: {
+      id: string;
+      category: string;
+      textContent: string | null;
+      mediaUrl: string | null;
+      userName: string | null;
+      user: {
+        name: string;
+      } | null;
+    };
+  }[];
+}
+
+export default function MagazinesPage() {
+  const [magazines, setMagazines] = useState<Magazine[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchMagazines();
+  }, []);
+
+  const fetchMagazines = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/magazines?public=true');
+      const data = await response.json();
+      setMagazines(data || []);
+    } catch (error) {
+      console.error('Failed to fetch magazines:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const latestMagazine = magazines.length > 0 ? magazines[0] : null;
+  const olderMagazines = magazines.slice(1);
+
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>
+      <div className="container" style={{ maxWidth: '900px', margin: '0 auto', padding: '20px' }}>
+        {/* Header */}
+        <div className="main-header" style={{
+          background: 'var(--primary-color)',
+          color: 'white',
+          padding: '20px',
+          textAlign: 'center',
+          marginBottom: '30px',
+          borderRadius: '8px'
+        }}>
+          <h1 style={{ fontSize: '24px', marginBottom: '10px', color: 'white' }}>
+            Centre404 Community Magazine Archive
+          </h1>
+          <p style={{ color: 'white' }}>Read all our community editions</p>
+        </div>
+
+        {/* Back Button */}
+        <Link
+          href="/"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 20px',
+            background: '#f8f9fa',
+            border: '2px solid #ddd',
+            borderRadius: '6px',
+            textDecoration: 'none',
+            color: 'var(--text-color)',
+            marginBottom: '30px',
+            fontWeight: '600'
+          }}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Contribute
+        </Link>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <RefreshCw className="h-12 w-12 animate-spin" style={{ margin: '0 auto 20px', color: '#ccc' }} />
+            <p style={{ color: '#666' }}>Loading magazines...</p>
+          </div>
+        ) : magazines.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '60px 20px',
+            background: 'white',
+            border: '2px solid #ddd',
+            borderRadius: '8px'
+          }}>
+            <p style={{ fontSize: '20px', marginBottom: '10px', fontWeight: '600' }}>
+              📚 No magazines published yet
+            </p>
+            <p style={{ color: '#666' }}>
+              Check back soon! Our first edition is being compiled from your wonderful contributions.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Latest Magazine */}
+            {latestMagazine && (
+              <div style={{ marginBottom: '50px' }}>
+                <h2 style={{
+                  fontSize: '20px',
+                  fontWeight: '700',
+                  marginBottom: '20px',
+                  color: 'var(--text-color)'
+                }}>
+                  🏆 Latest Edition
+                </h2>
+                <Link
+                  href={`/magazines/${latestMagazine.id}`}
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <div style={{
+                    background: 'linear-gradient(135deg, var(--primary-color), var(--success-color))',
+                    color: 'white',
+                    padding: '30px',
+                    borderRadius: '12px',
+                    border: '3px solid var(--primary-color)',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s, box-shadow 0.2s',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                  }}
+                  >
+                    <h3 style={{
+                      fontSize: '28px',
+                      fontWeight: '700',
+                      marginBottom: '10px',
+                      color: 'white'
+                    }}>
+                      {latestMagazine.title}
+                    </h3>
+                    {latestMagazine.description && (
+                      <p style={{ fontSize: '16px', marginBottom: '15px', opacity: 0.95 }}>
+                        {latestMagazine.description}
+                      </p>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', fontSize: '14px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Calendar className="h-4 w-4" />
+                        {latestMagazine.publishedAt ? new Date(latestMagazine.publishedAt).toLocaleDateString('en-US', {
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric'
+                        }) : 'Recently'}
+                      </span>
+                      <span>•</span>
+                      <span>{latestMagazine.items.length} {latestMagazine.items.length === 1 ? 'story' : 'stories'}</span>
+                    </div>
+                    <div style={{
+                      marginTop: '20px',
+                      padding: '12px 24px',
+                      background: 'rgba(255,255,255,0.2)',
+                      borderRadius: '6px',
+                      display: 'inline-block',
+                      fontWeight: '600'
+                    }}>
+                      📖 Read Edition →
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            )}
+
+            {/* Previous Editions */}
+            {olderMagazines.length > 0 && (
+              <div>
+                <h2 style={{
+                  fontSize: '20px',
+                  fontWeight: '700',
+                  marginBottom: '20px',
+                  color: 'var(--text-color)'
+                }}>
+                  📚 Previous Editions
+                </h2>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                  gap: '20px'
+                }}>
+                  {olderMagazines.map((magazine) => (
+                    <Link
+                      key={magazine.id}
+                      href={`/magazines/${magazine.id}`}
+                      style={{ textDecoration: 'none', color: 'inherit' }}
+                    >
+                      <div style={{
+                        background: 'white',
+                        border: '2px solid #ddd',
+                        borderRadius: '8px',
+                        padding: '20px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        height: '100%'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = 'var(--primary-color)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = '#ddd';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                      >
+                        <h3 style={{
+                          fontSize: '18px',
+                          fontWeight: '600',
+                          marginBottom: '8px',
+                          color: 'var(--text-color)'
+                        }}>
+                          {magazine.title}
+                        </h3>
+                        {magazine.description && (
+                          <p style={{
+                            fontSize: '14px',
+                            color: '#666',
+                            marginBottom: '12px',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                          }}>
+                            {magazine.description}
+                          </p>
+                        )}
+                        <div style={{
+                          fontSize: '13px',
+                          color: '#999',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          marginBottom: '8px'
+                        }}>
+                          <Calendar className="h-3 w-3" />
+                          {magazine.publishedAt ? new Date(magazine.publishedAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            year: 'numeric'
+                          }) : 'Recently'}
+                        </div>
+                        <div style={{
+                          fontSize: '13px',
+                          color: '#666',
+                          fontWeight: '500'
+                        }}>
+                          {magazine.items.length} {magazine.items.length === 1 ? 'story' : 'stories'}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

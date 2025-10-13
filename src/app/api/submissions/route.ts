@@ -77,13 +77,13 @@ export async function POST(request: NextRequest) {
     // Get user ID from header (set by middleware) or allow anonymous
     const userId = request.headers.get('x-user-id') || null;
 
-    console.log('Creating submission with data:', { ...validatedData, userId, status: 'APPROVED' });
-    
+    console.log('Creating submission with data:', { ...validatedData, userId, status: 'PENDING' });
+
     const submission = await prisma.submission.create({
       data: {
         ...validatedData,
         userId,
-        status: 'APPROVED', // Auto-approve for testing. TODO: Add proper moderation workflow
+        status: 'PENDING', // Submissions require admin review before publication
       },
       include: {
         user: {

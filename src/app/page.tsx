@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import { SimpleSubmissionForm } from '@/components/forms/simple-submission-form';
-import { SimpleMagazineViewer } from '@/components/magazine/simple-magazine-viewer';
+import Link from 'next/link';
 
 export default function Home() {
-  const [activeView, setActiveView] = useState<'contribute' | 'magazine'>('contribute');
+  const [showInfo, setShowInfo] = useState(false);
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>
       <div className="container" style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-        {/* Header - Matching original exactly */}
+        {/* Header */}
         <div className="main-header" style={{
           background: 'var(--primary-color)',
           color: 'white',
@@ -25,51 +25,79 @@ export default function Home() {
           <p style={{ color: 'white' }}>Your Voice, Your Stories</p>
         </div>
 
-        {/* Navigation - Matching original button style */}
+        {/* Info Banner */}
         <div style={{
-          display: 'flex',
-          gap: '15px',
-          justifyContent: 'center',
+          background: '#e3f2fd',
+          border: '2px solid #2196f3',
+          borderRadius: '8px',
+          padding: '15px',
           marginBottom: '30px',
-          flexWrap: 'wrap'
+          textAlign: 'center'
         }}>
-          <button
-            className="btn-large"
-            onClick={() => setActiveView('contribute')}
-            style={activeView === 'contribute' ? {
+          <p style={{ marginBottom: '10px', fontWeight: '600' }}>
+            📖 Want to read our community magazines?
+          </p>
+          <Link
+            href="/magazines"
+            style={{
+              display: 'inline-block',
+              padding: '10px 20px',
               background: 'var(--primary-color)',
-              color: 'white'
-            } : {
-              background: '#f8f9fa',
-              color: 'var(--text-color)',
-              border: '2px solid #ddd'
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '6px',
+              fontWeight: '600'
             }}
           >
-            📝 Contribute
-          </button>
-          <button
-            className="btn-large"
-            onClick={() => setActiveView('magazine')}
-            style={activeView === 'magazine' ? {
-              background: 'var(--primary-color)',
-              color: 'white'
-            } : {
-              background: '#f8f9fa',
-              color: 'var(--text-color)',
-              border: '2px solid #ddd'
-            }}
-          >
-            📖 View Magazine
-          </button>
+            View Magazine Archive →
+          </Link>
         </div>
 
-        {/* Content Area */}
-        <div className="animate-in">
-          {activeView === 'contribute' ? (
-            <SimpleSubmissionForm />
-          ) : (
-            <SimpleMagazineViewer />
+        {/* Info Section */}
+        <div style={{
+          background: 'white',
+          border: '2px solid #ddd',
+          borderRadius: '8px',
+          padding: '20px',
+          marginBottom: '30px'
+        }}>
+          <button
+            onClick={() => setShowInfo(!showInfo)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              width: '100%',
+              justifyContent: 'space-between'
+            }}
+          >
+            <span>ℹ️ How does this work?</span>
+            <span>{showInfo ? '▲' : '▼'}</span>
+          </button>
+
+          {showInfo && (
+            <div style={{ marginTop: '15px', lineHeight: '1.8' }}>
+              <ol style={{ paddingLeft: '20px' }}>
+                <li><strong>You submit</strong> your stories, photos, and drawings below</li>
+                <li><strong>Our team reviews</strong> each contribution carefully</li>
+                <li><strong>We compile</strong> approved submissions into beautiful magazine editions</li>
+                <li><strong>You read</strong> the published magazines in our archive!</li>
+              </ol>
+              <p style={{ marginTop: '15px', fontStyle: 'italic', color: '#666' }}>
+                Every voice matters in our community. We can&apos;t wait to see what you share!
+              </p>
+            </div>
           )}
+        </div>
+
+        {/* Contribution Form */}
+        <div className="animate-in">
+          <SimpleSubmissionForm />
         </div>
       </div>
 

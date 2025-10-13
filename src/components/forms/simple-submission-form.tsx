@@ -55,7 +55,7 @@ export function SimpleSubmissionForm() {
       });
 
       if (response.ok) {
-        setSuccessMessage('✓ Thank you! Your contribution has been submitted.');
+        setSuccessMessage('✓ Thank you! Your contribution is being reviewed by our team. You\'ll see it in the next magazine edition once approved!');
         setCategory('');
         setTextContent('');
         setAuthorName('');
@@ -66,7 +66,7 @@ export function SimpleSubmissionForm() {
           const ctx = canvasRef.current.getContext('2d');
           if (ctx) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
         }
-        setTimeout(() => setSuccessMessage(''), 5000);
+        setTimeout(() => setSuccessMessage(''), 8000);
       } else {
         const errorData = await response.text();
         console.error('Submission failed:', response.status, errorData);
