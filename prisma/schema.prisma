@@ -33,11 +33,11 @@ model Submission {
   id                String          @id @default(uuid())
   userId            String?
   user              User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
+
   category          String
   contentType       String
   status            String          @default("PENDING")
-  
+
   // Content fields
   textContent       String?
   mediaUrl          String?
@@ -45,6 +45,7 @@ model Submission {
   mediaMetadata     String          @default("{}")
   drawingData       String?         // Canvas drawing data
   accessibilityText String?         // Alt text or transcription
+  userName          String?         // Optional display name for anonymous users
   
   // Timestamps
   submittedAt       DateTime        @default(now())
