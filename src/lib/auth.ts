@@ -2,8 +2,8 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { User } from '@prisma/client';
 
-const JWT_SECRET = process.env.JWT_SECRET!;
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!;
+const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-in-production';
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'default-refresh-secret-change-in-production';
 
 export interface TokenPayload {
   userId: string;
@@ -29,7 +29,7 @@ export class AuthService {
       },
       JWT_SECRET,
       {
-        expiresIn: process.env.JWT_EXPIRES_IN || '15m',
+        expiresIn: '15m',
       }
     );
   }
@@ -39,7 +39,7 @@ export class AuthService {
       { userId },
       JWT_REFRESH_SECRET,
       {
-        expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+        expiresIn: '7d',
       }
     );
   }

@@ -20,8 +20,11 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const where: any = {
-      status: status as any,
+    const where: {
+      status?: string;
+      category?: string;
+    } = {
+      status: status,
     };
 
     if (category) {
@@ -102,10 +105,10 @@ export async function POST(request: NextRequest) {
           action: 'CREATE_SUBMISSION',
           entityType: 'submission',
           entityId: submission.id,
-          details: {
+          details: JSON.stringify({
             category: submission.category,
             contentType: submission.contentType,
-          },
+          }),
         },
       });
     }
@@ -114,7 +117,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input', details: error.errors },
+        { error: 'Invalid input', details: error.issues },
         { status: 400 }
       );
     }

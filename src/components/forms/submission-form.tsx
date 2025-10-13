@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Send, Mic, Image, Palette, Type } from 'lucide-react';
+import { Loader2, Send, Mic } from 'lucide-react';
 
 const submissionSchema = z.object({
   category: z.enum(['MY_NEWS', 'SAYING_HELLO', 'MY_SAY']),
@@ -84,16 +84,18 @@ export function SubmissionForm() {
       return;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    
+
     recognition.continuous = true;
     recognition.interimResults = true;
-    
+
     if (!isRecording) {
       recognition.start();
       setIsRecording(true);
-      
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       recognition.onresult = (event: any) => {
         let finalTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {

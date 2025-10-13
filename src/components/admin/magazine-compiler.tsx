@@ -4,9 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  CheckCircle, 
-  XCircle, 
+import {
   Plus,
   Trash2,
   Save,
@@ -107,9 +105,9 @@ export function MagazineCompiler() {
       });
 
       if (response.ok) {
-        const magazine = await response.json();
+        await response.json();
         alert(`Magazine created successfully! ${isPublic ? 'It is now live.' : 'It is saved as draft.'}`);
-        
+
         // Reset form
         setMagazineTitle('');
         setMagazineDescription('');

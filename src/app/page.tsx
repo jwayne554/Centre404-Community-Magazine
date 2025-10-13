@@ -34,14 +34,30 @@ export default function Home() {
           flexWrap: 'wrap'
         }}>
           <button
-            className={`btn-large ${activeView === 'contribute' ? 'btn-primary' : 'btn-secondary'}`}
+            className="btn-large"
             onClick={() => setActiveView('contribute')}
+            style={activeView === 'contribute' ? {
+              background: 'var(--primary-color)',
+              color: 'white'
+            } : {
+              background: '#f8f9fa',
+              color: 'var(--text-color)',
+              border: '2px solid #ddd'
+            }}
           >
             📝 Contribute
           </button>
           <button
-            className={`btn-large ${activeView === 'magazine' ? 'btn-primary' : 'btn-secondary'}`}
+            className="btn-large"
             onClick={() => setActiveView('magazine')}
+            style={activeView === 'magazine' ? {
+              background: 'var(--primary-color)',
+              color: 'white'
+            } : {
+              background: '#f8f9fa',
+              color: 'var(--text-color)',
+              border: '2px solid #ddd'
+            }}
           >
             📖 View Magazine
           </button>
@@ -73,7 +89,7 @@ export default function Home() {
             height: '50px',
             borderRadius: '50%',
             background: 'var(--bg-color)',
-            border: '2px solid var(--primary-color)',
+            border: '2px solid #27ae60',
             cursor: 'pointer',
             fontSize: '20px',
             boxShadow: 'var(--shadow)',
@@ -94,7 +110,7 @@ export default function Home() {
             height: '50px',
             borderRadius: '50%',
             background: 'var(--bg-color)',
-            border: '2px solid var(--primary-color)',
+            border: '2px solid #27ae60',
             cursor: 'pointer',
             fontSize: '20px',
             boxShadow: 'var(--shadow)',
@@ -117,7 +133,7 @@ export default function Home() {
             height: '50px',
             borderRadius: '50%',
             background: 'var(--bg-color)',
-            border: '2px solid var(--primary-color)',
+            border: '2px solid #27ae60',
             cursor: 'pointer',
             fontSize: '20px',
             boxShadow: 'var(--shadow)',

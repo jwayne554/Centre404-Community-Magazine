@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MediaUpload } from './media-upload';
 import { DrawingCanvas } from './drawing-canvas';
-import { Loader2, Send, Mic, Image, Palette, Type, X } from 'lucide-react';
+import { Loader2, Send, Mic, Image as ImageIcon, Palette, Type, X } from 'lucide-react';
 
 const submissionSchema = z.object({
   category: z.enum(['MY_NEWS', 'SAYING_HELLO', 'MY_SAY']),
@@ -107,16 +107,18 @@ export function EnhancedSubmissionForm() {
       return;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    
+
     recognition.continuous = true;
     recognition.interimResults = true;
-    
+
     if (!isRecording) {
       recognition.start();
       setIsRecording(true);
-      
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       recognition.onresult = (event: any) => {
         let finalTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -211,7 +213,7 @@ export function EnhancedSubmissionForm() {
                 variant={contentMode === 'media' ? 'default' : 'outline'}
                 onClick={() => setContentMode('media')}
               >
-                <Image className="mr-2 h-4 w-4" />
+                <ImageIcon className="mr-2 h-4 w-4" />
                 Upload Media
               </Button>
               <Button
@@ -293,8 +295,8 @@ export function EnhancedSubmissionForm() {
           {/* Media Upload */}
           {contentMode === 'media' && (
             <div>
-              <MediaUpload 
-                onUpload={(url, type) => {
+              <MediaUpload
+                onUpload={(url) => {
                   setMediaUrl(url);
                   // You might want to show a preview here
                 }}

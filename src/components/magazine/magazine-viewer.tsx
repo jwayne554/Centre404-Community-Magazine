@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, MessageCircle, Share2, Volume2, Filter, RefreshCw } from 'lucide-react';
+import { Heart, Share2, Volume2, Filter, RefreshCw } from 'lucide-react';
 
 interface Submission {
   id: string;
@@ -28,6 +28,7 @@ export function MagazineViewer() {
 
   useEffect(() => {
     fetchApprovedSubmissions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory]);
 
   const fetchApprovedSubmissions = async () => {

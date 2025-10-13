@@ -31,7 +31,7 @@ export function middleware(request: NextRequest) {
           headers: requestHeaders,
         },
       });
-    } catch (error) {
+    } catch {
       if (request.nextUrl.pathname.startsWith('/api')) {
         return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
       }

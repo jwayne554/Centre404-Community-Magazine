@@ -111,11 +111,11 @@ export async function POST(request: NextRequest) {
         action: 'CREATE_MAGAZINE',
         entityType: 'magazine',
         entityId: magazine.id,
-        details: {
+        details: JSON.stringify({
           title: magazine.title,
           itemCount: validatedData.submissionIds.length,
           isPublic: validatedData.isPublic,
-        },
+        }),
       },
     });
 
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input', details: error.errors },
+        { error: 'Invalid input', details: error.issues },
         { status: 400 }
       );
     }

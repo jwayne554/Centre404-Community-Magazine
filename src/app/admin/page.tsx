@@ -3,13 +3,10 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  Eye, 
-  Edit, 
-  Trash2,
+import {
+  CheckCircle,
+  XCircle,
+  Clock,
   RefreshCw,
   Filter
 } from 'lucide-react';
@@ -35,6 +32,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchSubmissions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   const fetchSubmissions = async () => {

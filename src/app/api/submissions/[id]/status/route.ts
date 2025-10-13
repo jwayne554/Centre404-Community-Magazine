@@ -9,13 +9,15 @@ const updateStatusSchema = z.object({
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+
     // Check if user is admin (from middleware)
     const userRole = request.headers.get('x-user-role');
     const userId = request.headers.get('x-user-id');
-    
+
     if (userRole !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized - Admin access required' },
@@ -28,7 +30,7 @@ export async function PATCH(
 
     // Update submission
     const submission = await prisma.submission.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         status: validatedData.status,
         reviewNotes: validatedData.reviewNotes,
@@ -52,12 +54,12 @@ export async function PATCH(
         userId: userId!,
         action: `UPDATE_SUBMISSION_STATUS_${validatedData.status}`,
         entityType: 'submission',
-        entityId: params.id,
-        details: {
+        entityId: id,
+        details: JSON.stringify({
           previousStatus: submission.status,
           newStatus: validatedData.status,
           reviewNotes: validatedData.reviewNotes,
-        },
+        }),
       },
     });
 
@@ -65,7 +67,7 @@ export async function PATCH(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input', details: error.errors },
+        { error: 'Invalid input', details: error.issues },
         { status: 400 }
       );
     }

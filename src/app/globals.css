@@ -10,7 +10,7 @@
 
 :root {
   /* EXACT colors from Centre404 HTML */
-  --primary-color: #2c5aa0;
+  --primary-color: #27ae60;  /* Changed from blue to green */
   --secondary-color: #f39c12;
   --success-color: #27ae60;
   --danger-color: #e74c3c;
@@ -46,7 +46,7 @@ body {
 }
 
 .btn-primary {
-  background: #2c5aa0;
+  background: #27ae60;  /* Changed from blue to green */
   color: white;
 }
 
@@ -77,12 +77,12 @@ body {
 }
 
 .category-card:hover {
-  background: #e3f2fd;
+  background: #e8f5e9;  /* Light green on hover */
 }
 
 .category-card.selected {
-  background: #e3f2fd;
-  border-color: #2c5aa0;
+  background: #e8f5e9;  /* Light green background */
+  border-color: #27ae60;  /* Green border */
 }
 
 /* Tool buttons exactly as original */
@@ -224,6 +224,20 @@ body {
 
 .high-contrast .btn-secondary:hover {
   background: #ffffff !important;
+}
+
+/* High contrast navigation buttons - active state */
+.high-contrast button.btn-large[style*="--primary-color"] {
+  background: #ffff00 !important;
+  color: #000 !important;
+  border: 2px solid #ffff00 !important;
+}
+
+/* High contrast navigation buttons - inactive state */
+.high-contrast button.btn-large[style*="#f8f9fa"] {
+  background: #2c2c2c !important;
+  color: #fff !important;
+  border: 2px solid #666 !important;
 }
 
 .high-contrast .tool-button,

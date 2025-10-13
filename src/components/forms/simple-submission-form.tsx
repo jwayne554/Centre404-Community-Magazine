@@ -13,6 +13,7 @@ const symbols = ['😊', '❤️', '👍', '🎉', '🌟', '☀️', '🌈', '�
 export function SimpleSubmissionForm() {
   const [category, setCategory] = useState('');
   const [textContent, setTextContent] = useState('');
+  const [authorName, setAuthorName] = useState('');
   const [showSymbols, setShowSymbols] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [showDrawing, setShowDrawing] = useState(false);
@@ -49,6 +50,7 @@ export function SimpleSubmissionForm() {
           contentType,
           mediaUrl: imagePreview || drawingData || null,
           drawingData: drawingData || null,
+          userName: authorName || 'Community Member',
         }),
       });
 
@@ -56,6 +58,7 @@ export function SimpleSubmissionForm() {
         setSuccessMessage('✓ Thank you! Your contribution has been submitted.');
         setCategory('');
         setTextContent('');
+        setAuthorName('');
         setImagePreview('');
         setDrawingData('');
         // Clear canvas if it exists
@@ -77,16 +80,18 @@ export function SimpleSubmissionForm() {
 
   const startSpeechRecognition = () => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
-      
+
       recognition.continuous = true;
       recognition.interimResults = true;
-      
+
       if (!isRecording) {
         recognition.start();
         setIsRecording(true);
-        
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         recognition.onresult = (event: any) => {
           let finalTranscript = '';
           for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -98,9 +103,9 @@ export function SimpleSubmissionForm() {
             setTextContent(prev => prev + finalTranscript + ' ');
           }
         };
-        
+
         recognition.onerror = () => setIsRecording(false);
-        
+
         setTimeout(() => {
           recognition.stop();
           setIsRecording(false);
@@ -257,6 +262,38 @@ export function SimpleSubmissionForm() {
           </div>
         </div>
 
+        {/* Author Name - Optional field */}
+        <div style={{ marginBottom: '25px' }}>
+          <label style={{ 
+            display: 'block', 
+            fontSize: '18px', 
+            fontWeight: '600', 
+            marginBottom: '10px',
+            color: 'var(--text-color)'
+          }}>
+            Your name (optional):
+          </label>
+          <input
+            type="text"
+            value={authorName}
+            onChange={(e) => setAuthorName(e.target.value)}
+            placeholder="Tell us your name or leave blank"
+            style={{
+              width: '100%',
+              padding: '15px',
+              fontSize: '18px',
+              border: '2px solid var(--border-color)',
+              borderRadius: '8px',
+              fontFamily: 'inherit',
+              background: 'white'
+            }}
+            maxLength={50}
+          />
+          <div style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
+            If left blank, your post will show as &quot;Community Member&quot;
+          </div>
+        </div>
+
         {/* Text Content - Matching original style */}
         <div style={{ marginBottom: '25px' }}>
           <label style={{ 
@@ -372,12 +409,12 @@ export function SimpleSubmissionForm() {
             />
           </div>
           {imagePreview && (
-            <img 
-              src={imagePreview} 
-              alt="Preview" 
-              style={{ 
-                maxWidth: '100%', 
-                marginTop: '20px', 
+            <img
+              src={imagePreview}
+              alt="Uploaded image preview"
+              style={{
+                maxWidth: '100%',
+                marginTop: '20px',
                 borderRadius: '8px',
                 boxShadow: 'var(--shadow)'
               }}

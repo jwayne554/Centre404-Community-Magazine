@@ -22,6 +22,7 @@ export function SimpleMagazineViewer() {
 
   useEffect(() => {
     fetchSubmissions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory]);
 
   const fetchSubmissions = async () => {
@@ -50,11 +51,11 @@ export function SimpleMagazineViewer() {
   const getCategoryInfo = (category: string) => {
     switch (category) {
       case 'MY_NEWS':
-        return { emoji: '📰', label: 'My News', color: '#2c5aa0' };
+        return { emoji: '📰', label: 'My News', color: '#e67e22' };  // Orange
       case 'SAYING_HELLO':
-        return { emoji: '👋', label: 'Saying Hello', color: '#27ae60' };
+        return { emoji: '👋', label: 'Saying Hello', color: '#27ae60' };  // Green
       case 'MY_SAY':
-        return { emoji: '💬', label: 'My Say', color: '#8e44ad' };
+        return { emoji: '💬', label: 'My Say', color: '#8e44ad' };  // Purple
       default:
         return { emoji: '📝', label: 'Story', color: '#7f8c8d' };
     }

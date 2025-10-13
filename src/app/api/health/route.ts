@@ -34,7 +34,7 @@ export async function GET() {
       diagnostics.database.tablesExist = true;
       diagnostics.diagnosis.push('✓ Database tables exist');
       diagnostics.status = 'healthy';
-    } catch (tableError) {
+    } catch {
       diagnostics.database.error = 'Tables not found - migrations not applied';
       diagnostics.diagnosis.push('❌ Database tables missing - run migrations!');
       diagnostics.status = 'unhealthy';
