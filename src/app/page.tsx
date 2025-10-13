@@ -17,8 +17,38 @@ export default function Home() {
           padding: '20px',
           textAlign: 'center',
           marginBottom: '30px',
-          borderRadius: '8px'
+          borderRadius: '8px',
+          position: 'relative'
         }}>
+          {/* Admin Link */}
+          <Link
+            href="/admin"
+            style={{
+              position: 'absolute',
+              top: '20px',
+              right: '20px',
+              padding: '8px 16px',
+              background: 'rgba(255,255,255,0.2)',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: '600',
+              border: '2px solid rgba(255,255,255,0.3)',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.3)';
+              e.currentTarget.style.borderColor = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+            }}
+          >
+            🔐 Admin
+          </Link>
+
           <h1 style={{ fontSize: '24px', marginBottom: '10px', color: 'white' }}>
             Centre404 Community Magazine
           </h1>
