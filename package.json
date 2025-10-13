@@ -8,9 +8,10 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "build:railway": "rm -rf .next node_modules/.cache && next build",
+    "build:railway": "prisma generate && prisma db push --accept-data-loss && next build",
     "start": "next start",
     "railway:install": "./scripts/railway-install.sh",
+    "db:check": "node scripts/check-db.js",
     "lint": "eslint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -22,9 +23,6 @@
     "db:seed": "tsx prisma/seed.ts",
     "test": "echo 'Tests coming soon'",
     "postinstall": "prisma generate"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
