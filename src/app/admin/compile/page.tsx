@@ -1,21 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  ArrowLeft,
-  Plus,
-  X,
-  ArrowUp,
-  ArrowDown,
-  Eye,
-  Save,
-  Sparkles,
-  CheckCircle,
-  Loader2
-} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -116,7 +101,6 @@ export default function MagazineCompiler() {
       });
 
       if (response.ok) {
-        const magazine = await response.json();
         alert(`Magazine ${publishNow ? 'published' : 'saved as draft'} successfully!`);
         router.push('/magazines');
       } else {
@@ -140,6 +124,15 @@ export default function MagazineCompiler() {
     }
   };
 
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'MY_NEWS': return '#f39c12';
+      case 'SAYING_HELLO': return '#27ae60';
+      case 'MY_SAY': return '#9b59b6';
+      default: return '#3498db';
+    }
+  };
+
   const generateSuggestedTitle = () => {
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const date = new Date();
@@ -154,299 +147,497 @@ export default function MagazineCompiler() {
   );
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/admin">
-            <Button variant="ghost" className="mb-4 gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
-            </Button>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px' }}>
+        {/* Hero Header */}
+        <div style={{
+          background: 'linear-gradient(135deg, #f39c12, #e67e22)',
+          color: 'white',
+          padding: '40px 30px',
+          borderRadius: '12px',
+          marginBottom: '30px'
+        }}>
+          <Link
+            href="/admin"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              border: '2px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '6px',
+              color: 'white',
+              textDecoration: 'none',
+              fontWeight: '600',
+              fontSize: '14px',
+              marginBottom: '20px',
+              transition: 'all 0.3s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+            }}
+          >
+            ← Back to Dashboard
           </Link>
-          <h1 className="text-3xl font-bold mb-2">Compile Magazine Edition</h1>
-          <p className="text-muted-foreground">
-            Select and arrange approved submissions to create a new magazine edition
+
+          <div style={{ fontSize: '48px', marginBottom: '10px' }}>📖</div>
+          <h1 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '10px', color: 'white' }}>
+            Compile Magazine Edition
+          </h1>
+          <p style={{ fontSize: '18px', opacity: 0.95 }}>
+            Select and arrange approved submissions to create a beautiful magazine
           </p>
         </div>
 
-        {/* Magazine Metadata */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5" />
-              Magazine Information
-            </CardTitle>
-            <CardDescription>Give your magazine a title and description</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <label className="text-sm font-medium mb-2 block">Title *</label>
+        {/* Magazine Information */}
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '30px',
+          marginBottom: '25px',
+          boxShadow: 'var(--shadow)'
+        }}>
+          <div style={{ marginBottom: '25px' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: '700', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              ✨ Magazine Information
+            </h2>
+            <p style={{ color: '#666', fontSize: '15px' }}>
+              Give your magazine a title and description
+            </p>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
+              <div style={{ flex: '1', minWidth: '300px' }}>
+                <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px', fontSize: '14px' }}>
+                  Title *
+                </label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g., Spring 2025 Edition, Issue #5"
-                  className="w-full p-3 border rounded-lg"
                   maxLength={255}
+                  style={{
+                    width: '100%',
+                    padding: '12px 15px',
+                    fontSize: '16px',
+                    border: '2px solid #ddd',
+                    borderRadius: '8px',
+                    fontFamily: 'inherit'
+                  }}
                 />
               </div>
-              <Button
-                variant="outline"
+              <button
                 onClick={generateSuggestedTitle}
-                className="self-end"
+                className="tool-button"
+                style={{
+                  alignSelf: 'flex-end',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
               >
-                <Sparkles className="h-4 w-4 mr-2" />
-                Suggest
-              </Button>
+                ✨ Suggest Title
+              </button>
             </div>
 
-            <div>
-              <label className="text-sm font-medium mb-2 block">Description</label>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px', fontSize: '14px' }}>
+                Description (Optional)
+              </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Optional: Brief description of this edition"
-                className="w-full p-3 border rounded-lg min-h-[80px]"
+                placeholder="Brief description of this edition"
                 maxLength={500}
+                style={{
+                  width: '100%',
+                  padding: '12px 15px',
+                  fontSize: '16px',
+                  border: '2px solid #ddd',
+                  borderRadius: '8px',
+                  minHeight: '90px',
+                  fontFamily: 'inherit',
+                  resize: 'vertical'
+                }}
               />
             </div>
 
-            <div className="flex items-center gap-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '15px',
+              background: '#e3f2fd',
+              border: '2px solid #2196f3',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '600'
+            }}>
               <input
                 type="checkbox"
-                id="publishNow"
                 checked={publishNow}
                 onChange={(e) => setPublishNow(e.target.checked)}
-                className="w-4 h-4"
+                style={{ width: '20px', height: '20px', cursor: 'pointer' }}
               />
-              <label htmlFor="publishNow" className="text-sm font-medium cursor-pointer">
-                Publish immediately (make visible to all users)
-              </label>
-            </div>
-          </CardContent>
-        </Card>
+              🌐 Publish immediately (make visible to all users)
+            </label>
+          </div>
+        </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
+        {/* Two Column Layout */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))',
+          gap: '25px',
+          marginBottom: '25px'
+        }}>
           {/* Available Submissions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Available Submissions ({availableSubmissions.length})
-              </CardTitle>
-              <CardDescription>
-                Approved submissions ready to be added to the magazine
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="text-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
-                  <p>Loading submissions...</p>
-                </div>
-              ) : availableSubmissions.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <p className="text-lg mb-2">No available submissions</p>
-                  <p className="text-sm">
-                    {selectedSubmissions.length > 0
-                      ? 'All approved submissions have been added!'
-                      : 'No approved submissions yet. Go to the dashboard to approve some!'}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                  {availableSubmissions.map((submission) => (
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '25px',
+            boxShadow: 'var(--shadow)',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '2px solid #eee' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '5px' }}>
+                📚 Available Submissions ({availableSubmissions.length})
+              </h2>
+              <p style={{ color: '#666', fontSize: '14px' }}>
+                Approved submissions ready to be added
+              </p>
+            </div>
+
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+                <div style={{ fontSize: '48px', marginBottom: '15px' }}>⏳</div>
+                <p style={{ color: '#666', fontSize: '16px' }}>Loading submissions...</p>
+              </div>
+            ) : availableSubmissions.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '60px 20px', background: '#f8f9fa', borderRadius: '8px' }}>
+                <div style={{ fontSize: '64px', marginBottom: '15px' }}>✅</div>
+                <p style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>
+                  {selectedSubmissions.length > 0 ? 'All Added!' : 'No Submissions'}
+                </p>
+                <p style={{ color: '#666', fontSize: '14px' }}>
+                  {selectedSubmissions.length > 0
+                    ? 'All approved submissions have been added!'
+                    : 'No approved submissions yet.'}
+                </p>
+              </div>
+            ) : (
+              <div style={{ maxHeight: '650px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {availableSubmissions.map((submission) => {
+                  const categoryColor = getCategoryColor(submission.category);
+
+                  return (
                     <div
                       key={submission.id}
-                      className="border rounded-lg p-4 hover:bg-accent transition-colors"
+                      style={{
+                        border: '2px solid #ddd',
+                        borderRadius: '8px',
+                        padding: '15px',
+                        borderLeft: `5px solid ${categoryColor}`,
+                        transition: 'all 0.3s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#f8f9fa';
+                        e.currentTarget.style.transform = 'translateX(3px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'white';
+                        e.currentTarget.style.transform = 'translateX(0)';
+                      }}
                     >
-                      <div className="flex items-start gap-3 mb-3">
-                        <span className="text-2xl">
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '10px' }}>
+                        <span style={{ fontSize: '28px' }}>
                           {getCategoryEmoji(submission.category)}
                         </span>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm">
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: '15px', fontWeight: '700', marginBottom: '3px' }}>
                             {submission.category.replace(/_/g, ' ')}
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                          <div style={{ fontSize: '13px', color: '#666' }}>
                             By {submission.user?.name || submission.userName || 'Anonymous'}
                           </div>
                         </div>
-                        <Button
-                          size="sm"
+                        <button
                           onClick={() => addToMagazine(submission)}
-                          className="gap-1 shrink-0"
+                          style={{
+                            padding: '6px 14px',
+                            background: '#27ae60',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontWeight: '600',
+                            fontSize: '13px',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = '#229954')}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = '#27ae60')}
                         >
-                          <Plus className="h-3 w-3" />
-                          Add
-                        </Button>
+                          + Add
+                        </button>
                       </div>
                       {submission.textContent && (
-                        <p className="text-sm line-clamp-2 text-muted-foreground">
+                        <p style={{
+                          fontSize: '14px',
+                          lineHeight: '1.5',
+                          color: '#555',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
                           {submission.textContent}
                         </p>
                       )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Selected for Magazine */}
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Selected for Edition ({selectedSubmissions.length})
-              </CardTitle>
-              <CardDescription>
-                Arrange these submissions in the order they&apos;ll appear
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {selectedSubmissions.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <BookOpen className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-lg mb-2">No submissions selected</p>
-                  <p className="text-sm">
-                    Click &quot;Add&quot; on submissions from the left to include them
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                  {selectedSubmissions.map((submission, index) => (
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '25px',
+            boxShadow: 'var(--shadow)',
+            border: '3px solid #f39c12',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '2px solid #eee' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '5px' }}>
+                📖 Selected for Edition ({selectedSubmissions.length})
+              </h2>
+              <p style={{ color: '#666', fontSize: '14px' }}>
+                Arrange these in the order they'll appear
+              </p>
+            </div>
+
+            {selectedSubmissions.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '60px 20px', background: '#f8f9fa', borderRadius: '8px' }}>
+                <div style={{ fontSize: '64px', marginBottom: '15px' }}>📭</div>
+                <p style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>
+                  No Submissions Selected
+                </p>
+                <p style={{ color: '#666', fontSize: '14px' }}>
+                  Click &quot;Add&quot; on submissions from the left to include them
+                </p>
+              </div>
+            ) : (
+              <div style={{ maxHeight: '650px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {selectedSubmissions.map((submission, index) => {
+                  const categoryColor = getCategoryColor(submission.category);
+
+                  return (
                     <div
                       key={submission.id}
-                      className="border rounded-lg p-4 bg-accent/50"
+                      style={{
+                        border: '2px solid #f39c12',
+                        borderRadius: '8px',
+                        padding: '15px',
+                        background: '#fffbf5',
+                        borderLeft: `5px solid ${categoryColor}`
+                      }}
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="flex flex-col gap-1 shrink-0">
-                          <Button
-                            variant="outline"
-                            size="sm"
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                        {/* Reorder Controls */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <button
                             onClick={() => moveUp(index)}
                             disabled={index === 0}
-                            className="h-7 w-7 p-0"
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              background: index === 0 ? '#e0e0e0' : '#f8f9fa',
+                              border: '2px solid #ddd',
+                              borderRadius: '6px',
+                              cursor: index === 0 ? 'not-allowed' : 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '16px',
+                              opacity: index === 0 ? 0.4 : 1
+                            }}
                           >
-                            <ArrowUp className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
+                            ↑
+                          </button>
+                          <button
                             onClick={() => moveDown(index)}
                             disabled={index === selectedSubmissions.length - 1}
-                            className="h-7 w-7 p-0"
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              background: index === selectedSubmissions.length - 1 ? '#e0e0e0' : '#f8f9fa',
+                              border: '2px solid #ddd',
+                              borderRadius: '6px',
+                              cursor: index === selectedSubmissions.length - 1 ? 'not-allowed' : 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '16px',
+                              opacity: index === selectedSubmissions.length - 1 ? 0.4 : 1
+                            }}
                           >
-                            <ArrowDown className="h-3 w-3" />
-                          </Button>
+                            ↓
+                          </button>
                         </div>
 
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-lg">
+                        {/* Content */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '24px' }}>
                               {getCategoryEmoji(submission.category)}
                             </span>
-                            <Badge variant="outline" className="text-xs">
+                            <span style={{
+                              background: categoryColor,
+                              color: 'white',
+                              padding: '2px 10px',
+                              borderRadius: '12px',
+                              fontSize: '12px',
+                              fontWeight: '700'
+                            }}>
                               #{index + 1}
-                            </Badge>
-                            <div className="font-semibold text-sm">
+                            </span>
+                            <div style={{ fontSize: '15px', fontWeight: '700' }}>
                               {submission.category.replace(/_/g, ' ')}
                             </div>
                           </div>
-                          <div className="text-xs text-muted-foreground mb-2">
+                          <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
                             By {submission.user?.name || submission.userName || 'Anonymous'}
                           </div>
                           {submission.textContent && (
-                            <p className="text-xs line-clamp-2 text-muted-foreground">
+                            <p style={{
+                              fontSize: '13px',
+                              lineHeight: '1.5',
+                              color: '#555',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden'
+                            }}>
                               {submission.textContent}
                             </p>
                           )}
                         </div>
 
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        {/* Remove Button */}
+                        <button
                           onClick={() => removeFromMagazine(submission.id)}
-                          className="shrink-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            background: '#fee',
+                            border: '2px solid #e74c3c',
+                            borderRadius: '6px',
+                            color: '#e74c3c',
+                            cursor: 'pointer',
+                            fontSize: '18px',
+                            fontWeight: '700',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.3s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#e74c3c';
+                            e.currentTarget.style.color = 'white';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#fee';
+                            e.currentTarget.style.color = '#e74c3c';
+                          }}
                         >
-                          <X className="h-4 w-4" />
-                        </Button>
+                          ×
+                        </button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Action Bar */}
-        <div className="mt-8 flex items-center justify-between p-6 bg-accent rounded-lg border-2 border-primary/20">
+        <div style={{
+          background: 'linear-gradient(135deg, #f8f9fa, #e8e9ea)',
+          borderRadius: '12px',
+          padding: '25px 30px',
+          border: '3px solid #ddd',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '20px'
+        }}>
           <div>
-            <div className="font-semibold mb-1">
-              Ready to {publishNow ? 'publish' : 'save'}?
+            <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '5px' }}>
+              Ready to {publishNow ? 'Publish' : 'Save'}? 🚀
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div style={{ fontSize: '14px', color: '#666' }}>
               {selectedSubmissions.length} submission{selectedSubmissions.length !== 1 ? 's' : ''} selected
               {publishNow && ' • Will be visible to all users immediately'}
+              {!publishNow && ' • Can be published later from the archive'}
             </div>
           </div>
 
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
               onClick={() => router.push('/admin')}
               disabled={saving}
+              className="tool-button"
+              style={{
+                opacity: saving ? 0.5 : 1,
+                cursor: saving ? 'not-allowed' : 'pointer'
+              }}
             >
               Cancel
-            </Button>
-            <Button
-              size="lg"
+            </button>
+            <button
               onClick={saveMagazine}
               disabled={saving || !title.trim() || selectedSubmissions.length === 0}
-              className="gap-2"
+              className="btn-large"
+              style={{
+                background: publishNow ? '#27ae60' : '#2c5aa0',
+                color: 'white',
+                opacity: (saving || !title.trim() || selectedSubmissions.length === 0) ? 0.5 : 1,
+                cursor: (saving || !title.trim() || selectedSubmissions.length === 0) ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
             >
               {saving ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  {publishNow ? 'Publishing...' : 'Saving...'}
+                  ⏳ {publishNow ? 'Publishing...' : 'Saving...'}
                 </>
               ) : publishNow ? (
                 <>
-                  <CheckCircle className="h-4 w-4" />
-                  Publish Magazine
+                  🌐 Publish Magazine
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4" />
-                  Save as Draft
+                  💾 Save as Draft
                 </>
               )}
-            </Button>
+            </button>
           </div>
         </div>
       </div>
     </div>
-  );
-}
-
-function BookOpen({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-    </svg>
   );
 }

@@ -1,19 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  CheckCircle,
-  XCircle,
-  Clock,
-  RefreshCw,
-  Filter,
-  Eye,
-  BookOpen,
-  ArrowRight
-} from 'lucide-react';
 import Link from 'next/link';
 
 interface Submission {
@@ -137,12 +124,25 @@ export default function AdminDashboard() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'MY_NEWS': return '#f39c12';
+      case 'SAYING_HELLO': return '#27ae60';
+      case 'MY_SAY': return '#9b59b6';
+      default: return '#3498db';
+    }
+  };
+
+  const getStatusBadgeStyle = (status: string) => {
     switch (status) {
-      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
-      case 'APPROVED': return 'bg-green-100 text-green-800';
-      case 'REJECTED': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'PENDING':
+        return { background: '#fff3cd', color: '#856404', border: '2px solid #ffc107' };
+      case 'APPROVED':
+        return { background: '#d4edda', color: '#155724', border: '2px solid #27ae60' };
+      case 'REJECTED':
+        return { background: '#f8d7da', color: '#721c24', border: '2px solid #e74c3c' };
+      default:
+        return { background: '#f8f9fa', color: '#666', border: '2px solid #ddd' };
     }
   };
 
@@ -154,367 +154,699 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage community magazine submissions and compile editions</p>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px' }}>
+        {/* Hero Header */}
+        <div style={{
+          background: 'linear-gradient(135deg, #27ae60, #2c5aa0)',
+          color: 'white',
+          padding: '40px 30px',
+          borderRadius: '12px',
+          marginBottom: '30px',
+          position: 'relative'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '10px' }}>🔐</div>
+          <h1 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '10px', color: 'white' }}>
+            Admin Dashboard
+          </h1>
+          <p style={{ fontSize: '18px', opacity: 0.95, marginBottom: '25px' }}>
+            Review submissions, manage content, and compile magazine editions
+          </p>
+
+          {/* Navigation Links */}
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <Link
+              href="/"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 20px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '8px',
+                color: 'white',
+                textDecoration: 'none',
+                fontWeight: '600',
+                transition: 'all 0.3s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              🏠 Home
+            </Link>
+            <Link
+              href="/magazines"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 20px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '8px',
+                color: 'white',
+                textDecoration: 'none',
+                fontWeight: '600',
+                transition: 'all 0.3s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              📚 Archive
+            </Link>
+            <Link
+              href="/admin/compile"
+              className="btn-large"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 20px',
+                background: '#f39c12',
+                border: '2px solid #f39c12',
+                borderRadius: '8px',
+                color: 'white',
+                textDecoration: 'none',
+                fontWeight: '600',
+                transition: 'all 0.3s',
+                minHeight: 'auto'
+              }}
+            >
+              📖 Compile Magazine →
+            </Link>
           </div>
-          <Link href="/admin/compile">
-            <Button size="lg" className="gap-2">
-              <BookOpen className="h-5 w-5" />
-              Compile Magazine
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid md:grid-cols-4 gap-4 mb-8">
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setActiveTab('ALL')}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                All Submissions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stats.total}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-yellow-500" onClick={() => setActiveTab('PENDING')}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Pending Review
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-yellow-600">{stats.pending}</div>
-              <p className="text-xs text-muted-foreground mt-1">Needs your attention</p>
-            </CardContent>
-          </Card>
-
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-green-500" onClick={() => setActiveTab('APPROVED')}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                Approved
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-600">{stats.approved}</div>
-              <p className="text-xs text-muted-foreground mt-1">Ready for compilation</p>
-            </CardContent>
-          </Card>
-
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-red-500" onClick={() => setActiveTab('REJECTED')}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <XCircle className="h-4 w-4" />
-                Rejected
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-red-600">{stats.rejected}</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tab Bar */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-2">
-            <Button
-              variant={activeTab === 'PENDING' ? 'default' : 'outline'}
-              onClick={() => setActiveTab('PENDING')}
-              className="gap-2"
-            >
-              <Clock className="h-4 w-4" />
-              Pending ({stats.pending})
-            </Button>
-            <Button
-              variant={activeTab === 'APPROVED' ? 'default' : 'outline'}
-              onClick={() => setActiveTab('APPROVED')}
-              className="gap-2"
-            >
-              <CheckCircle className="h-4 w-4" />
-              Approved ({stats.approved})
-            </Button>
-            <Button
-              variant={activeTab === 'REJECTED' ? 'default' : 'outline'}
-              onClick={() => setActiveTab('REJECTED')}
-              className="gap-2"
-            >
-              <XCircle className="h-4 w-4" />
-              Rejected ({stats.rejected})
-            </Button>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: '20px',
+          marginBottom: '30px'
+        }}>
+          {/* Total Card */}
+          <div
+            onClick={() => setActiveTab('ALL')}
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '25px',
+              boxShadow: 'var(--shadow)',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              border: activeTab === 'ALL' ? '3px solid #2c5aa0' : '3px solid transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'var(--shadow)';
+            }}
+          >
+            <div style={{ fontSize: '14px', color: '#666', marginBottom: '10px', fontWeight: '600' }}>
+              📊 ALL SUBMISSIONS
+            </div>
+            <div style={{ fontSize: '42px', fontWeight: '700', color: '#2c5aa0' }}>
+              {stats.total}
+            </div>
           </div>
 
-          <div className="flex gap-2">
-            {selectedIds.size > 0 && activeTab === 'PENDING' && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={bulkApprove}
-                  disabled={actionLoading}
-                  className="gap-2"
-                >
-                  <CheckCircle className="h-4 w-4" />
-                  Approve Selected ({selectedIds.size})
-                </Button>
-              </>
-            )}
-            <Button
-              variant="outline"
-              onClick={fetchAllSubmissions}
-              className="gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Refresh
-            </Button>
+          {/* Pending Card */}
+          <div
+            onClick={() => setActiveTab('PENDING')}
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '25px',
+              boxShadow: 'var(--shadow)',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              border: activeTab === 'PENDING' ? '3px solid #f39c12' : '3px solid transparent',
+              borderLeft: '6px solid #f39c12'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'var(--shadow)';
+            }}
+          >
+            <div style={{ fontSize: '14px', color: '#666', marginBottom: '10px', fontWeight: '600' }}>
+              ⏳ PENDING REVIEW
+            </div>
+            <div style={{ fontSize: '42px', fontWeight: '700', color: '#f39c12' }}>
+              {stats.pending}
+            </div>
+            <div style={{ fontSize: '13px', color: '#999', marginTop: '5px' }}>
+              Needs attention
+            </div>
+          </div>
+
+          {/* Approved Card */}
+          <div
+            onClick={() => setActiveTab('APPROVED')}
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '25px',
+              boxShadow: 'var(--shadow)',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              border: activeTab === 'APPROVED' ? '3px solid #27ae60' : '3px solid transparent',
+              borderLeft: '6px solid #27ae60'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'var(--shadow)';
+            }}
+          >
+            <div style={{ fontSize: '14px', color: '#666', marginBottom: '10px', fontWeight: '600' }}>
+              ✅ APPROVED
+            </div>
+            <div style={{ fontSize: '42px', fontWeight: '700', color: '#27ae60' }}>
+              {stats.approved}
+            </div>
+            <div style={{ fontSize: '13px', color: '#999', marginTop: '5px' }}>
+              Ready for magazine
+            </div>
+          </div>
+
+          {/* Rejected Card */}
+          <div
+            onClick={() => setActiveTab('REJECTED')}
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '25px',
+              boxShadow: 'var(--shadow)',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              border: activeTab === 'REJECTED' ? '3px solid #e74c3c' : '3px solid transparent',
+              borderLeft: '6px solid #e74c3c'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'var(--shadow)';
+            }}
+          >
+            <div style={{ fontSize: '14px', color: '#666', marginBottom: '10px', fontWeight: '600' }}>
+              ❌ REJECTED
+            </div>
+            <div style={{ fontSize: '42px', fontWeight: '700', color: '#e74c3c' }}>
+              {stats.rejected}
+            </div>
           </div>
         </div>
 
-        {/* Bulk Actions Bar */}
-        {submissions.length > 0 && activeTab === 'PENDING' && (
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={selectedIds.size === submissions.length && submissions.length > 0}
-                onChange={selectAll}
-                className="w-4 h-4"
-              />
-              <span className="text-sm font-medium">
+        {/* Action Bar */}
+        <div style={{
+          background: 'white',
+          borderRadius: '8px',
+          padding: '20px',
+          marginBottom: '20px',
+          boxShadow: 'var(--shadow)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '15px'
+        }}>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+            {submissions.length > 0 && activeTab === 'PENDING' && (
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                padding: '8px 15px',
+                background: '#f8f9fa',
+                borderRadius: '6px',
+                fontWeight: '600'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size === submissions.length && submissions.length > 0}
+                  onChange={selectAll}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
                 {selectedIds.size > 0 ? `${selectedIds.size} selected` : 'Select all'}
-              </span>
-            </label>
-            {selectedIds.size > 0 && (
-              <span className="text-sm text-blue-700">Bulk actions available →</span>
+              </label>
+            )}
+
+            {selectedIds.size > 0 && activeTab === 'PENDING' && (
+              <button
+                onClick={bulkApprove}
+                disabled={actionLoading}
+                className="btn-large"
+                style={{
+                  background: '#27ae60',
+                  color: 'white',
+                  padding: '8px 20px',
+                  minHeight: 'auto',
+                  opacity: actionLoading ? 0.5 : 1,
+                  cursor: actionLoading ? 'not-allowed' : 'pointer'
+                }}
+              >
+                ✅ Approve Selected ({selectedIds.size})
+              </button>
             )}
           </div>
-        )}
+
+          <button
+            onClick={fetchAllSubmissions}
+            className="tool-button"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            🔄 Refresh
+          </button>
+        </div>
 
         {/* Submissions List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {activeTab === 'ALL' ? 'All Submissions' :
-               activeTab === 'PENDING' ? 'Pending Review' :
-               activeTab === 'APPROVED' ? 'Approved Submissions' :
-               'Rejected Submissions'}
-            </CardTitle>
-            <CardDescription>
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '30px',
+          boxShadow: 'var(--shadow)'
+        }}>
+          <div style={{ marginBottom: '25px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px' }}>
+              {activeTab === 'ALL' && '📋 All Submissions'}
+              {activeTab === 'PENDING' && '⏳ Pending Review'}
+              {activeTab === 'APPROVED' && '✅ Approved Submissions'}
+              {activeTab === 'REJECTED' && '❌ Rejected Submissions'}
+            </h2>
+            <p style={{ color: '#666', fontSize: '15px' }}>
               {activeTab === 'PENDING' && 'Review these submissions to approve or reject them'}
               {activeTab === 'APPROVED' && 'These submissions are ready to be compiled into magazines'}
               {activeTab === 'REJECTED' && 'These submissions were not approved'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-12">
-                <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
-                <p>Loading submissions...</p>
+              {activeTab === 'ALL' && 'View all submissions across all statuses'}
+            </p>
+          </div>
+
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+              <div style={{ fontSize: '48px', marginBottom: '15px', animation: 'spin 2s linear infinite' }}>
+                🔄
               </div>
-            ) : submissions.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <p className="text-lg mb-2">No submissions found</p>
-                {activeTab === 'PENDING' && (
-                  <p className="text-sm">All caught up! No pending reviews.</p>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {submissions.map((submission) => (
+              <p style={{ color: '#666', fontSize: '16px' }}>Loading submissions...</p>
+            </div>
+          ) : submissions.length === 0 ? (
+            <div style={{
+              textAlign: 'center',
+              padding: '60px 20px',
+              background: '#f8f9fa',
+              borderRadius: '8px'
+            }}>
+              <div style={{ fontSize: '64px', marginBottom: '15px' }}>📭</div>
+              <p style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>
+                No submissions found
+              </p>
+              {activeTab === 'PENDING' && (
+                <p style={{ color: '#666' }}>All caught up! No pending reviews.</p>
+              )}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              {submissions.map((submission) => {
+                const categoryColor = getCategoryColor(submission.category);
+                const statusBadgeStyle = getStatusBadgeStyle(submission.status);
+
+                return (
                   <div
                     key={submission.id}
-                    className="border rounded-lg p-4 hover:bg-accent transition-colors"
+                    style={{
+                      border: '2px solid #ddd',
+                      borderRadius: '8px',
+                      padding: '20px',
+                      transition: 'all 0.3s',
+                      borderLeft: `6px solid ${categoryColor}`
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#f8f9fa';
+                      e.currentTarget.style.transform = 'translateX(5px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'white';
+                      e.currentTarget.style.transform = 'translateX(0)';
+                    }}
                   >
-                    <div className="flex items-start gap-4">
-                      {/* Selection Checkbox */}
+                    <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                      {/* Checkbox */}
                       {activeTab === 'PENDING' && (
                         <input
                           type="checkbox"
                           checked={selectedIds.has(submission.id)}
                           onChange={() => toggleSelection(submission.id)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="mt-1 w-4 h-4"
+                          style={{ width: '18px', height: '18px', cursor: 'pointer', marginTop: '5px' }}
                         />
                       )}
 
-                      {/* Content Preview */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-2xl">
-                            {getCategoryEmoji(submission.category)}
-                          </span>
-                          <div className="flex-1">
-                            <div className="font-semibold">
-                              {submission.category.replace(/_/g, ' ')}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              By {submission.user?.name || 'Anonymous'} •
-                              {new Date(submission.submittedAt).toLocaleString()}
+                      {/* Content */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {/* Header */}
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          justifyContent: 'space-between',
+                          marginBottom: '12px',
+                          gap: '15px',
+                          flexWrap: 'wrap'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <span style={{ fontSize: '32px' }}>
+                              {getCategoryEmoji(submission.category)}
+                            </span>
+                            <div>
+                              <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>
+                                {submission.category.replace(/_/g, ' ')}
+                              </div>
+                              <div style={{ fontSize: '14px', color: '#666' }}>
+                                By {submission.user?.name || 'Anonymous'} •{' '}
+                                {new Date(submission.submittedAt).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </div>
                             </div>
                           </div>
-                          <Badge className={getStatusColor(submission.status)}>
+
+                          <span style={{
+                            ...statusBadgeStyle,
+                            padding: '6px 14px',
+                            borderRadius: '20px',
+                            fontSize: '13px',
+                            fontWeight: '700',
+                            whiteSpace: 'nowrap'
+                          }}>
                             {submission.status}
-                          </Badge>
+                          </span>
                         </div>
 
                         {/* Text Preview */}
                         {submission.textContent && (
-                          <p className="text-sm line-clamp-2 mb-2 text-muted-foreground">
+                          <p style={{
+                            fontSize: '15px',
+                            lineHeight: '1.6',
+                            color: '#555',
+                            marginBottom: '10px',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                          }}>
                             {submission.textContent}
                           </p>
                         )}
 
                         {/* Media Indicator */}
                         {submission.mediaUrl && (
-                          <div className="text-xs text-blue-600 mb-2">
-                            📎 Contains media attachment
+                          <div style={{
+                            display: 'inline-block',
+                            background: '#e3f2fd',
+                            color: '#1565c0',
+                            padding: '4px 12px',
+                            borderRadius: '4px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            marginBottom: '15px'
+                          }}>
+                            📎 Contains media
                           </div>
                         )}
-                      </div>
 
-                      {/* Actions */}
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedSubmission(submission)}
-                          className="gap-1"
-                        >
-                          <Eye className="h-3 w-3" />
-                          View
-                        </Button>
+                        {/* Actions */}
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '15px' }}>
+                          <button
+                            onClick={() => setSelectedSubmission(submission)}
+                            className="tool-button"
+                            style={{ fontSize: '14px' }}
+                          >
+                            👁️ View Full
+                          </button>
 
-                        {submission.status === 'PENDING' && (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => updateSubmissionStatus(submission.id, 'APPROVED')}
-                              disabled={actionLoading}
-                              className="gap-1 bg-green-600 hover:bg-green-700"
-                            >
-                              <CheckCircle className="h-3 w-3" />
-                              Approve
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => updateSubmissionStatus(submission.id, 'REJECTED')}
-                              disabled={actionLoading}
-                              className="gap-1"
-                            >
-                              <XCircle className="h-3 w-3" />
-                              Reject
-                            </Button>
-                          </>
-                        )}
+                          {submission.status === 'PENDING' && (
+                            <>
+                              <button
+                                onClick={() => updateSubmissionStatus(submission.id, 'APPROVED')}
+                                disabled={actionLoading}
+                                style={{
+                                  padding: '8px 16px',
+                                  background: '#27ae60',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  cursor: actionLoading ? 'not-allowed' : 'pointer',
+                                  fontWeight: '600',
+                                  fontSize: '14px',
+                                  opacity: actionLoading ? 0.5 : 1,
+                                  transition: 'all 0.3s'
+                                }}
+                                onMouseEnter={(e) => !actionLoading && (e.currentTarget.style.background = '#229954')}
+                                onMouseLeave={(e) => !actionLoading && (e.currentTarget.style.background = '#27ae60')}
+                              >
+                                ✅ Approve
+                              </button>
+                              <button
+                                onClick={() => updateSubmissionStatus(submission.id, 'REJECTED')}
+                                disabled={actionLoading}
+                                style={{
+                                  padding: '8px 16px',
+                                  background: '#e74c3c',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  cursor: actionLoading ? 'not-allowed' : 'pointer',
+                                  fontWeight: '600',
+                                  fontSize: '14px',
+                                  opacity: actionLoading ? 0.5 : 1,
+                                  transition: 'all 0.3s'
+                                }}
+                                onMouseEnter={(e) => !actionLoading && (e.currentTarget.style.background = '#c0392b')}
+                                onMouseLeave={(e) => !actionLoading && (e.currentTarget.style.background = '#e74c3c')}
+                              >
+                                ❌ Reject
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Review Modal */}
         {selectedSubmission && (
           <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
             onClick={() => setSelectedSubmission(null)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.75)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '20px',
+              cursor: 'pointer'
+            }}
           >
-            <Card
-              className="max-w-3xl w-full max-h-[85vh] overflow-y-auto"
+            <div
               onClick={(e) => e.stopPropagation()}
+              style={{
+                background: 'white',
+                borderRadius: '12px',
+                maxWidth: '900px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflow: 'auto',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+                cursor: 'default'
+              }}
             >
-              <CardHeader>
-                <div className="flex items-start justify-between">
+              {/* Modal Header */}
+              <div style={{
+                padding: '30px',
+                borderBottom: '2px solid #eee',
+                background: getCategoryColor(selectedSubmission.category),
+                color: 'white',
+                borderRadius: '12px 12px 0 0'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px' }}>
                   <div>
-                    <CardTitle className="flex items-center gap-2 mb-2">
-                      <span className="text-2xl">
-                        {getCategoryEmoji(selectedSubmission.category)}
-                      </span>
+                    <div style={{ fontSize: '48px', marginBottom: '10px' }}>
+                      {getCategoryEmoji(selectedSubmission.category)}
+                    </div>
+                    <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '8px', color: 'white' }}>
                       Review Submission
-                    </CardTitle>
-                    <CardDescription>
+                    </h2>
+                    <p style={{ fontSize: '15px', opacity: 0.95 }}>
                       Submitted by {selectedSubmission.user?.name || 'Anonymous'} on{' '}
-                      {new Date(selectedSubmission.submittedAt).toLocaleString()}
-                    </CardDescription>
+                      {new Date(selectedSubmission.submittedAt).toLocaleString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
                   </div>
-                  <Badge className={getStatusColor(selectedSubmission.status)}>
+
+                  <span style={{
+                    ...getStatusBadgeStyle(selectedSubmission.status),
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    fontWeight: '700',
+                    flexShrink: 0
+                  }}>
                     {selectedSubmission.status}
-                  </Badge>
+                  </span>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <h3 className="font-semibold mb-2 text-sm text-muted-foreground">CATEGORY</h3>
-                  <p className="text-lg">{selectedSubmission.category.replace(/_/g, ' ')}</p>
+              </div>
+
+              {/* Modal Content */}
+              <div style={{ padding: '30px' }}>
+                <div style={{ marginBottom: '25px' }}>
+                  <h3 style={{ fontSize: '14px', color: '#999', fontWeight: '700', marginBottom: '8px', letterSpacing: '1px' }}>
+                    CATEGORY
+                  </h3>
+                  <p style={{ fontSize: '20px', fontWeight: '600', color: '#2c3e50' }}>
+                    {selectedSubmission.category.replace(/_/g, ' ')}
+                  </p>
                 </div>
 
                 {selectedSubmission.textContent && (
-                  <div>
-                    <h3 className="font-semibold mb-2 text-sm text-muted-foreground">CONTENT</h3>
-                    <p className="whitespace-pre-wrap text-base leading-relaxed">
+                  <div style={{ marginBottom: '25px' }}>
+                    <h3 style={{ fontSize: '14px', color: '#999', fontWeight: '700', marginBottom: '12px', letterSpacing: '1px' }}>
+                      CONTENT
+                    </h3>
+                    <p style={{
+                      fontSize: '17px',
+                      lineHeight: '1.8',
+                      color: '#2c3e50',
+                      whiteSpace: 'pre-wrap',
+                      background: '#f8f9fa',
+                      padding: '20px',
+                      borderRadius: '8px',
+                      border: '2px solid #e0e0e0'
+                    }}>
                       {selectedSubmission.textContent}
                     </p>
                   </div>
                 )}
 
                 {selectedSubmission.mediaUrl && (
-                  <div>
-                    <h3 className="font-semibold mb-2 text-sm text-muted-foreground">MEDIA</h3>
+                  <div style={{ marginBottom: '25px' }}>
+                    <h3 style={{ fontSize: '14px', color: '#999', fontWeight: '700', marginBottom: '12px', letterSpacing: '1px' }}>
+                      MEDIA ATTACHMENT
+                    </h3>
                     <img
                       src={selectedSubmission.mediaUrl}
                       alt="Submission media"
-                      className="max-w-full rounded-lg border"
+                      style={{
+                        maxWidth: '100%',
+                        borderRadius: '8px',
+                        border: '2px solid #ddd',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}
                     />
                   </div>
                 )}
 
-                <div className="flex gap-3 pt-4 border-t">
+                {/* Modal Actions */}
+                <div style={{
+                  display: 'flex',
+                  gap: '12px',
+                  paddingTop: '25px',
+                  borderTop: '2px solid #eee',
+                  flexWrap: 'wrap'
+                }}>
                   {selectedSubmission.status === 'PENDING' && (
                     <>
-                      <Button
-                        onClick={() => {
-                          updateSubmissionStatus(selectedSubmission.id, 'APPROVED');
-                        }}
+                      <button
+                        onClick={() => updateSubmissionStatus(selectedSubmission.id, 'APPROVED')}
                         disabled={actionLoading}
-                        className="flex-1 gap-2"
-                      >
-                        <CheckCircle className="h-4 w-4" />
-                        Approve
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={() => {
-                          updateSubmissionStatus(selectedSubmission.id, 'REJECTED');
+                        className="btn-large"
+                        style={{
+                          flex: 1,
+                          background: '#27ae60',
+                          color: 'white',
+                          opacity: actionLoading ? 0.5 : 1,
+                          cursor: actionLoading ? 'not-allowed' : 'pointer'
                         }}
-                        disabled={actionLoading}
-                        className="flex-1 gap-2"
                       >
-                        <XCircle className="h-4 w-4" />
-                        Reject
-                      </Button>
+                        ✅ Approve Submission
+                      </button>
+                      <button
+                        onClick={() => updateSubmissionStatus(selectedSubmission.id, 'REJECTED')}
+                        disabled={actionLoading}
+                        className="btn-large"
+                        style={{
+                          flex: 1,
+                          background: '#e74c3c',
+                          color: 'white',
+                          opacity: actionLoading ? 0.5 : 1,
+                          cursor: actionLoading ? 'not-allowed' : 'pointer'
+                        }}
+                      >
+                        ❌ Reject Submission
+                      </button>
                     </>
                   )}
-                  <Button
-                    variant="outline"
+                  <button
                     onClick={() => setSelectedSubmission(null)}
-                    className="flex-1"
+                    className="btn-large"
+                    style={{
+                      flex: selectedSubmission.status === 'PENDING' ? 'none' : 1,
+                      background: '#f8f9fa',
+                      color: '#2c3e50',
+                      border: '2px solid #ddd'
+                    }}
                   >
                     Close
-                  </Button>
+                  </button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         )}
       </div>
