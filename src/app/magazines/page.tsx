@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Calendar, Heart, Volume2, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Calendar, RefreshCw } from 'lucide-react';
 
 interface Magazine {
   id: string;

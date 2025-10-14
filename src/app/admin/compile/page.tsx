@@ -423,7 +423,7 @@ export default function MagazineCompiler() {
                 📖 Selected for Edition ({selectedSubmissions.length})
               </h2>
               <p style={{ color: '#666', fontSize: '14px' }}>
-                Arrange these in the order they'll appear
+                Arrange these in the order they&apos;ll appear
               </p>
             </div>
 
