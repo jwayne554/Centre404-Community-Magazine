@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
   try {
     // TODO: Re-enable authentication when login system is implemented
     // const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id') || 'system';
+    const userId = request.headers.get('x-user-id') || null;
 
     // Temporarily allow all requests (authentication disabled)
     // if (userRole !== 'ADMIN') {
@@ -105,10 +105,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Log the action
+    // Log the action (userId can be null for anonymous admin actions)
     await prisma.auditLog.create({
       data: {
-        userId: userId!,
+        userId: userId,  // null is valid for anonymous actions
         action: 'CREATE_MAGAZINE',
         entityType: 'magazine',
         entityId: magazine.id,

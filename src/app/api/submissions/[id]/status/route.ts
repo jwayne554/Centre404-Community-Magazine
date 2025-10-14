@@ -16,7 +16,7 @@ export async function PATCH(
 
     // TODO: Re-enable authentication when login system is implemented
     // const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id') || 'system';
+    const userId = request.headers.get('x-user-id') || null;
 
     // Temporarily allow all requests (authentication disabled)
     // if (userRole !== 'ADMIN') {
@@ -28,6 +28,12 @@ export async function PATCH(
 
     const body = await request.json();
     const validatedData = updateStatusSchema.parse(body);
+
+    // Get current status before update
+    const currentSubmission = await prisma.submission.findUnique({
+      where: { id },
+      select: { status: true },
+    });
 
     // Update submission
     const submission = await prisma.submission.update({
@@ -49,15 +55,15 @@ export async function PATCH(
       },
     });
 
-    // Log the action
+    // Log the action (userId can be null for anonymous admin actions)
     await prisma.auditLog.create({
       data: {
-        userId: userId!,
+        userId: userId,  // null is valid for anonymous actions
         action: `UPDATE_SUBMISSION_STATUS_${validatedData.status}`,
         entityType: 'submission',
         entityId: id,
         details: JSON.stringify({
-          previousStatus: submission.status,
+          previousStatus: currentSubmission?.status || 'UNKNOWN',
           newStatus: validatedData.status,
           reviewNotes: validatedData.reviewNotes,
         }),

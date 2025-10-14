@@ -71,6 +71,11 @@ export default function AdminDashboard() {
         await fetchAllSubmissions();
         setSelectedSubmission(null);
         setSelectedIds(new Set());
+      } else {
+        // Handle non-OK responses
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Failed to update submission:', errorData);
+        alert(`Failed to update submission: ${errorData.error || response.statusText}`);
       }
     } catch (error) {
       console.error('Failed to update submission:', error);
