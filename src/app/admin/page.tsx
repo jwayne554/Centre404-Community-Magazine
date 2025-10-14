@@ -9,6 +9,7 @@ interface Submission {
   contentType: string;
   textContent: string | null;
   mediaUrl: string | null;
+  drawingData: string | null;
   status: string;
   submittedAt: string;
   user: {
@@ -781,19 +782,35 @@ export default function AdminDashboard() {
                           </p>
                         )}
 
-                        {/* Media Indicator */}
-                        {submission.mediaUrl && (
-                          <div style={{
-                            display: 'inline-block',
-                            background: '#e3f2fd',
-                            color: '#1565c0',
-                            padding: '4px 12px',
-                            borderRadius: '4px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            marginBottom: '15px'
-                          }}>
-                            📎 Contains media
+                        {/* Image/Drawing Preview */}
+                        {(submission.mediaUrl || submission.drawingData) && (
+                          <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+                            <img
+                              src={submission.mediaUrl || submission.drawingData || ''}
+                              alt="Preview"
+                              style={{
+                                maxWidth: '200px',
+                                maxHeight: '150px',
+                                borderRadius: '6px',
+                                border: '2px solid #ddd',
+                                objectFit: 'cover',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                              }}
+                            />
+                            {submission.drawingData && (
+                              <div style={{
+                                display: 'inline-block',
+                                background: '#f3e5f5',
+                                color: '#7b1fa2',
+                                padding: '4px 12px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                marginTop: '8px'
+                              }}>
+                                🎨 Drawing
+                              </div>
+                            )}
                           </div>
                         )}
 
@@ -968,7 +985,7 @@ export default function AdminDashboard() {
                 {selectedSubmission.mediaUrl && (
                   <div style={{ marginBottom: '25px' }}>
                     <h3 style={{ fontSize: '14px', color: '#999', fontWeight: '700', marginBottom: '12px', letterSpacing: '1px' }}>
-                      MEDIA ATTACHMENT
+                      {selectedSubmission.drawingData ? '🎨 DRAWING' : '📷 IMAGE ATTACHMENT'}
                     </h3>
                     <img
                       src={selectedSubmission.mediaUrl}
@@ -978,6 +995,25 @@ export default function AdminDashboard() {
                         borderRadius: '8px',
                         border: '2px solid #ddd',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}
+                    />
+                  </div>
+                )}
+
+                {selectedSubmission.drawingData && !selectedSubmission.mediaUrl && (
+                  <div style={{ marginBottom: '25px' }}>
+                    <h3 style={{ fontSize: '14px', color: '#999', fontWeight: '700', marginBottom: '12px', letterSpacing: '1px' }}>
+                      🎨 DRAWING
+                    </h3>
+                    <img
+                      src={selectedSubmission.drawingData}
+                      alt="User drawing"
+                      style={{
+                        maxWidth: '100%',
+                        borderRadius: '8px',
+                        border: '2px solid #ddd',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                        background: 'white'
                       }}
                     />
                   </div>
