@@ -14,16 +14,17 @@ export async function PATCH(
   try {
     const { id } = await params;
 
-    // Check if user is admin (from middleware)
-    const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id');
+    // TODO: Re-enable authentication when login system is implemented
+    // const userRole = request.headers.get('x-user-role');
+    const userId = request.headers.get('x-user-id') || 'system';
 
-    if (userRole !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 403 }
-      );
-    }
+    // Temporarily allow all requests (authentication disabled)
+    // if (userRole !== 'ADMIN') {
+    //   return NextResponse.json(
+    //     { error: 'Unauthorized - Admin access required' },
+    //     { status: 403 }
+    //   );
+    // }
 
     const body = await request.json();
     const validatedData = updateStatusSchema.parse(body);

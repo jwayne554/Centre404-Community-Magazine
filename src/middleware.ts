@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/auth';
 
 export function middleware(request: NextRequest) {
-  // Define protected routes
-  const protectedPaths = ['/admin', '/api/admin', '/api/submissions/create'];
-  const isProtectedPath = protectedPaths.some(path => 
+  // NOTE: Authentication temporarily disabled for admin access
+  // TODO: Implement proper authentication flow with login page
+
+  // Define protected routes (currently not enforced)
+  const protectedPaths = ['/api/admin'];
+  const isProtectedPath = protectedPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
   );
 
@@ -20,7 +23,7 @@ export function middleware(request: NextRequest) {
 
     try {
       const payload = AuthService.verifyAccessToken(token);
-      
+
       // Add user info to headers for API routes
       const requestHeaders = new Headers(request.headers);
       requestHeaders.set('x-user-id', payload.userId);
@@ -44,8 +47,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/admin/:path*',
     '/api/admin/:path*',
-    '/api/submissions/create',
   ],
 };
