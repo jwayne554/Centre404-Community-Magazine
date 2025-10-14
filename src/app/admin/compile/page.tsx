@@ -102,7 +102,8 @@ export default function MagazineCompiler() {
 
       if (response.ok) {
         alert(`Magazine ${publishNow ? 'published' : 'saved as draft'} successfully!`);
-        router.push('/magazines');
+        // Redirect to admin dashboard if draft (to view it), or magazines if published
+        router.push(publishNow ? '/magazines' : '/admin');
       } else {
         const error = await response.json();
         throw new Error(error.error || 'Failed to create magazine');

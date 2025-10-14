@@ -17,10 +17,23 @@ interface Submission {
   } | null;
 }
 
+interface Magazine {
+  id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  createdAt: string;
+  items: {
+    id: string;
+  }[];
+}
+
 export default function AdminDashboard() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
+  const [draftMagazines, setDraftMagazines] = useState<Magazine[]>([]);
   const [loading, setLoading] = useState(true);
+  const [magazinesLoading, setMagazinesLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'>('PENDING');
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -28,6 +41,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchAllSubmissions();
+    fetchDraftMagazines();
   }, []);
 
   useEffect(() => {
@@ -45,6 +59,68 @@ export default function AdminDashboard() {
       console.error('Failed to fetch submissions:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDraftMagazines = async () => {
+    setMagazinesLoading(true);
+    try {
+      const response = await fetch('/api/magazines');
+      const data = await response.json();
+      const drafts = data.filter((m: Magazine) => m.status === 'DRAFT');
+      setDraftMagazines(drafts);
+    } catch (error) {
+      console.error('Failed to fetch draft magazines:', error);
+    } finally {
+      setMagazinesLoading(false);
+    }
+  };
+
+  const publishDraft = async (id: string) => {
+    if (!confirm('Publish this magazine? It will be visible to all users.')) return;
+
+    setActionLoading(true);
+    try {
+      const response = await fetch(`/api/magazines/${id}`, {
+        method: 'PATCH',
+      });
+
+      if (response.ok) {
+        await fetchDraftMagazines();
+        alert('Magazine published successfully!');
+      } else {
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+        alert(`Failed to publish: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Failed to publish magazine:', error);
+      alert('Failed to publish magazine. Please try again.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const deleteDraft = async (id: string) => {
+    if (!confirm('Delete this draft? This action cannot be undone.')) return;
+
+    setActionLoading(true);
+    try {
+      const response = await fetch(`/api/magazines/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        await fetchDraftMagazines();
+        alert('Draft deleted successfully');
+      } else {
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+        alert(`Failed to delete: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Failed to delete draft:', error);
+      alert('Failed to delete draft. Please try again.');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -386,6 +462,117 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Draft Magazines Section */}
+        {draftMagazines.length > 0 && (
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '30px',
+            marginBottom: '30px',
+            boxShadow: 'var(--shadow)',
+            border: '3px solid #f39c12'
+          }}>
+            <div style={{ marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px' }}>
+                📝 Draft Magazines ({draftMagazines.length})
+              </h2>
+              <p style={{ color: '#666', fontSize: '15px' }}>
+                Magazines saved as drafts - publish them to make them visible to users
+              </p>
+            </div>
+
+            {magazinesLoading ? (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <div style={{ fontSize: '40px', marginBottom: '10px' }}>⏳</div>
+                <p style={{ color: '#666' }}>Loading drafts...</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                {draftMagazines.map((magazine) => (
+                  <div
+                    key={magazine.id}
+                    style={{
+                      border: '2px solid #f39c12',
+                      borderRadius: '8px',
+                      padding: '20px',
+                      background: '#fffbf5',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '20px',
+                      flexWrap: 'wrap'
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '5px' }}>
+                        📖 {magazine.title}
+                      </div>
+                      {magazine.description && (
+                        <p style={{ color: '#666', fontSize: '14px', marginBottom: '8px' }}>
+                          {magazine.description}
+                        </p>
+                      )}
+                      <div style={{ fontSize: '13px', color: '#999' }}>
+                        {magazine.items.length} submission{magazine.items.length !== 1 ? 's' : ''} •{' '}
+                        Created {new Date(magazine.createdAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      <button
+                        onClick={() => publishDraft(magazine.id)}
+                        disabled={actionLoading}
+                        style={{
+                          padding: '10px 20px',
+                          background: '#27ae60',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          cursor: actionLoading ? 'not-allowed' : 'pointer',
+                          opacity: actionLoading ? 0.5 : 1,
+                          transition: 'all 0.3s',
+                          whiteSpace: 'nowrap'
+                        }}
+                        onMouseEnter={(e) => !actionLoading && (e.currentTarget.style.background = '#229954')}
+                        onMouseLeave={(e) => !actionLoading && (e.currentTarget.style.background = '#27ae60')}
+                      >
+                        🌐 Publish Now
+                      </button>
+                      <button
+                        onClick={() => deleteDraft(magazine.id)}
+                        disabled={actionLoading}
+                        style={{
+                          padding: '10px 20px',
+                          background: '#e74c3c',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          cursor: actionLoading ? 'not-allowed' : 'pointer',
+                          opacity: actionLoading ? 0.5 : 1,
+                          transition: 'all 0.3s',
+                          whiteSpace: 'nowrap'
+                        }}
+                        onMouseEnter={(e) => !actionLoading && (e.currentTarget.style.background = '#c0392b')}
+                        onMouseLeave={(e) => !actionLoading && (e.currentTarget.style.background = '#e74c3c')}
+                      >
+                        🗑️ Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Action Bar */}
         <div style={{
