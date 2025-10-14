@@ -6,9 +6,10 @@ const createSubmissionSchema = z.object({
   category: z.enum(['MY_NEWS', 'SAYING_HELLO', 'MY_SAY']),
   contentType: z.enum(['TEXT', 'IMAGE', 'AUDIO', 'DRAWING', 'MIXED']),
   textContent: z.string().max(5000).optional(),
-  mediaUrl: z.string().url().optional(),
+  mediaUrl: z.string().optional(), // Allow both URLs and base64 data URIs
   accessibilityText: z.string().optional(),
   drawingData: z.any().optional(),
+  userName: z.string().optional(), // Optional display name for anonymous users
 });
 
 // GET /api/submissions - Get all submissions (with filters)
