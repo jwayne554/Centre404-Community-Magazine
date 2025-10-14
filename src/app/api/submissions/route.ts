@@ -5,11 +5,11 @@ import prisma from '@/lib/prisma';
 const createSubmissionSchema = z.object({
   category: z.enum(['MY_NEWS', 'SAYING_HELLO', 'MY_SAY']),
   contentType: z.enum(['TEXT', 'IMAGE', 'AUDIO', 'DRAWING', 'MIXED']),
-  textContent: z.string().max(5000).optional(),
-  mediaUrl: z.string().optional(), // Allow both URLs and base64 data URIs
-  accessibilityText: z.string().optional(),
-  drawingData: z.any().optional(),
-  userName: z.string().optional(), // Optional display name for anonymous users
+  textContent: z.string().max(5000).nullable().optional(),
+  mediaUrl: z.string().nullable().optional(), // Allow both URLs and base64 data URIs, and null
+  accessibilityText: z.string().nullable().optional(),
+  drawingData: z.any().nullable().optional(),
+  userName: z.string().nullable().optional(), // Optional display name for anonymous users
 });
 
 // GET /api/submissions - Get all submissions (with filters)
