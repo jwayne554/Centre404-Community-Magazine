@@ -16,17 +16,20 @@ const createSubmissionSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get('status') || 'APPROVED';
+    const status = searchParams.get('status'); // Don't default - let admin see all
     const category = searchParams.get('category');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = parseInt(searchParams.get('limit') || '100'); // Increased default limit
     const offset = parseInt(searchParams.get('offset') || '0');
 
     const where: {
       status?: string;
       category?: string;
-    } = {
-      status: status,
-    };
+    } = {};
+
+    // Only filter by status if explicitly provided
+    if (status) {
+      where.status = status;
+    }
 
     if (category) {
       where.category = category;
