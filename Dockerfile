@@ -26,6 +26,7 @@ COPY . .
 
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED 1
+ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"
 RUN npm run build
 
 # Production image, copy all the files and run next
