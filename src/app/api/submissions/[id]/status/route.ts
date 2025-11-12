@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
+import { requireModerator } from '@/lib/api-auth';
 
 const updateStatusSchema = z.object({
   status: z.enum(['PENDING', 'APPROVED', 'REJECTED', 'ARCHIVED']),
@@ -14,17 +15,13 @@ export async function PATCH(
   try {
     const { id } = await params;
 
-    // TODO: Re-enable authentication when login system is implemented
-    // const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id') || null;
+    // Require ADMIN or MODERATOR role
+    const authResult = await requireModerator(request);
+    if ('error' in authResult) {
+      return authResult.error;
+    }
 
-    // Temporarily allow all requests (authentication disabled)
-    // if (userRole !== 'ADMIN') {
-    //   return NextResponse.json(
-    //     { error: 'Unauthorized - Admin access required' },
-    //     { status: 403 }
-    //   );
-    // }
+    const { userId } = authResult.auth;
 
     const body = await request.json();
     const validatedData = updateStatusSchema.parse(body);

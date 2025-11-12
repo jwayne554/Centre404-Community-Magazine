@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
+import { requireAdmin } from '@/lib/api-auth';
 
 const createMagazineSchema = z.object({
   title: z.string().min(1).max(255),
@@ -60,17 +61,13 @@ export async function GET(request: NextRequest) {
 // POST /api/magazines - Create a new magazine
 export async function POST(request: NextRequest) {
   try {
-    // TODO: Re-enable authentication when login system is implemented
-    // const userRole = request.headers.get('x-user-role');
-    const userId = request.headers.get('x-user-id') || null;
+    // Require ADMIN role
+    const authResult = await requireAdmin(request);
+    if ('error' in authResult) {
+      return authResult.error;
+    }
 
-    // Temporarily allow all requests (authentication disabled)
-    // if (userRole !== 'ADMIN') {
-    //   return NextResponse.json(
-    //     { error: 'Unauthorized - Admin access required' },
-    //     { status: 403 }
-    //   );
-    // }
+    const { userId } = authResult.auth;
 
     const body = await request.json();
     const validatedData = createMagazineSchema.parse(body);

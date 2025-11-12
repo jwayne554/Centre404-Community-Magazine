@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { requireAdmin } from '@/lib/api-auth';
 
 // PATCH /api/magazines/[id] - Publish a draft magazine
 export async function PATCH(
@@ -8,7 +9,14 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const userId = request.headers.get('x-user-id') || null;
+
+    // Require ADMIN role
+    const authResult = await requireAdmin(request);
+    if ('error' in authResult) {
+      return authResult.error;
+    }
+
+    const { userId } = authResult.auth;
 
     // Update magazine to published
     const magazine = await prisma.magazine.update({
@@ -58,7 +66,14 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const userId = request.headers.get('x-user-id') || null;
+
+    // Require ADMIN role
+    const authResult = await requireAdmin(request);
+    if ('error' in authResult) {
+      return authResult.error;
+    }
+
+    const { userId } = authResult.auth;
 
     // Get magazine details before deletion
     const magazine = await prisma.magazine.findUnique({
