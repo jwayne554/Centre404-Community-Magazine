@@ -40,25 +40,26 @@ model Submission {
 
   // Content fields
   textContent       String?
-  mediaUrl          String?
-  mediaThumbnailUrl String?
+  mediaUrl          String?         // Legacy field - kept for backward compatibility
+  mediaThumbnailUrl String?         // Legacy field - kept for backward compatibility
   mediaMetadata     String          @default("{}")
   drawingData       String?         // Canvas drawing data
   accessibilityText String?         // Alt text or transcription
   userName          String?         // Optional display name for anonymous users
-  
+
   // Timestamps
   submittedAt       DateTime        @default(now())
   reviewedAt        DateTime?
   updatedAt         DateTime        @updatedAt
-  
+
   // Review fields
   reviewedById      String?
   reviewedBy        User?           @relation("ReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
   reviewNotes       String?
-  
+
   // Relations
   magazineItems     MagazineItem[]
+  media             Media[]         // New: Tracked media files (Task 1.5)
 
   // Existing indexes
   @@index([status, submittedAt])
@@ -155,6 +156,11 @@ model Media {
   mimeType          String
   metadata          String          @default("{}")
   uploadedAt        DateTime        @default(now())
-  
+
+  // Relations (Task 1.5 - Fix orphaned media)
+  submissionId      String?
+  submission        Submission?     @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
   @@index([type])
+  @@index([submissionId])           // Task 1.5: Track media ownership
 }
