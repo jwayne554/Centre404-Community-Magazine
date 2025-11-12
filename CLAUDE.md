@@ -292,10 +292,38 @@ The application is configured for deployment to Railway with Docker:
 - **Environment Variables**: Must configure DATABASE_URL, JWT secrets, TTS API key in Railway dashboard
 - See `DEPLOYMENT.md` and `RAILWAY_CHECKLIST.md` for details
 
+## Optimization Plan
+
+**⚠️ IMPORTANT**: A comprehensive architectural review was conducted on 2025-01-12 and identified **48 optimization opportunities** across security, performance, code quality, and UX.
+
+**See `OPTIMIZATION_PLAN.md` for complete details.**
+
+### Critical Issues Identified:
+1. 🚨 **Authentication DISABLED** on admin endpoints (anyone can approve/reject)
+2. 🚨 **JWT tokens exposed** to JavaScript (XSS vulnerability)
+3. 🚨 **No rate limiting** (open to abuse)
+4. 🚨 **Media model orphaned** (no database tracking, files accumulate)
+5. 🚨 **Using db:push** in production (no migration safety)
+
+### Expected Impact After Optimizations:
+- **Performance**: 40-60% faster queries, 50% smaller bundle
+- **Security**: D-grade → A+
+- **Code**: 48% reduction (1,700 lines eliminated)
+- **Memory**: 47-90% reduction depending on component
+
+### Implementation Status:
+- **Phase 1** (Critical Security): ⏳ Pending
+- **Phase 2** (Performance): ⏳ Pending
+- **Phase 3** (Code Quality): ⏳ Pending
+- **Phase 4** (Polish): ⏳ Pending
+
+**Current Focus**: Quick Wins (2 hours) or Phase 1, Task 1.1 (Authentication)
+
 ## Related Documentation
 
 - `README.md` - Project overview and setup
 - `TECHNICAL_ARCHITECTURE.md` - Detailed architecture documentation
 - `DEPLOYMENT.md` - Railway deployment guide
 - `RAILWAY_CHECKLIST.md` - Deployment checklist
+- `OPTIMIZATION_PLAN.md` - **Comprehensive optimization roadmap (START HERE for improvements)**
 - `IMPLEMENTATION_PLAN.md` - Feature roadmap

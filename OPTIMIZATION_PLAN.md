@@ -1,0 +1,1659 @@
+# Centre404 Community Magazine - Comprehensive Optimization Plan
+
+> **Date Created**: 2025-01-12
+> **Status**: Planning Phase
+> **Total Estimated Effort**: 24 developer days (5-6 weeks)
+> **Expected Impact**: 40-60% performance improvement, 48% code reduction, Security D → A+
+
+---
+
+## 📋 Table of Contents
+
+1. [Executive Summary](#executive-summary)
+2. [Phase 1: Critical Security Fixes](#phase-1-critical-security-fixes)
+3. [Phase 2: High-Impact Performance](#phase-2-high-impact-performance)
+4. [Phase 3: Code Quality Improvements](#phase-3-code-quality-improvements)
+5. [Phase 4: Polish & UX Enhancements](#phase-4-polish--ux-enhancements)
+6. [Quick Wins (2 Hours)](#quick-wins-2-hours)
+7. [Detailed Analysis References](#detailed-analysis-references)
+8. [Progress Tracking](#progress-tracking)
+
+---
+
+## Executive Summary
+
+After comprehensive architectural review, identified **48 optimization opportunities** across:
+- **Code Duplication**: 1,700 lines can be eliminated (48% reduction)
+- **Security**: 5 critical vulnerabilities requiring immediate attention
+- **Performance**: 10-50x faster queries possible with indexes
+- **Bundle Size**: 50% reduction possible (800KB → 400KB)
+- **Database**: Schema issues causing orphaned files and missing constraints
+
+### Critical Issues
+1. 🚨 **Authentication DISABLED** on admin endpoints
+2. 🚨 **JWT tokens exposed** to JavaScript (XSS risk)
+3. 🚨 **No rate limiting** (open to abuse)
+4. 🚨 **Media model orphaned** (no database tracking)
+5. 🚨 **Using db:push** in production (no migration safety)
+
+---
+
+## Phase 1: Critical Security Fixes
+**Timeline**: Week 1 | **Effort**: 5 days | **Priority**: 🔴 CRITICAL
+
+### Task 1.1: Enable Authentication on Admin Endpoints
+**Status**: ⏳ Pending
+**Effort**: 1 day
+**Priority**: 🔴 CRITICAL
+
+**Problem**:
+```typescript
+// File: src/app/api/submissions/[id]/status/route.ts:17-27
+// TODO: Re-enable authentication when login system is implemented
+// const userRole = request.headers.get('x-user-role');
+const userId = request.headers.get('x-user-id') || null;
+// Temporarily allow all requests (authentication disabled)
+```
+
+**Impact**: Anyone can approve/reject submissions, create/publish magazines
+
+**Solution**:
+1. Create reusable auth middleware: `src/lib/api-auth.ts`
+2. Update middleware matcher to protect all admin routes
+3. Re-enable authentication checks in:
+   - `/api/submissions/[id]/status/route.ts`
+   - `/api/magazines/route.ts`
+   - `/api/magazines/[id]/route.ts`
+
+**Files to Modify**:
+- [ ] Create `src/lib/api-auth.ts`
+- [ ] Update `src/middleware.ts`
+- [ ] Update `src/app/api/submissions/[id]/status/route.ts`
+- [ ] Update `src/app/api/magazines/route.ts`
+- [ ] Update `src/app/api/magazines/[id]/route.ts`
+
+**Implementation Code**:
+```typescript
+// src/lib/api-auth.ts
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function requireAuth(request: NextRequest, roles?: string[]) {
+  const userId = request.headers.get('x-user-id');
+  const userRole = request.headers.get('x-user-role');
+
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (roles && !roles.includes(userRole || '')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  return { userId, userRole };
+}
+```
+
+**Testing Checklist**:
+- [ ] Verify unauthenticated requests are rejected
+- [ ] Verify CONTRIBUTOR cannot approve submissions
+- [ ] Verify ADMIN can approve submissions
+- [ ] Verify MODERATOR can approve submissions
+
+---
+
+### Task 1.2: Fix JWT Token Storage (HTTP-only Cookies)
+**Status**: ⏳ Pending
+**Effort**: 0.5 day
+**Priority**: 🔴 CRITICAL
+
+**Problem**:
+```typescript
+// File: src/app/api/auth/login/route.ts:44-53
+return NextResponse.json({
+  user: { ... },
+  ...tokens, // accessToken and refreshToken in response body - XSS RISK!
+});
+```
+
+**Impact**: Tokens can be stolen via XSS attacks
+
+**Solution**:
+1. Return tokens in HTTP-only cookies instead of JSON
+2. Update middleware to read from cookies
+3. Create refresh token endpoint
+
+**Files to Modify**:
+- [ ] Update `src/app/api/auth/login/route.ts`
+- [ ] Update `src/app/api/auth/register/route.ts`
+- [ ] Create `src/app/api/auth/refresh/route.ts`
+- [ ] Update `src/middleware.ts`
+
+**Implementation Code**:
+```typescript
+// src/app/api/auth/login/route.ts
+const response = NextResponse.json({
+  user: { id: user.id, email: user.email, name: user.name, role: user.role },
+});
+
+response.cookies.set('accessToken', tokens.accessToken, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
+  maxAge: 15 * 60, // 15 minutes
+  path: '/',
+});
+
+response.cookies.set('refreshToken', tokens.refreshToken, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
+  maxAge: 7 * 24 * 60 * 60, // 7 days
+  path: '/api/auth',
+});
+
+return response;
+```
+
+**Testing Checklist**:
+- [ ] Verify tokens not visible in JavaScript (document.cookie)
+- [ ] Verify tokens sent with subsequent requests
+- [ ] Verify refresh token endpoint works
+- [ ] Verify logout clears cookies
+
+---
+
+### Task 1.3: Implement Rate Limiting
+**Status**: ⏳ Pending
+**Effort**: 1 day
+**Priority**: 🔴 CRITICAL
+
+**Problem**: No rate limiting on any endpoint
+
+**High-risk endpoints**:
+- `/api/auth/login` - Brute force attacks
+- `/api/auth/register` - Spam accounts
+- `/api/upload` - Resource exhaustion
+- `/api/submissions` - Spam submissions
+- `/api/tts/unrealspeech` - API quota abuse
+
+**Solution**: Use `@upstash/ratelimit` with Upstash Redis
+
+**Files to Create**:
+- [ ] Create `src/lib/rate-limit.ts`
+- [ ] Add rate limiting to all API routes
+
+**Implementation**:
+```bash
+npm install @upstash/ratelimit @upstash/redis
+```
+
+```typescript
+// src/lib/rate-limit.ts
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
+export const rateLimiters = {
+  auth: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, '1 m'), // 5 requests per minute
+  }),
+  upload: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, '1 h'), // 10 uploads per hour
+  }),
+  submission: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(20, '1 h'), // 20 submissions per hour
+  }),
+  tts: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(100, '1 d'), // 100 TTS per day
+  }),
+};
+```
+
+**Environment Variables Needed**:
+```bash
+UPSTASH_REDIS_REST_URL=your_url_here
+UPSTASH_REDIS_REST_TOKEN=your_token_here
+```
+
+**Testing Checklist**:
+- [ ] Verify rate limit triggers after threshold
+- [ ] Verify 429 status code returned
+- [ ] Verify reset time provided in response
+- [ ] Test with different IP addresses
+
+---
+
+### Task 1.4: Switch to Prisma Migrate
+**Status**: ⏳ Pending
+**Effort**: 1 day
+**Priority**: 🔴 CRITICAL
+
+**Problem**:
+- Using `db:push` which has no migration history
+- Dockerfile runs `prisma migrate deploy` but NO migrations exist
+- Deployments may fail silently
+
+**Solution**: Create baseline migration and switch to proper migrations
+
+**Steps**:
+1. [ ] Create baseline migration from current schema
+2. [ ] Update package.json scripts
+3. [ ] Update Dockerfile
+4. [ ] Commit migration files to git
+5. [ ] Update development workflow docs
+
+**Commands**:
+```bash
+# 1. Create baseline migration
+npx prisma migrate dev --name initial_schema
+
+# 2. Verify migration created
+ls prisma/migrations/
+
+# 3. Test deployment command
+npx prisma migrate deploy
+```
+
+**Files to Modify**:
+- [ ] Update `package.json` scripts
+- [ ] Update `Dockerfile`
+- [ ] Commit `prisma/migrations/` directory
+
+**package.json Changes**:
+```json
+{
+  "scripts": {
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:reset": "prisma migrate reset",
+    "db:push": "prisma db push"  // Keep for quick prototyping only
+  }
+}
+```
+
+**Testing Checklist**:
+- [ ] Verify baseline migration created
+- [ ] Verify `migrate deploy` works
+- [ ] Test rollback capability
+- [ ] Verify Railway deployment succeeds
+
+---
+
+### Task 1.5: Fix Media Model (Orphaned Relations)
+**Status**: ⏳ Pending
+**Effort**: 1 day
+**Priority**: 🔴 CRITICAL
+
+**Problem**: Media model has NO foreign key relationships
+- Upload route doesn't create Media records
+- Submissions store URLs directly in `mediaUrl` field
+- No way to track or clean up files
+- 156KB+ orphaned files already exist
+
+**Solution Option A** (Recommended): Link Media to Submission
+```prisma
+model Submission {
+  id                String    @id @default(uuid())
+  // Remove these:
+  // mediaUrl          String?
+  // mediaThumbnailUrl String?
+
+  // Add this:
+  media             Media[]   // One-to-many relationship
+}
+
+model Media {
+  id           String      @id @default(uuid())
+  submissionId String?
+  submission   Submission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  url          String
+  thumbnailUrl String?
+  type         String      // 'IMAGE', 'AUDIO', 'DRAWING'
+  size         Int
+  mimeType     String
+  uploadedAt   DateTime    @default(now())
+
+  @@index([submissionId])
+  @@index([type, uploadedAt])
+}
+```
+
+**Solution Option B**: Remove Media table entirely (Keep current approach)
+```sql
+DROP TABLE "Media";
+```
+
+**Files to Modify**:
+- [ ] Update `prisma/schema.prisma`
+- [ ] Create migration
+- [ ] Update `src/app/api/upload/route.ts` (if Option A)
+- [ ] Update `src/app/api/submissions/route.ts` (if Option A)
+
+**Recommendation**: Start with Option A, provides better tracking
+
+**Testing Checklist**:
+- [ ] Verify Media records created on upload
+- [ ] Verify cascade delete works
+- [ ] Test orphaned file cleanup script
+- [ ] Verify existing submissions still work
+
+---
+
+### Task 1.6: Implement File Upload Streaming
+**Status**: ⏳ Pending
+**Effort**: 0.5 day
+**Priority**: 🟠 HIGH
+
+**Problem**: Entire file loaded into memory before writing
+```typescript
+// src/app/api/upload/route.ts:37-38
+const bytes = await file.arrayBuffer();  // LOADS ENTIRE FILE INTO MEMORY
+const buffer = Buffer.from(bytes);
+```
+
+**Impact**: 10MB file × concurrent uploads = potential heap overflow
+
+**Solution**: Stream file to disk
+```typescript
+import { pipeline } from 'stream/promises';
+import { createWriteStream } from 'fs';
+import { fileTypeFromFile } from 'file-type';
+
+export async function POST(request: NextRequest) {
+  const formData = await request.formData();
+  const file = formData.get('file') as File;
+
+  if (!file) {
+    return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+  }
+
+  // Stream to disk without loading into memory
+  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+  await mkdir(uploadDir, { recursive: true });
+
+  const fileName = `${randomUUID()}${path.extname(file.name)}`;
+  const filePath = path.join(uploadDir, fileName);
+
+  const stream = file.stream();
+  const writeStream = createWriteStream(filePath);
+
+  await pipeline(
+    stream as unknown as NodeJS.ReadableStream,
+    writeStream
+  );
+
+  // Validate file AFTER writing (can delete if invalid)
+  const fileType = await fileTypeFromFile(filePath);
+  if (!fileType || !allowedTypes.includes(fileType.mime)) {
+    await unlink(filePath);
+    return NextResponse.json({ error: 'Invalid file type' }, { status: 400 });
+  }
+
+  return NextResponse.json({ url: `/uploads/${fileName}` });
+}
+```
+
+**Files to Modify**:
+- [ ] Update `src/app/api/upload/route.ts`
+
+**Dependencies Needed**:
+```bash
+npm install file-type
+```
+
+**Testing Checklist**:
+- [ ] Verify large files (8-10MB) upload without errors
+- [ ] Verify invalid files are rejected and deleted
+- [ ] Test concurrent uploads (5+ simultaneous)
+- [ ] Monitor memory usage during uploads
+
+---
+
+## Phase 2: High-Impact Performance
+**Timeline**: Week 2 | **Effort**: 6 days | **Priority**: 🟠 HIGH
+
+### Task 2.1: Add Database Indexes
+**Status**: ⏳ Pending
+**Effort**: 0.5 day
+**Priority**: 🟠 HIGH
+**Impact**: 10-50x faster queries
+
+**Changes Needed**:
+```prisma
+// prisma/schema.prisma
+
+model Submission {
+  // ... existing fields ...
+
+  // Existing indexes:
+  @@index([status, submittedAt])
+  @@index([userId])
+  @@index([category])
+
+  // ADD THESE:
+  @@index([status, category, submittedAt])  // Admin dashboard filtering
+  @@index([category, status])                // Magazine viewer
+  @@index([reviewedById, reviewedAt])        // Reviewer productivity
+  @@index([reviewedAt])                      // Analytics
+}
+
+model Magazine {
+  // ... existing fields ...
+
+  // Existing indexes:
+  @@index([status, publishedAt])
+
+  // REMOVE THIS (redundant with @unique):
+  // @@index([shareableSlug])
+
+  // ADD THESE:
+  @@index([isPublic, status, publishedAt])  // Public magazine filtering
+  @@index([viewCount])                       // Popular magazines
+}
+
+model MagazineItem {
+  // ... existing fields ...
+
+  @@unique([magazineId, submissionId])
+  @@index([magazineId, displayOrder])
+  @@index([submissionId])  // ADD: Reverse lookups
+}
+
+model AuditLog {
+  // ... existing fields ...
+
+  @@index([entityType, entityId])
+  @@index([userId, timestamp])
+
+  // ADD THESE:
+  @@index([action, timestamp])      // Action-based queries
+  @@index([archived, timestamp])    // Retention queries
+  @@index([expiresAt])              // Cleanup queries
+}
+```
+
+**Steps**:
+1. [ ] Update `prisma/schema.prisma`
+2. [ ] Run `npx prisma migrate dev --name add_performance_indexes`
+3. [ ] Test query performance before/after
+4. [ ] Deploy to Railway
+
+**Expected Results**:
+- Admin dashboard: 50ms → 5ms (10x faster)
+- Magazine list: 100ms → 30ms (3x faster)
+- Reviewer reports: 200ms → 5ms (40x faster)
+
+**Testing Queries**:
+```sql
+-- Test admin dashboard query
+EXPLAIN ANALYZE
+SELECT * FROM "Submission"
+WHERE status = 'PENDING'
+  AND category = 'MY_NEWS'
+ORDER BY "submittedAt" DESC
+LIMIT 20;
+
+-- Should use index: Submission_status_category_submittedAt_idx
+```
+
+---
+
+### Task 2.2: Fix Lucide Icons (Tree-shaking)
+**Status**: ⏳ Pending
+**Effort**: 1 hour
+**Priority**: 🟠 HIGH
+**Impact**: Save 400KB from bundle
+
+**Problem**:
+```typescript
+// CURRENT (BAD) - Bundles ALL icons (~400KB)
+import { Palette, Eraser, RotateCcw, Download, Pen } from 'lucide-react';
+```
+
+**Solution Option A**: Individual imports (tree-shakable)
+```typescript
+import Palette from 'lucide-react/dist/esm/icons/palette';
+import Eraser from 'lucide-react/dist/esm/icons/eraser';
+import RotateCcw from 'lucide-react/dist/esm/icons/rotate-ccw';
+import Download from 'lucide-react/dist/esm/icons/download';
+import Pen from 'lucide-react/dist/esm/icons/pen';
+```
+
+**Solution Option B**: Use emojis (0KB, instant)
+```typescript
+const icons = {
+  palette: '🎨',
+  eraser: '🧹',
+  rotate: '↻',
+  download: '⬇️',
+  pen: '✏️'
+};
+```
+
+**Files to Modify**:
+- [ ] `src/components/forms/drawing-canvas.tsx`
+
+**Testing Checklist**:
+- [ ] Verify icons display correctly
+- [ ] Check bundle size with `npm run build`
+- [ ] Test in production build
+
+---
+
+### Task 2.3: Remove Axios (Use Native Fetch)
+**Status**: ⏳ Pending
+**Effort**: 1 hour
+**Priority**: 🟠 HIGH
+**Impact**: Save 13KB
+
+**Problem**: Axios adds 13KB when native fetch API is already used elsewhere
+
+**Files to Modify**:
+- [ ] `src/services/tts.service.ts` (only place axios is used)
+
+**Current Code**:
+```typescript
+// If using axios anywhere
+import axios from 'axios';
+const response = await axios.get(url);
+```
+
+**Replace With**:
+```typescript
+const response = await fetch(url);
+const data = await response.json();
+```
+
+**Then Remove**:
+```bash
+npm uninstall axios
+```
+
+**Testing Checklist**:
+- [ ] Verify TTS service still works
+- [ ] Test error handling
+- [ ] Check bundle size reduction
+
+---
+
+### Task 2.4: Implement Dynamic Imports
+**Status**: ⏳ Pending
+**Effort**: 2 hours
+**Priority**: 🟠 HIGH
+**Impact**: 40-50% reduction in initial bundle
+
+**Components to Split**:
+
+**Drawing Canvas**:
+```typescript
+// src/components/forms/simple-submission-form.tsx
+const DrawingCanvas = dynamic(() => import('@/components/forms/drawing-canvas'), {
+  loading: () => <p>Loading canvas...</p>,
+  ssr: false
+});
+```
+
+**Magazine Compiler**:
+```typescript
+// src/app/admin/page.tsx
+const MagazineCompiler = dynamic(() => import('@/components/admin/magazine-compiler'), {
+  loading: () => <LoadingSkeleton />,
+  ssr: false
+});
+```
+
+**TTS Service** (when needed):
+```typescript
+const TTSService = dynamic(() => import('@/services/tts.service'), {
+  ssr: false
+});
+```
+
+**Files to Modify**:
+- [ ] `src/components/forms/simple-submission-form.tsx`
+- [ ] `src/app/admin/page.tsx`
+- [ ] Any other large components
+
+**Testing Checklist**:
+- [ ] Verify components load correctly
+- [ ] Check Network tab for lazy loading
+- [ ] Measure initial bundle size reduction
+- [ ] Test loading states
+
+---
+
+### Task 2.5: Consolidate Form Components
+**Status**: ⏳ Pending
+**Effort**: 2 days
+**Priority**: 🟠 HIGH
+**Impact**: Eliminate 500+ lines, improve maintainability
+
+**Problem**: 3 separate form components with 90%+ code duplication
+- `simple-submission-form.tsx` (856 lines)
+- `enhanced-submission-form.tsx` (391 lines)
+- `submission-form.tsx` (277 lines)
+
+**Duplicated Code**:
+- Categories array (100% identical)
+- Symbols array (100% identical)
+- Validation schemas (90% similar)
+- Speech recognition logic (95% identical)
+- Symbol board rendering (100% identical)
+
+**Solution**: Create single consolidated component with shared sub-components
+
+**New Structure**:
+```
+src/
+├── components/
+│   ├── forms/
+│   │   └── submission-form.tsx       // Consolidated
+│   └── shared/
+│       ├── category-selector.tsx     // Extracted
+│       ├── symbol-board.tsx          // Extracted
+│       └── speech-input.tsx          // Extracted
+├── constants/
+│   └── categories.ts                 // Shared constants
+└── schemas/
+    └── submission.schema.ts          // Shared validation
+```
+
+**Implementation Steps**:
+1. [ ] Create `src/constants/categories.ts`
+2. [ ] Create `src/schemas/submission.schema.ts`
+3. [ ] Create `src/components/shared/category-selector.tsx`
+4. [ ] Create `src/components/shared/symbol-board.tsx`
+5. [ ] Create `src/components/shared/speech-input.tsx`
+6. [ ] Consolidate into `src/components/forms/submission-form.tsx`
+7. [ ] Update imports in pages
+8. [ ] Remove old components
+9. [ ] Test all functionality
+
+**Expected Result**: ~900 lines → ~400 lines (56% reduction)
+
+**Testing Checklist**:
+- [ ] Verify all form features work
+- [ ] Test audio recording
+- [ ] Test drawing canvas
+- [ ] Test image upload
+- [ ] Test speech recognition
+- [ ] Test symbol board
+- [ ] Verify submission succeeds
+- [ ] Check UX feedback (toast, banner, auto-scroll)
+
+---
+
+### Task 2.6: Consolidate Magazine Viewers
+**Status**: ⏳ Pending
+**Effort**: 1.5 days
+**Priority**: 🟠 HIGH
+**Impact**: Eliminate 300+ lines
+
+**Problem**: 2 magazine viewers with 75% duplication
+- `magazine-viewer.tsx` (294 lines)
+- `simple-magazine-viewer.tsx` (382 lines)
+
+**Duplicated Code**:
+- getCategoryInfo function (90% identical)
+- TTS/Audio playback logic (95% identical)
+- Submission fetching (90% identical)
+- Filter bar implementation (85% similar)
+
+**Solution**: Single component with theme prop
+
+**New Structure**:
+```
+src/
+├── components/
+│   └── magazine/
+│       └── magazine-viewer.tsx       // Consolidated with theme prop
+├── hooks/
+│   ├── useMagazineData.ts           // Data fetching
+│   └── useTTSPlayback.ts            // Audio playback
+└── utils/
+    └── category-helpers.ts           // getCategoryInfo
+```
+
+**Implementation Steps**:
+1. [ ] Create `src/hooks/useMagazineData.ts`
+2. [ ] Create `src/hooks/useTTSPlayback.ts`
+3. [ ] Move getCategoryInfo to `src/utils/category-helpers.ts`
+4. [ ] Consolidate into single `magazine-viewer.tsx` with theme prop
+5. [ ] Update imports in pages
+6. [ ] Remove old components
+7. [ ] Test both themes
+
+**Expected Result**: ~676 lines → ~350 lines (48% reduction)
+
+**Testing Checklist**:
+- [ ] Verify both themes work
+- [ ] Test TTS playback
+- [ ] Test audio playback
+- [ ] Test category filtering
+- [ ] Verify submissions load
+- [ ] Check styling differences
+
+---
+
+### Task 2.7: Add useMemo to Admin Dashboard
+**Status**: ⏳ Pending
+**Effort**: 2 hours
+**Priority**: 🟠 HIGH
+**Impact**: Fix 100ms lag with 50+ submissions
+
+**Problem**: Expensive recalculations on every render
+
+**File**: `src/app/admin/page.tsx`
+
+**Changes Needed**:
+
+**1. Memoize filtered submissions** (lines 128-134):
+```typescript
+// BEFORE
+const filterSubmissions = () => {
+  if (activeTab === 'ALL') {
+    setSubmissions(allSubmissions);
+  } else {
+    setSubmissions(allSubmissions.filter(s => s.status === activeTab));
+  }
+};
+
+// AFTER
+const filteredSubmissions = useMemo(() => {
+  if (activeTab === 'ALL') return allSubmissions;
+  return allSubmissions.filter(s => s.status === activeTab);
+}, [activeTab, allSubmissions]);
+```
+
+**2. Memoize stats object** (lines 230-235):
+```typescript
+// BEFORE
+const stats = {
+  total: allSubmissions.length,
+  pending: allSubmissions.filter(s => s.status === 'PENDING').length,
+  approved: allSubmissions.filter(s => s.status === 'APPROVED').length,
+  rejected: allSubmissions.filter(s => s.status === 'REJECTED').length,
+};
+
+// AFTER
+const stats = useMemo(() => ({
+  total: allSubmissions.length,
+  pending: allSubmissions.filter(s => s.status === 'PENDING').length,
+  approved: allSubmissions.filter(s => s.status === 'APPROVED').length,
+  rejected: allSubmissions.filter(s => s.status === 'REJECTED').length,
+}), [allSubmissions]);
+```
+
+**3. Memoize bulk action handlers**:
+```typescript
+const handleBulkAction = useCallback((action: 'APPROVE' | 'REJECT') => {
+  // ... implementation
+}, [selectedSubmissions, allSubmissions]);
+```
+
+**Files to Modify**:
+- [ ] `src/app/admin/page.tsx`
+
+**Testing Checklist**:
+- [ ] Verify tab switching is instant
+- [ ] Test with 50+ submissions
+- [ ] Check stats update correctly
+- [ ] Verify bulk actions work
+
+---
+
+### Task 2.8: Replace Inline Handlers with CSS
+**Status**: ⏳ Pending
+**Effort**: 1 hour
+**Priority**: 🟠 HIGH
+**Impact**: Remove 200+ event handlers
+
+**Problem**: Inline hover handlers create memory overhead
+
+**Example** (repeated 40+ times):
+```typescript
+onMouseEnter={(e) => {
+  e.currentTarget.style.transform = 'translateY(-5px)';
+  e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.15)';
+}}
+onMouseLeave={(e) => {
+  e.currentTarget.style.transform = 'translateY(0)';
+  e.currentTarget.style.boxShadow = 'var(--shadow)';
+}}
+```
+
+**Solution**: Use CSS transitions
+```css
+.stat-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+```
+
+**Files to Modify**:
+- [ ] `src/app/admin/page.tsx`
+- [ ] Move inline styles to CSS classes
+- [ ] Add to `globals.css` or component-specific CSS module
+
+**Testing Checklist**:
+- [ ] Verify hover effects work
+- [ ] Test in high contrast mode
+- [ ] Check memory usage improvement
+
+---
+
+## Phase 3: Code Quality Improvements
+**Timeline**: Week 3-4 | **Effort**: 8 days | **Priority**: 🟡 MEDIUM
+
+### Task 3.1: Convert to Database Enums
+**Status**: ⏳ Pending
+**Effort**: 2 days
+**Priority**: 🟡 MEDIUM
+**Impact**: Type safety, prevents data corruption
+
+**Problem**: String fields for enum values allow typos
+```prisma
+model User {
+  role String @default("CONTRIBUTOR")  // Can insert 'CONTRIBUTER' (typo)
+}
+```
+
+**Solution**: Create proper enums
+```prisma
+enum UserRole {
+  ADMIN
+  MODERATOR
+  CONTRIBUTOR
+}
+
+enum SubmissionCategory {
+  MY_NEWS
+  SAYING_HELLO
+  MY_SAY
+}
+
+enum SubmissionContentType {
+  TEXT
+  IMAGE
+  AUDIO
+  DRAWING
+  MIXED
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+enum MagazineStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model User {
+  role UserRole @default(CONTRIBUTOR)  // Type-safe
+}
+```
+
+**Implementation Steps**:
+1. [ ] Validate all existing data matches enum values
+2. [ ] Update `prisma/schema.prisma`
+3. [ ] Create migration
+4. [ ] Update TypeScript types
+5. [ ] Update Zod validation schemas
+6. [ ] Update API routes to use enums
+7. [ ] Test thoroughly
+
+**Validation Queries** (run BEFORE migration):
+```sql
+-- Check for invalid status values
+SELECT DISTINCT status FROM "Submission"
+WHERE status NOT IN ('PENDING', 'APPROVED', 'REJECTED', 'ARCHIVED');
+
+-- Check for invalid categories
+SELECT DISTINCT category FROM "Submission"
+WHERE category NOT IN ('MY_NEWS', 'SAYING_HELLO', 'MY_SAY');
+
+-- Check for invalid roles
+SELECT DISTINCT role FROM "User"
+WHERE role NOT IN ('ADMIN', 'MODERATOR', 'CONTRIBUTOR');
+```
+
+**Testing Checklist**:
+- [ ] Verify migration succeeds
+- [ ] Test API endpoints still work
+- [ ] Verify type checking catches errors
+- [ ] Test creating submissions with enums
+
+---
+
+### Task 3.2: Create Shared Utilities
+**Status**: ⏳ Pending
+**Effort**: 1 day
+**Priority**: 🟡 MEDIUM
+
+**Files to Create**:
+
+**1. Category Helpers**:
+```typescript
+// src/utils/category-helpers.ts
+export const CATEGORIES = {
+  MY_NEWS: { emoji: '📰', label: 'My News', color: '#e67e22' },
+  SAYING_HELLO: { emoji: '👋', label: 'Saying Hello', color: '#27ae60' },
+  MY_SAY: { emoji: '💬', label: 'My Say', color: '#8e44ad' },
+  default: { emoji: '📝', label: 'Story', color: '#7f8c8d' }
+} as const;
+
+export function getCategoryInfo(category: string) {
+  return CATEGORIES[category as keyof typeof CATEGORIES] || CATEGORIES.default;
+}
+```
+
+**2. Date Helpers**:
+```typescript
+// src/utils/date-helpers.ts
+export function formatRelativeDate(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  return date.toLocaleDateString();
+}
+```
+
+**3. Audit Logger**:
+```typescript
+// src/lib/audit-logger.ts
+import prisma from './prisma';
+import { NextRequest } from 'next/server';
+
+export async function createAuditLog(params: {
+  userId: string | null;
+  action: string;
+  entityType: string;
+  entityId: string;
+  details?: Record<string, unknown>;
+  request?: NextRequest;
+}) {
+  await prisma.auditLog.create({
+    data: {
+      userId: params.userId,
+      action: params.action,
+      entityType: params.entityType,
+      entityId: params.entityId,
+      details: JSON.stringify(params.details || {}),
+      ipAddress: params.request?.headers.get('x-forwarded-for') || null,
+      userAgent: params.request?.headers.get('user-agent') || null,
+      timestamp: new Date(),
+    },
+  });
+}
+```
+
+**Files to Modify**:
+- [ ] Replace getCategoryInfo usage in all components
+- [ ] Replace date formatting in all components
+- [ ] Replace audit logging in all API routes
+
+**Testing Checklist**:
+- [ ] Verify getCategoryInfo returns correct data
+- [ ] Test date formatting edge cases
+- [ ] Verify audit logs created correctly
+
+---
+
+### Task 3.3: Extract Custom Hooks
+**Status**: ⏳ Pending
+**Effort**: 1 day
+**Priority**: 🟡 MEDIUM
+
+**Hooks to Create**:
+
+**1. useAsyncAction**:
+```typescript
+// src/hooks/useAsyncAction.ts
+import { useState, useCallback } from 'react';
+
+export function useAsyncAction<T extends unknown[], R>(
+  action: (...args: T) => Promise<R>
+) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const execute = useCallback(
+    async (...args: T) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await action(...args);
+        return result;
+      } catch (err) {
+        setError(err as Error);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [action]
+  );
+
+  return { execute, loading, error };
+}
+```
+
+**2. useMagazineData** (from consolidation task)
+
+**3. useTTSPlayback** (from consolidation task)
+
+**Files to Modify**:
+- [ ] Replace loading state patterns with useAsyncAction
+- [ ] Update components to use new hooks
+
+---
+
+### Task 3.4: Implement Layered Architecture
+**Status**: ⏳ Pending
+**Effort**: 5 days
+**Priority**: 🟡 MEDIUM
+**Impact**: Better testability, maintainability
+
+**Current**: "Fat routes" - all logic in route handlers
+
+**Target Structure**:
+```
+src/
+├── app/api/              # Thin route handlers
+├── services/             # Business logic
+│   ├── submission.service.ts
+│   ├── magazine.service.ts
+│   ├── auth.service.ts
+│   └── upload.service.ts
+├── repositories/         # Database access
+│   ├── submission.repository.ts
+│   ├── magazine.repository.ts
+│   └── user.repository.ts
+└── lib/
+    ├── api-auth.ts
+    ├── api-errors.ts
+    ├── api-logger.ts
+    └── audit-logger.ts
+```
+
+**Example Refactor**:
+
+**Before**:
+```typescript
+// src/app/api/submissions/route.ts (all in one)
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+  const validatedData = createSubmissionSchema.parse(body);
+  const userId = request.headers.get('x-user-id') || null;
+
+  const submission = await prisma.submission.create({ ... });
+
+  if (userId) {
+    await prisma.auditLog.create({ ... });
+  }
+
+  return NextResponse.json(submission, { status: 201 });
+}
+```
+
+**After (Layered)**:
+```typescript
+// src/app/api/submissions/route.ts (thin)
+export async function POST(request: NextRequest) {
+  const auth = await requireAuth(request);
+  const body = await request.json();
+  const validatedData = createSubmissionSchema.parse(body);
+
+  const submission = await SubmissionService.create(validatedData, auth.userId);
+
+  return NextResponse.json(submission, { status: 201 });
+}
+
+// src/services/submission.service.ts (business logic)
+export class SubmissionService {
+  static async create(data: CreateSubmissionInput, userId: string | null) {
+    return prisma.$transaction(async (tx) => {
+      const submission = await SubmissionRepository.create(tx, {
+        ...data,
+        userId,
+        status: 'PENDING',
+      });
+
+      if (userId) {
+        await AuditLogger.log(tx, {
+          userId,
+          action: 'CREATE_SUBMISSION',
+          entityType: 'submission',
+          entityId: submission.id,
+        });
+      }
+
+      return submission;
+    });
+  }
+}
+
+// src/repositories/submission.repository.ts (data access)
+export class SubmissionRepository {
+  static async create(tx: Prisma.TransactionClient, data: CreateSubmissionData) {
+    return tx.submission.create({
+      data,
+      include: { user: { select: { id: true, name: true } } },
+    });
+  }
+}
+```
+
+**Benefits**:
+- Easier testing (mock services)
+- Reusable business logic
+- Clear separation of concerns
+- Better error handling boundaries
+
+**Implementation Steps**:
+1. [ ] Create service layer structure
+2. [ ] Create repository layer structure
+3. [ ] Refactor submission endpoints
+4. [ ] Refactor magazine endpoints
+5. [ ] Refactor auth endpoints
+6. [ ] Update tests
+
+---
+
+### Task 3.5: Add Response Caching
+**Status**: ⏳ Pending
+**Effort**: 1 day
+**Priority**: 🟡 MEDIUM
+**Impact**: 99% reduction in DB queries for public pages
+
+**Solution**: Use Next.js 15 `unstable_cache`
+```typescript
+import { unstable_cache } from 'next/cache';
+import { revalidateTag } from 'next/cache';
+
+// Cached magazine list
+export const GET = unstable_cache(
+  async (request: NextRequest) => {
+    const magazines = await prisma.magazine.findMany({
+      where: { isPublic: true, status: 'PUBLISHED' },
+      include: { /* ... */ },
+    });
+    return NextResponse.json(magazines);
+  },
+  ['public-magazines'],
+  {
+    revalidate: 300, // 5 minutes
+    tags: ['magazines'],
+  }
+);
+
+// Invalidate on POST/PATCH/DELETE
+export async function POST(request: NextRequest) {
+  // ... create magazine
+  revalidateTag('magazines');
+  return NextResponse.json(magazine);
+}
+```
+
+**Files to Modify**:
+- [ ] `src/app/api/magazines/route.ts`
+- [ ] Add cache invalidation on create/update/delete
+
+**Testing Checklist**:
+- [ ] Verify cache works (second request is instant)
+- [ ] Verify cache invalidates on changes
+- [ ] Test revalidation time
+
+---
+
+### Task 3.6: Standardize Error Handling
+**Status**: ⏳ Pending
+**Effort**: 1 day
+**Priority**: 🟡 MEDIUM
+
+**Problem**: 3 different error response formats across routes
+
+**Solution**: Centralized error handler
+```typescript
+// src/lib/api-errors.ts
+export function handleApiError(error: unknown): NextResponse {
+  if (error instanceof z.ZodError) {
+    return NextResponse.json(
+      { error: 'Validation failed', details: error.issues },
+      { status: 400 }
+    );
+  }
+
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === 'P2002') {
+      return NextResponse.json({ error: 'Duplicate entry' }, { status: 409 });
+    }
+    if (error.code === 'P2025') {
+      return NextResponse.json({ error: 'Record not found' }, { status: 404 });
+    }
+  }
+
+  console.error('[API Error]', error);
+
+  const message = error instanceof Error ? error.message : 'Internal server error';
+  return NextResponse.json(
+    {
+      error: process.env.NODE_ENV === 'development' ? message : 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { details: error })
+    },
+    { status: 500 }
+  );
+}
+```
+
+**Files to Modify**:
+- [ ] Replace try/catch blocks in all API routes
+- [ ] Use standardized error handler
+
+---
+
+## Phase 4: Polish & UX Enhancements
+**Timeline**: Week 5 | **Effort**: 5 days | **Priority**: 🟢 NICE TO HAVE
+
+### Task 4.1: Add Skeleton Screens
+**Status**: ⏳ Pending
+**Effort**: 1 day
+**Priority**: 🟢 LOW
+
+**Current**: Generic spinner
+**Better**: Content-aware skeleton screens
+
+```typescript
+function SubmissionSkeleton() {
+  return (
+    <div className="animate-pulse space-y-4">
+      <div className="h-32 bg-gray-200 rounded-lg">
+        <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+        <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+      </div>
+    </div>
+  );
+}
+
+// Use it
+{loading ? (
+  <>
+    <SubmissionSkeleton />
+    <SubmissionSkeleton />
+    <SubmissionSkeleton />
+  </>
+) : /* actual content */}
+```
+
+**Files to Create**:
+- [ ] `src/components/skeletons/submission-skeleton.tsx`
+- [ ] `src/components/skeletons/magazine-skeleton.tsx`
+
+**Files to Modify**:
+- [ ] `src/app/admin/page.tsx`
+- [ ] `src/components/magazine/magazine-viewer.tsx`
+
+---
+
+### Task 4.2: Implement Optimistic Updates
+**Status**: ⏳ Pending
+**Effort**: 1 day
+**Priority**: 🟢 LOW
+
+**Current**: Wait for server response
+**Better**: Update UI immediately, rollback on error
+
+```typescript
+const updateSubmissionStatus = async (id: string, status: string) => {
+  // Optimistically update UI
+  const previousSubmissions = allSubmissions;
+  setAllSubmissions(prev =>
+    prev.map(s => s.id === id ? { ...s, status } : s)
+  );
+
+  try {
+    const response = await fetch(/* ... */);
+    if (!response.ok) {
+      // Rollback on error
+      setAllSubmissions(previousSubmissions);
+      alert('Failed to update');
+    }
+  } catch (error) {
+    // Rollback on error
+    setAllSubmissions(previousSubmissions);
+  }
+};
+```
+
+**Files to Modify**:
+- [ ] `src/app/admin/page.tsx`
+
+---
+
+### Task 4.3: Use Next.js Image Component
+**Status**: ⏳ Pending
+**Effort**: 1 day
+**Priority**: 🟢 LOW
+
+**Current**: Native `<img>` tags
+**Better**: Next.js Image component with automatic optimization
+
+```typescript
+// BEFORE
+<img src={url} alt="Preview" style={{ maxWidth: '200px' }} />
+
+// AFTER
+import Image from 'next/image';
+<Image
+  src={url}
+  alt="Preview"
+  width={200}
+  height={150}
+  placeholder="blur"
+  loading="lazy"
+/>
+```
+
+**Files to Modify**:
+- [ ] `src/app/admin/page.tsx` (preview cards)
+- [ ] `src/components/magazine/magazine-viewer.tsx`
+- [ ] `src/components/forms/simple-submission-form.tsx`
+
+---
+
+### Task 4.4: Add Memory Cleanup
+**Status**: ⏳ Pending
+**Effort**: 0.5 day
+**Priority**: 🟢 LOW
+
+**Problem**: Blob URLs never revoked, causing memory leaks
+
+**Solution**:
+```typescript
+useEffect(() => {
+  return () => {
+    // Cleanup blob URLs
+    if (audioUrl && audioUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(audioUrl);
+    }
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    if (drawingData && drawingData.startsWith('blob:')) {
+      URL.revokeObjectURL(drawingData);
+    }
+
+    // Stop audio
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio = null;
+    }
+  };
+}, [audioUrl, imagePreview, drawingData]);
+```
+
+**Files to Modify**:
+- [ ] `src/components/forms/simple-submission-form.tsx`
+- [ ] `src/components/forms/drawing-canvas.tsx`
+- [ ] `src/components/magazine/magazine-viewer.tsx`
+
+---
+
+### Task 4.5: Add Comprehensive Logging
+**Status**: ⏳ Pending
+**Effort**: 1 day
+**Priority**: 🟢 LOW
+
+**Solution**:
+```typescript
+// src/lib/api-logger.ts
+export function logRequest(request: NextRequest, userId?: string) {
+  const log = {
+    timestamp: new Date().toISOString(),
+    method: request.method,
+    url: request.url,
+    userId: userId || 'anonymous',
+    ip: request.headers.get('x-forwarded-for') || 'unknown',
+    userAgent: request.headers.get('user-agent'),
+  };
+
+  console.log('[API Request]', JSON.stringify(log));
+}
+```
+
+**Files to Modify**:
+- [ ] Add to all API route handlers
+
+---
+
+### Task 4.6: Implement File Cleanup Jobs
+**Status**: ⏳ Pending
+**Effort**: 0.5 day
+**Priority**: 🟢 LOW
+
+**Solution**: Cleanup script for orphaned files
+```typescript
+// src/scripts/cleanup-uploads.ts
+import { readdir, stat, unlink } from 'fs/promises';
+import path from 'path';
+import prisma from '@/lib/prisma';
+
+async function cleanupOrphanedUploads() {
+  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+  const files = await readdir(uploadDir);
+
+  // Get all referenced URLs from database
+  const referencedUrls = new Set(
+    (await prisma.submission.findMany({
+      select: { mediaUrl: true },
+    })).map(s => s.mediaUrl?.replace('/uploads/', ''))
+  );
+
+  // Delete unreferenced files older than 24 hours
+  for (const file of files) {
+    if (!referencedUrls.has(file)) {
+      const filePath = path.join(uploadDir, file);
+      const stats = await stat(filePath);
+
+      if (Date.now() - stats.mtimeMs > 24 * 60 * 60 * 1000) {
+        await unlink(filePath);
+        console.log(`Deleted orphaned file: ${file}`);
+      }
+    }
+  }
+}
+```
+
+**Files to Create**:
+- [ ] `src/scripts/cleanup-uploads.ts`
+- [ ] Add cron job or scheduled task
+
+---
+
+## Quick Wins (2 Hours)
+**These can be done immediately for instant impact**
+
+### ✅ Quick Win 1: Fix Lucide Icons
+**Effort**: 15 minutes | **Impact**: Save 400KB
+
+```bash
+# In drawing-canvas.tsx, change:
+import { Palette } from 'lucide-react';
+# To:
+const Palette = '🎨';
+```
+
+### ✅ Quick Win 2: Remove Axios
+**Effort**: 15 minutes | **Impact**: Save 13KB
+
+```bash
+npm uninstall axios
+# Replace in tts.service.ts with native fetch
+```
+
+### ✅ Quick Win 3: Remove Unused Zustand
+**Effort**: 5 minutes | **Impact**: Save 3KB
+
+```bash
+npm uninstall zustand
+```
+
+### ✅ Quick Win 4: Add Database Indexes
+**Effort**: 30 minutes | **Impact**: 10-50x faster queries
+
+Copy the index definitions from Task 2.1 into `schema.prisma` and run migration.
+
+### ✅ Quick Win 5: Add useMemo to Admin Dashboard
+**Effort**: 30 minutes | **Impact**: Fix 100ms lag
+
+Copy the useMemo examples from Task 2.7 into admin page.
+
+### ✅ Quick Win 6: Replace Inline Hover Handlers
+**Effort**: 30 minutes | **Impact**: Remove 200+ handlers
+
+Move all `onMouseEnter/Leave` handlers to CSS (Task 2.8).
+
+**Total Quick Wins Impact**:
+- Bundle: -416KB
+- Memory: -200 event handlers
+- Queries: 10-50x faster
+- UX: No lag on filters
+
+---
+
+## Detailed Analysis References
+
+### Code Duplication Analysis
+- **Form Components**: 90%+ duplication across 3 files (1,524 total lines)
+- **Magazine Viewers**: 75% duplication across 2 files (676 total lines)
+- **Utility Functions**: getCategoryInfo exists in 4+ locations
+- **Validation Schemas**: Duplicated across forms and API routes
+- **Styling**: 300+ lines of inline styles could be extracted
+
+### API Architecture Issues
+- **Authentication**: Completely disabled (CRITICAL)
+- **Error Handling**: 3 different response formats
+- **File Uploads**: Two-request pattern, memory issues
+- **Audit Logging**: Duplicated code in 5+ routes
+- **Caching**: No caching strategy (all requests hit DB)
+- **Pagination**: Default of 100 is too high
+
+### Database Schema Issues
+- **Media Model**: Completely orphaned, no foreign keys
+- **Missing Indexes**: 9 recommended indexes for performance
+- **String Enums**: Should be database enums for type safety
+- **Missing Constraints**: No content validation checks
+- **Migration Strategy**: Using db:push instead of migrate
+
+### Frontend Performance Issues
+- **Bundle Size**: 800KB initial (should be ~400KB)
+- **Lucide Icons**: Bundles all 1,000+ icons (only uses 10)
+- **No Code Splitting**: Large components loaded upfront
+- **Memory Leaks**: Blob URLs never revoked
+- **Missing Memoization**: Admin dashboard recalculates on every render
+- **200+ Inline Handlers**: Should use CSS
+
+### Security Vulnerabilities
+- **Authentication Disabled**: Anyone can access admin functions
+- **JWT in JSON**: Tokens exposed to JavaScript (XSS risk)
+- **No Rate Limiting**: Open to brute force and spam
+- **File Upload Risks**: No virus scanning, path traversal possible
+- **Input Sanitization**: Missing in several places
+
+---
+
+## Progress Tracking
+
+### Overall Progress
+- [ ] Phase 1: Critical Security (0/6 tasks)
+- [ ] Phase 2: High-Impact Performance (0/8 tasks)
+- [ ] Phase 3: Code Quality (0/6 tasks)
+- [ ] Phase 4: Polish & UX (0/6 tasks)
+- [ ] Quick Wins (0/6 tasks)
+
+### Completion Status
+**Phase 1**: ⬜⬜⬜⬜⬜⬜ 0% (0/6)
+**Phase 2**: ⬜⬜⬜⬜⬜⬜⬜⬜ 0% (0/8)
+**Phase 3**: ⬜⬜⬜⬜⬜⬜ 0% (0/6)
+**Phase 4**: ⬜⬜⬜⬜⬜⬜ 0% (0/6)
+**Quick Wins**: ⬜⬜⬜⬜⬜⬜ 0% (0/6)
+**TOTAL**: 0% (0/32 tasks)
+
+### Current Focus
+**Next Task**: Quick Wins (recommended) OR Phase 1, Task 1.1 (Authentication)
+
+---
+
+## Metrics to Track
+
+### Performance Metrics
+- [ ] Database query times (before/after indexes)
+- [ ] Initial bundle size (before/after optimizations)
+- [ ] Page load time (Lighthouse)
+- [ ] Memory usage over 1 hour session
+- [ ] Admin dashboard filter response time
+
+### Code Quality Metrics
+- [ ] Lines of code (target: -48%)
+- [ ] Duplicated code (target: 0)
+- [ ] Test coverage (target: >80%)
+- [ ] TypeScript errors (target: 0)
+
+### Security Metrics
+- [ ] Security score (target: A+)
+- [ ] OWASP vulnerabilities (target: 0 critical)
+- [ ] Rate limit effectiveness
+- [ ] Failed authentication attempts
+
+---
+
+## Notes
+
+### When Starting a Task:
+1. Update task status to "🏗️ In Progress"
+2. Create a feature branch: `git checkout -b task-X.X-description`
+3. Follow implementation steps
+4. Run testing checklist
+5. Update progress tracking
+6. Create PR for review
+
+### When Completing a Task:
+1. Update task status to "✅ Completed"
+2. Update progress bars
+3. Commit with descriptive message
+4. Merge to main
+5. Update CLAUDE.md if needed
+
+### Dependencies Between Tasks:
+- Task 1.4 (Migrate) should be done before database schema changes
+- Task 1.5 (Media Model) affects Task 1.6 (File Uploads)
+- Task 2.5 (Consolidate Forms) depends on Task 3.2 (Shared Utilities)
+- Phase 3 tasks can be done in parallel
+
+---
+
+**Last Updated**: 2025-01-12
+**Document Version**: 1.0
+**Status**: Ready for Implementation
