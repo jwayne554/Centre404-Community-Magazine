@@ -321,7 +321,7 @@ The application is configured for deployment to Railway with Docker:
   - ⏭️ Inline Hover Handlers (deferred to Phase 2)
   - **Impact Achieved**: -416KB bundle, -11 packages, 10-50x faster queries, no admin lag
 
-- **Phase 1** (Critical Security): 🚧 **IN PROGRESS** (5/6 done - 2025-01-12) - 83% Complete
+- **Phase 1** (Critical Security): ✅ **COMPLETED** (6/6 done - 2025-01-12) - 100% Complete 🎉
   - ✅ Task 1.1: Authentication on Admin Endpoints
     - Created `src/lib/api-auth.ts` with requireAuth(), requireAdmin(), requireModerator()
     - Protected all admin endpoints (submissions status, magazines CRUD)
@@ -345,15 +345,21 @@ The application is configured for deployment to Railway with Docker:
     - Created migration: `20251112112242_add_media_submission_relations`
     - Created cleanup script: `scripts/cleanup-orphaned-media.ts`
     - Foundation for proper file tracking (future: update upload API)
-  - ⏳ Task 1.6: File Upload Streaming (pending)
-  - **Security Impact**: D-grade → B+ (5 critical vulnerabilities fixed, database integrity improved)
+  - ✅ Task 1.6: File Upload Streaming (Memory Safety)
+    - Replaced arrayBuffer() with streaming using pipeline() + createWriteStream()
+    - Content-based MIME validation using file-type@21.1.0
+    - Auto-cleanup of invalid files, size verification, error handling
+    - Constant memory usage regardless of file size (10MB safe)
+  - **Security Impact**: D-grade → A- (All 6 critical vulnerabilities fixed!)
+  - **🎯 MILESTONE**: Production-ready security baseline achieved
 
 - **Phase 2** (Performance): ⏳ Pending
 - **Phase 3** (Code Quality): ⏳ Pending
 - **Phase 4** (Polish): ⏳ Pending
 
-**Current Focus**: Phase 1, Task 1.6 (File Upload Streaming)
-**Overall Progress**: 31% complete (10/32 tasks)
+**🎯 Phase 1 COMPLETE**: All Critical Security Fixes Done!
+**Current Focus**: Ready for Phase 2 (High-Impact Performance)
+**Overall Progress**: 34% complete (11/32 tasks)
 
 ## Related Documentation
 
