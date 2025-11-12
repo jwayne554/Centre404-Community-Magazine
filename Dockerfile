@@ -1,5 +1,5 @@
-# Use Node 18 Alpine for smaller image
-FROM node:18-alpine AS base
+# Use Node 22 Alpine for smaller image and latest features
+FROM node:22-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -12,7 +12,7 @@ COPY prisma ./prisma/
 
 # Install dependencies with clean slate
 RUN rm -rf node_modules .next
-RUN npm install --legacy-peer-deps
+RUN npm install
 
 # Generate Prisma Client for PostgreSQL
 ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"
