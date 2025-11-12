@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit } from '@/lib/rate-limit';
 
 const UNREAL_SPEECH_API_URL = 'https://api.v8.unrealspeech.com';
 
 export async function POST(request: NextRequest) {
+  // Apply rate limiting - 100 TTS requests per day
+  const rateLimitResponse = await rateLimit.tts(request);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const { text, voiceId = 'Scarlett', speed = 0, pitch = 1.0 } = await request.json();
 

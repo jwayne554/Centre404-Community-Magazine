@@ -2,8 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+  // Apply rate limiting - 10 uploads per hour
+  const rateLimitResponse = await rateLimit.upload(request);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;

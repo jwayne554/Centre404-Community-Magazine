@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
+import { rateLimit } from '@/lib/rate-limit';
 
 const createSubmissionSchema = z.object({
   category: z.enum(['MY_NEWS', 'SAYING_HELLO', 'MY_SAY']),
@@ -72,6 +73,12 @@ export async function GET(request: NextRequest) {
 
 // POST /api/submissions - Create a new submission
 export async function POST(request: NextRequest) {
+  // Apply rate limiting - 20 submissions per hour
+  const rateLimitResponse = await rateLimit.submission(request);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   console.log('POST /api/submissions - Request received');
   try {
     const body = await request.json();
