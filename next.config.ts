@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Remove standalone mode to ensure API routes work
+  output: 'standalone',
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb'
@@ -14,10 +14,6 @@ const nextConfig: NextConfig = {
   typescript: {
     // Type check during builds
     ignoreBuildErrors: false,
-  },
-  // Skip static error page generation
-  generateBuildId: async () => {
-    return 'build-' + Date.now();
   },
 };
 

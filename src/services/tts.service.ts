@@ -291,15 +291,17 @@ export function isPlaying(): boolean {
 function addToCache(key: string, audioUrl: string): void {
   // If cache is full, remove oldest entry
   if (audioCache.size >= MAX_CACHE_SIZE) {
-    const firstKey = audioCache.keys().next().value;
-    const firstUrl = audioCache.get(firstKey);
+    const firstKey = audioCache.keys().next().value as string;
+    if (firstKey) {
+      const firstUrl = audioCache.get(firstKey);
 
-    // Revoke blob URL if it exists
-    if (firstUrl && firstUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(firstUrl);
+      // Revoke blob URL if it exists
+      if (firstUrl && firstUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(firstUrl);
+      }
+
+      audioCache.delete(firstKey);
     }
-
-    audioCache.delete(firstKey);
   }
 
   audioCache.set(key, audioUrl);
