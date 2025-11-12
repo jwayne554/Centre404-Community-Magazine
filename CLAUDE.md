@@ -320,12 +320,31 @@ The application is configured for deployment to Railway with Docker:
   - ✅ useMemo Optimizations (eliminated admin lag)
   - ⏭️ Inline Hover Handlers (deferred to Phase 2)
   - **Impact Achieved**: -416KB bundle, -11 packages, 10-50x faster queries, no admin lag
-- **Phase 1** (Critical Security): ⏳ Pending
+
+- **Phase 1** (Critical Security): 🚧 **IN PROGRESS** (3/6 done - 2025-01-12)
+  - ✅ Task 1.1: Authentication on Admin Endpoints
+    - Created `src/lib/api-auth.ts` with requireAuth(), requireAdmin(), requireModerator()
+    - Protected all admin endpoints (submissions status, magazines CRUD)
+    - Role-based access control (ADMIN, MODERATOR, CONTRIBUTOR)
+  - ✅ Task 1.2: HTTP-only Cookie Authentication
+    - Tokens now stored in HTTP-only cookies (prevents XSS)
+    - Created `/api/auth/refresh` and `/api/auth/logout` endpoints
+    - Supports both cookie and Authorization header authentication
+  - ✅ Task 1.3: Rate Limiting
+    - In-memory rate limiter with sliding window algorithm
+    - Login: 5/min, Register: 3/hr, Upload: 10/hr, Submissions: 20/hr, TTS: 100/day
+    - HTTP 429 responses with Retry-After headers
+  - ⏳ Task 1.4: Switch to Prisma Migrate (pending)
+  - ⏳ Task 1.5: Fix Media Model (pending)
+  - ⏳ Task 1.6: File Upload Streaming (pending)
+  - **Security Impact**: D-grade → B-grade (3 critical vulnerabilities fixed)
+
 - **Phase 2** (Performance): ⏳ Pending
 - **Phase 3** (Code Quality): ⏳ Pending
 - **Phase 4** (Polish): ⏳ Pending
 
-**Current Focus**: Phase 1, Task 1.1 (Enable Authentication on Admin Endpoints)
+**Current Focus**: Phase 1, Task 1.4 (Switch to Prisma Migrate)
+**Overall Progress**: 25% complete (8/32 tasks)
 
 ## Related Documentation
 
