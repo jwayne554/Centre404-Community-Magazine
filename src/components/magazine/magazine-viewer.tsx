@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Share2, Volume2, Filter, RefreshCw } from 'lucide-react';
+import { Heart, Share2, Volume2, Filter, RefreshCw, Loader2 } from 'lucide-react';
+import { playAudio, stopAudio, isPlaying } from '@/services/tts.service';
 
 interface Submission {
   id: string;
@@ -25,6 +26,7 @@ export function MagazineViewer() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [currentlySpeaking, setCurrentlySpeaking] = useState<string | null>(null);
+  const [loadingAudio, setLoadingAudio] = useState<string | null>(null);
 
   useEffect(() => {
     fetchApprovedSubmissions();
@@ -58,28 +60,45 @@ export function MagazineViewer() {
     }
   };
 
-  const speakText = (text: string, id: string) => {
-    if ('speechSynthesis' in window) {
-      // Stop any current speech
-      window.speechSynthesis.cancel();
-      
-      if (currentlySpeaking === id) {
-        setCurrentlySpeaking(null);
-        return;
-      }
+  const speakText = async (text: string, id: string) => {
+    // If this submission is already speaking, stop it
+    if (currentlySpeaking === id) {
+      stopAudio();
+      setCurrentlySpeaking(null);
+      setLoadingAudio(null);
+      return;
+    }
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
-      
-      utterance.onend = () => {
-        setCurrentlySpeaking(null);
-      };
-      
-      setCurrentlySpeaking(id);
-      window.speechSynthesis.speak(utterance);
-    } else {
-      alert('Text-to-speech is not supported in your browser.');
+    // Stop any other audio that might be playing
+    if (isPlaying()) {
+      stopAudio();
+      setCurrentlySpeaking(null);
+    }
+
+    // Show loading state
+    setLoadingAudio(id);
+
+    try {
+      // Play audio using the TTS service (with automatic fallback)
+      await playAudio(text, { voiceId: 'Scarlett', speed: 0, pitch: 1.0 }, {
+        onStart: () => {
+          setLoadingAudio(null);
+          setCurrentlySpeaking(id);
+        },
+        onEnd: () => {
+          setCurrentlySpeaking(null);
+          setLoadingAudio(null);
+        },
+        onError: (error) => {
+          console.error('[TTS] Playback error:', error);
+          setCurrentlySpeaking(null);
+          setLoadingAudio(null);
+        },
+      });
+    } catch (error) {
+      console.error('[TTS] Failed to play audio:', error);
+      setLoadingAudio(null);
+      setCurrentlySpeaking(null);
     }
   };
 
@@ -243,9 +262,14 @@ export function MagazineViewer() {
                         size="sm"
                         className={`flex-1 ${isCurrentlySpeaking ? 'bg-primary/10' : ''}`}
                         onClick={() => speakText(submission.textContent!, submission.id)}
+                        disabled={loadingAudio === submission.id}
                       >
-                        <Volume2 className={`mr-1 h-4 w-4 ${isCurrentlySpeaking ? 'animate-pulse' : ''}`} />
-                        {isCurrentlySpeaking ? 'Stop' : 'Listen'}
+                        {loadingAudio === submission.id ? (
+                          <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Volume2 className={`mr-1 h-4 w-4 ${isCurrentlySpeaking ? 'animate-pulse' : ''}`} />
+                        )}
+                        {loadingAudio === submission.id ? 'Loading...' : isCurrentlySpeaking ? 'Stop' : 'Listen'}
                       </Button>
                     )}
                     

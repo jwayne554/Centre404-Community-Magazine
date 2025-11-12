@@ -782,34 +782,63 @@ export default function AdminDashboard() {
                           </p>
                         )}
 
-                        {/* Image/Drawing Preview */}
+                        {/* Media Preview (Image/Drawing/Audio) */}
                         {(submission.mediaUrl || submission.drawingData) && (
                           <div style={{ marginTop: '10px', marginBottom: '10px' }}>
-                            <img
-                              src={submission.mediaUrl || submission.drawingData || ''}
-                              alt="Preview"
-                              style={{
-                                maxWidth: '200px',
-                                maxHeight: '150px',
-                                borderRadius: '6px',
-                                border: '2px solid #ddd',
-                                objectFit: 'cover',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                              }}
-                            />
-                            {submission.drawingData && (
-                              <div style={{
-                                display: 'inline-block',
-                                background: '#f3e5f5',
-                                color: '#7b1fa2',
-                                padding: '4px 12px',
-                                borderRadius: '4px',
-                                fontSize: '12px',
-                                fontWeight: '600',
-                                marginTop: '8px'
-                              }}>
-                                🎨 Drawing
-                              </div>
+                            {submission.contentType === 'AUDIO' || submission.mediaUrl?.match(/\.(mp3|wav|webm|ogg|m4a)$/i) ? (
+                              <>
+                                <audio
+                                  controls
+                                  src={submission.mediaUrl || ''}
+                                  style={{
+                                    width: '100%',
+                                    maxWidth: '400px',
+                                    borderRadius: '6px',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                  }}
+                                />
+                                <div style={{
+                                  display: 'inline-block',
+                                  background: '#e3f2fd',
+                                  color: '#1565c0',
+                                  padding: '4px 12px',
+                                  borderRadius: '4px',
+                                  fontSize: '12px',
+                                  fontWeight: '600',
+                                  marginTop: '8px'
+                                }}>
+                                  🎵 Audio Recording
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <img
+                                  src={submission.mediaUrl || submission.drawingData || ''}
+                                  alt="Preview"
+                                  style={{
+                                    maxWidth: '200px',
+                                    maxHeight: '150px',
+                                    borderRadius: '6px',
+                                    border: '2px solid #ddd',
+                                    objectFit: 'cover',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                  }}
+                                />
+                                {submission.drawingData && (
+                                  <div style={{
+                                    display: 'inline-block',
+                                    background: '#f3e5f5',
+                                    color: '#7b1fa2',
+                                    padding: '4px 12px',
+                                    borderRadius: '4px',
+                                    fontSize: '12px',
+                                    fontWeight: '600',
+                                    marginTop: '8px'
+                                  }}>
+                                    🎨 Drawing
+                                  </div>
+                                )}
+                              </>
                             )}
                           </div>
                         )}
@@ -984,19 +1013,38 @@ export default function AdminDashboard() {
 
                 {selectedSubmission.mediaUrl && (
                   <div style={{ marginBottom: '25px' }}>
-                    <h3 style={{ fontSize: '14px', color: '#999', fontWeight: '700', marginBottom: '12px', letterSpacing: '1px' }}>
-                      {selectedSubmission.drawingData ? '🎨 DRAWING' : '📷 IMAGE ATTACHMENT'}
-                    </h3>
-                    <img
-                      src={selectedSubmission.mediaUrl}
-                      alt="Submission media"
-                      style={{
-                        maxWidth: '100%',
-                        borderRadius: '8px',
-                        border: '2px solid #ddd',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                      }}
-                    />
+                    {selectedSubmission.contentType === 'AUDIO' || selectedSubmission.mediaUrl?.match(/\.(mp3|wav|webm|ogg|m4a)$/i) ? (
+                      <>
+                        <h3 style={{ fontSize: '14px', color: '#999', fontWeight: '700', marginBottom: '12px', letterSpacing: '1px' }}>
+                          🎵 AUDIO RECORDING
+                        </h3>
+                        <audio
+                          controls
+                          src={selectedSubmission.mediaUrl}
+                          style={{
+                            width: '100%',
+                            borderRadius: '8px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                          }}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <h3 style={{ fontSize: '14px', color: '#999', fontWeight: '700', marginBottom: '12px', letterSpacing: '1px' }}>
+                          {selectedSubmission.drawingData ? '🎨 DRAWING' : '📷 IMAGE ATTACHMENT'}
+                        </h3>
+                        <img
+                          src={selectedSubmission.mediaUrl}
+                          alt="Submission media"
+                          style={{
+                            maxWidth: '100%',
+                            borderRadius: '8px',
+                            border: '2px solid #ddd',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                          }}
+                        />
+                      </>
+                    )}
                   </div>
                 )}
 

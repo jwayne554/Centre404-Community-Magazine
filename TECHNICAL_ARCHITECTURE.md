@@ -1,440 +1,723 @@
 # Technical Architecture Document
+## Centre404 Community Magazine Platform
 
-## System Architecture Diagram
+**Last Updated:** 2025-11-11
+**Version:** 1.0 (Production-Ready)
+**Stack:** Next.js 15 + React 19 + PostgreSQL + Prisma
+
+---
+
+## System Overview
+
+The Centre404 Community Magazine is a full-stack Next.js application built with accessibility as the primary design principle. The application uses a modern monolithic architecture with Server-Side Rendering (SSR), API Routes, and PostgreSQL for data persistence.
+
+### Architecture Diagram
 
 ```mermaid
 graph TB
     subgraph "Client Layer"
-        UI[React/Next.js App]
-        PWA[PWA Service Worker]
+        Browser[Web Browser]
+        Screen[Screen Reader]
     end
-    
-    subgraph "API Gateway"
-        NGINX[Nginx Reverse Proxy]
+
+    subgraph "Next.js Application"
+        SSR[Server Components]
+        CSR[Client Components]
+        API[API Routes]
+        Middleware[Auth Middleware]
     end
-    
-    subgraph "Application Layer"
-        API[Node.js/Express API]
-        AUTH[Auth Service]
-        MEDIA[Media Service]
-        PDF[PDF Generator]
-    end
-    
+
     subgraph "Data Layer"
+        Prisma[Prisma ORM]
         PG[(PostgreSQL)]
-        REDIS[(Redis Cache)]
-        S3[Cloud Storage]
     end
-    
+
     subgraph "External Services"
-        CLOUD[Cloudinary CDN]
-        EMAIL[Email Service]
-        ANALYTICS[Analytics]
+        Cloudinary[Cloudinary CDN]
+        Email[SMTP Email]
     end
-    
-    UI --> NGINX
-    PWA --> NGINX
-    NGINX --> API
-    API --> AUTH
-    API --> MEDIA
-    API --> PDF
-    API --> PG
-    API --> REDIS
-    MEDIA --> S3
-    MEDIA --> CLOUD
-    API --> EMAIL
-    UI --> ANALYTICS
+
+    Browser --> SSR
+    Browser --> CSR
+    Browser --> API
+    Screen --> Browser
+    API --> Middleware
+    Middleware --> Prisma
+    Prisma --> PG
+    API --> Cloudinary
+    API --> Email
 ```
 
-## Detailed Component Specifications
+---
 
-### 1. Frontend Architecture
+## Technology Stack
 
-```typescript
-// Folder Structure
-/src
-  /components
-    /common        # Shared components
-    /forms         # Form components with validation
-    /layouts       # Page layouts
-    /accessibility # A11y specific components
-  /features
-    /submission    # Content submission feature
-    /magazine      # Magazine viewer feature
-    /admin         # Admin dashboard
-  /hooks           # Custom React hooks
-  /services        # API communication layer
-  /stores          # State management
-  /utils           # Helper functions
-  /styles          # Global styles and themes
+### Frontend
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | 19.1.0 | UI library with React Server Components |
+| Next.js | 15.5.2 | Full-stack framework (App Router) |
+| TypeScript | 5.x | Type safety and developer experience |
+| Tailwind CSS | 4.x | Utility-first styling with accessibility |
+| Radix UI | Latest | Accessible component primitives |
+| Zustand | 5.0.8 | Client-side state management |
+| React Hook Form | 7.62.0 | Form handling and validation |
+| Zod | 4.1.5 | Schema validation |
+| Lucide React | Latest | Icon library |
+
+### Backend
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Next.js API Routes | 15.5.2 | RESTful API endpoints |
+| Prisma | 6.15.0 | Type-safe ORM |
+| PostgreSQL | 17+ | Primary database |
+| bcrypt | Latest | Password hashing |
+| jsonwebtoken | Latest | JWT authentication |
+
+### Infrastructure
+
+| Service | Purpose |
+|---------|---------|
+| Railway | Hosting platform with PostgreSQL |
+| Cloudinary | Media storage and CDN (optional) |
+| GitHub Actions | CI/CD pipeline |
+| Docker | Containerization |
+
+---
+
+## Application Architecture
+
+### Directory Structure
+
+```
+src/
+├── app/                          # Next.js App Router
+│   ├── layout.tsx                # Root layout with providers
+│   ├── page.tsx                  # Landing page
+│   ├── error.tsx                 # Error boundary
+│   ├── global-error.tsx          # Global error handler
+│   ├── not-found.tsx             # 404 page
+│   ├── globals.css               # Global styles
+│   │
+│   ├── admin/                    # Admin dashboard pages
+│   │   ├── page.tsx              # Dashboard home
+│   │   ├── submissions/          # Submission review
+│   │   ├── magazines/            # Magazine management
+│   │   └── layout.tsx            # Admin layout
+│   │
+│   ├── magazines/                # Public magazine viewing
+│   │   ├── page.tsx              # Magazine list
+│   │   └── [id]/                 # Individual magazine
+│   │
+│   └── api/                      # API endpoints
+│       ├── auth/                 # Authentication
+│       │   ├── login/
+│       │   ├── register/
+│       │   ├── logout/
+│       │   └── refresh/
+│       ├── submissions/          # CRUD operations
+│       │   ├── route.ts          # List/Create
+│       │   ├── [id]/             # Read/Update/Delete
+│       │   └── [id]/approve/     # Admin actions
+│       ├── magazines/            # Magazine operations
+│       │   ├── route.ts
+│       │   ├── [id]/
+│       │   └── drafts/
+│       ├── upload/               # File upload handling
+│       │   └── route.ts
+│       └── health/               # Health check endpoint
+│           └── route.ts
+│
+├── components/                   # Reusable UI components
+│   ├── ui/                       # Base UI components (Radix wrappers)
+│   ├── forms/                    # Form components
+│   ├── layout/                   # Layout components
+│   └── accessibility/            # A11y-specific components
+│
+├── features/                     # Feature modules
+│   ├── submission/               # Submission feature
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   └── types.ts
+│   ├── magazine/                 # Magazine feature
+│   └── admin/                    # Admin feature
+│
+├── lib/                          # Core utilities
+│   ├── prisma.ts                 # Prisma client singleton
+│   ├── auth.ts                   # Auth helpers (JWT, bcrypt)
+│   └── utils.ts                  # General utilities
+│
+├── services/                     # API service layer
+│   ├── api.ts                    # Axios instance
+│   ├── auth.service.ts           # Auth API calls
+│   ├── submission.service.ts     # Submission API calls
+│   └── magazine.service.ts       # Magazine API calls
+│
+├── stores/                       # Zustand state stores
+│   ├── auth.store.ts             # Authentication state
+│   └── ui.store.ts               # UI state (accessibility settings)
+│
+├── types/                        # TypeScript definitions
+│   ├── api.ts                    # API types
+│   ├── models.ts                 # Database model types
+│   └── forms.ts                  # Form types
+│
+├── utils/                        # Helper functions
+│   └── validation.ts             # Zod schemas
+│
+└── middleware.ts                 # Next.js middleware (auth checks)
+
+prisma/
+├── schema.prisma                 # Database schema
+└── seed.ts                       # Seed script
 ```
 
-### 2. Backend Service Architecture
+---
 
-```typescript
-// Service Layer Pattern
-/server
-  /src
-    /controllers   # Request handlers
-    /services      # Business logic
-    /repositories  # Data access layer
-    /middleware    # Express middleware
-    /validators    # Input validation schemas
-    /utils         # Shared utilities
-    /config        # Configuration management
-    /migrations    # Database migrations
-    /seeds         # Test data seeds
-```
+## Database Schema
 
-### 3. Database Design (Detailed)
-
-```sql
--- Enhanced schema with accessibility features
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE,
-    name VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL CHECK (role IN ('contributor', 'admin', 'viewer')),
-    accessibility_preferences JSONB DEFAULT '{}',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE submissions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id),
-    category VARCHAR(100) NOT NULL,
-    content_type VARCHAR(50) NOT NULL CHECK (content_type IN ('text', 'image', 'audio', 'drawing')),
-    status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'archived')),
-    text_content TEXT,
-    media_metadata JSONB,
-    accessibility_text TEXT, -- Alt text or transcription
-    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reviewed_at TIMESTAMP,
-    reviewed_by UUID REFERENCES users(id),
-    review_notes TEXT
-);
-
-CREATE TABLE magazines (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    version VARCHAR(50) NOT NULL,
-    status VARCHAR(50) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
-    theme JSONB DEFAULT '{}',
-    published_at TIMESTAMP,
-    published_by UUID REFERENCES users(id),
-    shareable_slug VARCHAR(255) UNIQUE,
-    view_count INTEGER DEFAULT 0,
-    is_public BOOLEAN DEFAULT false
-);
-
--- Indexes for performance
-CREATE INDEX idx_submissions_status ON submissions(status);
-CREATE INDEX idx_submissions_user_id ON submissions(user_id);
-CREATE INDEX idx_magazines_shareable_slug ON magazines(shareable_slug);
-CREATE INDEX idx_magazines_status ON magazines(status);
-```
-
-### 4. API Specification (OpenAPI)
-
-```yaml
-openapi: 3.0.0
-info:
-  title: Community Magazine API
-  version: 1.0.0
-
-paths:
-  /api/submissions:
-    post:
-      summary: Create new submission
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                category:
-                  type: string
-                  enum: [my_news, saying_hello, my_say]
-                text_content:
-                  type: string
-                  maxLength: 5000
-                media:
-                  type: string
-                  format: binary
-                accessibility_text:
-                  type: string
-      responses:
-        201:
-          description: Submission created
-        400:
-          description: Validation error
-        413:
-          description: File too large
-
-  /api/magazines/{id}/publish:
-    post:
-      summary: Publish magazine
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Magazine published
-        403:
-          description: Unauthorized
-```
-
-### 5. Security Implementation
-
-```typescript
-// Security Middleware Stack
-const securityMiddleware = [
-  helmet(),                    // Security headers
-  rateLimit({                  // Rate limiting
-    windowMs: 15 * 60 * 1000,
-    max: 100
-  }),
-  mongoSanitize(),            // Prevent injection
-  xss(),                      // XSS protection
-  cors({                      // CORS configuration
-    origin: process.env.ALLOWED_ORIGINS?.split(','),
-    credentials: true
-  })
-];
-
-// Content validation
-const contentFilter = {
-  maxTextLength: 5000,
-  maxFileSize: 10 * 1024 * 1024, // 10MB
-  allowedMimeTypes: [
-    'image/jpeg', 'image/png', 'image/webp',
-    'audio/mpeg', 'audio/wav', 'audio/webm'
-  ],
-  profanityFilter: true
-};
-```
-
-### 6. Deployment Configuration
-
-```yaml
-# railway.toml
-[build]
-builder = "NIXPACKS"
-buildCommand = "npm run build"
-
-[deploy]
-startCommand = "npm run start"
-healthcheckPath = "/api/health"
-healthcheckTimeout = 10
-
-[variables]
-NODE_ENV = "production"
-PORT = "$PORT"
-
-# docker-compose.yml for local development
-version: '3.8'
-services:
-  app:
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      - DATABASE_URL=postgresql://user:pass@db:5432/magazine
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - db
-      - redis
-      
-  db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: magazine
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-
-volumes:
-  postgres_data:
-```
-
-### 7. Performance Optimization Strategy
-
-```javascript
-// Caching Strategy
-const cachingLayers = {
-  browser: {
-    staticAssets: '1 year',
-    apiResponses: '5 minutes'
-  },
-  cdn: {
-    images: '30 days',
-    magazines: '7 days'
-  },
-  redis: {
-    sessions: '24 hours',
-    magazines: '1 hour',
-    submissions: '10 minutes'
-  }
-};
-
-// Image Optimization Pipeline
-const imageOptimization = {
-  formats: ['webp', 'jpeg'],
-  sizes: [320, 640, 1280, 1920],
-  quality: 85,
-  lazyLoading: true,
-  placeholder: 'blur'
-};
-```
-
-### 8. Monitoring & Observability
-
-```typescript
-// Logging structure
-interface LogEntry {
-  timestamp: Date;
-  level: 'info' | 'warn' | 'error';
-  service: string;
-  userId?: string;
-  action: string;
-  metadata: Record<string, any>;
-  traceId: string;
-}
-
-// Key metrics to track
-const metrics = {
-  business: [
-    'submissions_per_day',
-    'magazine_views',
-    'user_engagement_rate',
-    'content_approval_time'
-  ],
-  technical: [
-    'api_response_time',
-    'error_rate',
-    'database_query_time',
-    'media_upload_success_rate'
-  ],
-  accessibility: [
-    'screen_reader_usage',
-    'high_contrast_usage',
-    'text_to_speech_requests'
-  ]
-};
-```
-
-### 9. Testing Strategy
-
-```javascript
-// Testing pyramid
-const testingStrategy = {
-  unit: {
-    coverage: '80%',
-    tools: ['Jest', 'React Testing Library']
-  },
-  integration: {
-    coverage: '60%',
-    tools: ['Supertest', 'MSW']
-  },
-  e2e: {
-    coverage: 'Critical paths',
-    tools: ['Playwright']
-  },
-  accessibility: {
-    tools: ['axe-core', 'NVDA', 'JAWS'],
-    standards: 'WCAG 2.1 AA'
-  }
-};
-```
-
-### 10. Disaster Recovery Plan
-
-```yaml
-backup_strategy:
-  database:
-    frequency: daily
-    retention: 30 days
-    location: offsite
-  
-  media:
-    frequency: weekly
-    retention: 90 days
-    location: S3 glacier
-  
-  configuration:
-    frequency: on_change
-    retention: unlimited
-    location: git
-
-recovery_objectives:
-  RTO: 4 hours  # Recovery Time Objective
-  RPO: 24 hours # Recovery Point Objective
-```
-
-## Implementation Priorities
-
-### Critical Path (Must Have)
-1. User authentication and authorization
-2. Content submission with basic moderation
-3. Magazine viewing with accessibility
-4. Data persistence and backup
-
-### Important (Should Have)
-1. Advanced media handling
-2. Print/PDF generation
-3. Analytics dashboard
-4. Email notifications
-
-### Nice to Have (Could Have)
-1. Real-time collaboration
-2. Advanced content filters
-3. Multi-language support
-4. Social sharing features
-
-## Technology Decision Matrix
-
-| Requirement | Option 1 | Option 2 | Selected | Rationale |
-|------------|----------|----------|----------|-----------|
-| Database | PostgreSQL | MongoDB | PostgreSQL | Better for relational data, ACID compliance |
-| File Storage | AWS S3 | Cloudinary | Cloudinary | Built-in CDN, transformations, free tier |
-| Framework | Next.js | Remix | Next.js | Larger ecosystem, better Railway support |
-| Auth | Auth0 | Custom JWT | Custom JWT | Cost-effective, full control |
-| Deployment | Railway | Vercel | Railway | As specified, good PostgreSQL integration |
-
-## Estimated Timeline
+### Entity Relationship Diagram
 
 ```mermaid
-gantt
-    title Implementation Timeline
-    dateFormat  YYYY-MM-DD
-    section Foundation
-    Project Setup           :a1, 2024-01-15, 3d
-    Database Design         :a2, after a1, 4d
-    Auth Implementation     :a3, after a2, 5d
-    
-    section Core Features
-    Submission System       :b1, after a3, 7d
-    Admin Dashboard        :b2, after b1, 5d
-    Magazine Viewer        :b3, after b2, 5d
-    
-    section Enhancement
-    Media Handling         :c1, after b3, 4d
-    Accessibility          :c2, after c1, 3d
-    Performance Opt        :c3, after c2, 3d
-    
-    section Deployment
-    Testing               :d1, after c3, 5d
-    Documentation         :d2, after d1, 2d
-    Go Live              :d3, after d2, 1d
+erDiagram
+    User ||--o{ Submission : creates
+    User ||--o{ Magazine : creates
+    User ||--o{ AuditLog : performs
+    Submission ||--o{ MagazineItem : contains
+    Magazine ||--o{ MagazineItem : includes
+    Submission ||--o{ Media : has
+
+    User {
+        uuid id PK
+        string email UK
+        string name
+        string password
+        enum role
+        json accessibilityPrefs
+        datetime createdAt
+    }
+
+    Submission {
+        uuid id PK
+        uuid userId FK
+        enum category
+        string title
+        text content
+        enum status
+        text imageUrl
+        text audioUrl
+        text drawingData
+        datetime createdAt
+        datetime reviewedAt
+        uuid reviewedBy FK
+    }
+
+    Magazine {
+        uuid id PK
+        uuid createdBy FK
+        string title
+        text description
+        string slug UK
+        enum status
+        datetime publishedAt
+    }
+
+    MagazineItem {
+        uuid id PK
+        uuid magazineId FK
+        uuid submissionId FK
+        int displayOrder
+    }
+
+    Media {
+        uuid id PK
+        uuid submissionId FK
+        enum type
+        string url
+        int size
+        string metadata
+    }
+
+    AuditLog {
+        uuid id PK
+        uuid userId FK
+        string action
+        string entityType
+        uuid entityId
+        json changes
+        datetime timestamp
+    }
 ```
+
+### Key Schema Details
+
+**User Model:**
+- Supports multiple roles: ADMIN, MODERATOR, CONTRIBUTOR
+- Stores accessibility preferences as JSON
+- Bcrypt-hashed passwords
+- Nullable email (supports anonymous contributors)
+
+**Submission Model:**
+- Multi-format content (text, image, audio, drawing)
+- Status workflow: PENDING → APPROVED/REJECTED
+- Soft-delete support (deletedAt field)
+- Admin review tracking
+
+**Magazine Model:**
+- Draft and published states
+- URL-friendly slugs
+- Ordered items via MagazineItem junction table
+
+**AuditLog Model:**
+- Compliance and tracking
+- Records all sensitive operations
+- JSON change tracking
+
+---
+
+## Authentication & Authorization
+
+### Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API
+    participant Prisma
+    participant DB
+
+    Client->>API: POST /api/auth/login {email, password}
+    API->>Prisma: findUnique(email)
+    Prisma->>DB: SELECT * FROM User
+    DB-->>Prisma: User data
+    Prisma-->>API: User object
+    API->>API: bcrypt.compare(password)
+    API->>API: jwt.sign({userId, role})
+    API-->>Client: {accessToken, refreshToken} + HTTP-only cookies
+
+    Note over Client,API: Subsequent requests
+
+    Client->>API: GET /api/submissions (with JWT cookie)
+    API->>API: Middleware: verifyToken(JWT)
+    API->>API: Check role permissions
+    API->>Prisma: findMany()
+    Prisma->>DB: SELECT * FROM Submission
+    DB-->>Client: Submissions data
+```
+
+### Token Strategy
+
+- **Access Token**: Short-lived (15 min), stored in HTTP-only cookie
+- **Refresh Token**: Long-lived (7 days), stored in HTTP-only cookie
+- **Rotation**: Refresh tokens are rotated on each use
+- **Revocation**: Logout clears cookies and invalidates tokens
+
+### Authorization Levels
+
+| Role | Permissions |
+|------|------------|
+| **ADMIN** | Full access: create, read, update, delete all entities |
+| **MODERATOR** | Approve/reject submissions, create magazines |
+| **CONTRIBUTOR** | Create submissions, view own submissions |
+
+### Middleware Protection
+
+```typescript
+// src/middleware.ts
+export function middleware(request: NextRequest) {
+  const token = request.cookies.get('accessToken')
+
+  // Public routes
+  if (isPublicRoute(request.nextUrl.pathname)) {
+    return NextResponse.next()
+  }
+
+  // Protected routes
+  if (!token) {
+    return NextResponse.redirect('/login')
+  }
+
+  try {
+    const decoded = verifyToken(token.value)
+
+    // Role-based checks
+    if (isAdminRoute(request.nextUrl.pathname)) {
+      if (decoded.role !== 'ADMIN') {
+        return NextResponse.redirect('/unauthorized')
+      }
+    }
+
+    return NextResponse.next()
+  } catch (error) {
+    return NextResponse.redirect('/login')
+  }
+}
+```
+
+---
+
+## API Design
+
+### RESTful Conventions
+
+All API routes follow REST principles:
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| POST | `/api/auth/login` | User login | Public |
+| POST | `/api/auth/register` | New user registration | Public |
+| POST | `/api/auth/logout` | User logout | Authenticated |
+| POST | `/api/auth/refresh` | Refresh access token | Authenticated |
+| GET | `/api/submissions` | List submissions | Authenticated |
+| POST | `/api/submissions` | Create submission | Authenticated |
+| GET | `/api/submissions/:id` | Get single submission | Authenticated |
+| PATCH | `/api/submissions/:id` | Update submission | Owner/Admin |
+| DELETE | `/api/submissions/:id` | Delete submission | Owner/Admin |
+| PATCH | `/api/submissions/:id/approve` | Approve submission | Admin/Mod |
+| PATCH | `/api/submissions/:id/reject` | Reject submission | Admin/Mod |
+| GET | `/api/magazines` | List published magazines | Public |
+| POST | `/api/magazines` | Create magazine | Admin |
+| GET | `/api/magazines/:id` | Get magazine details | Public |
+| PATCH | `/api/magazines/:id` | Update magazine | Admin |
+| POST | `/api/magazines/:id/publish` | Publish magazine | Admin |
+| POST | `/api/upload` | Upload media file | Authenticated |
+| GET | `/api/health` | Health check | Public |
+
+### Response Format
+
+**Success Response:**
+```json
+{
+  "success": true,
+  "data": { ... },
+  "meta": {
+    "total": 100,
+    "page": 1,
+    "pageSize": 20
+  }
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid input data",
+    "details": [
+      {
+        "field": "email",
+        "message": "Invalid email format"
+      }
+    ]
+  }
+}
+```
+
+### Validation with Zod
+
+All API endpoints use Zod for input validation:
+
+```typescript
+import { z } from 'zod'
+
+const submissionSchema = z.object({
+  category: z.enum(['MY_NEWS', 'SAYING_HELLO', 'MY_SAY']),
+  title: z.string().min(1).max(200),
+  content: z.string().min(1).max(5000),
+  imageUrl: z.string().url().optional(),
+  audioUrl: z.string().url().optional(),
+  drawingData: z.string().optional()
+})
+
+// Usage in API route
+export async function POST(request: Request) {
+  const body = await request.json()
+  const validated = submissionSchema.parse(body) // Throws if invalid
+  // ... proceed with validated data
+}
+```
+
+---
+
+## Frontend Architecture
+
+### Server vs Client Components
+
+**Server Components (Default):**
+- Page layouts
+- Data fetching components
+- Static content rendering
+
+**Client Components ('use client'):**
+- Interactive forms
+- State management
+- Event handlers
+- Drawing canvas
+- Audio recorder
+
+### State Management Strategy
+
+**Server State (Database):**
+- Fetched via Server Components or API routes
+- No client-side caching (rely on Next.js cache)
+
+**Client State (Zustand):**
+```typescript
+// stores/auth.store.ts
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  setUser: (user) => set({ user }),
+  logout: () => set({ user: null })
+}))
+
+// stores/ui.store.ts
+export const useUIStore = create<UIState>((set) => ({
+  highContrast: false,
+  fontSize: 'medium',
+  toggleHighContrast: () => set((state) => ({
+    highContrast: !state.highContrast
+  }))
+}))
+```
+
+### Accessibility Implementation
+
+**WCAG 2.1 AA Compliance Checklist:**
+
+✅ **Semantic HTML**: All components use proper HTML5 elements
+✅ **ARIA Labels**: All interactive elements have descriptive labels
+✅ **Keyboard Navigation**: Full keyboard support with visible focus indicators
+✅ **Color Contrast**: Minimum 4.5:1 ratio for normal text, 3:1 for large text
+✅ **Screen Reader Support**: Tested with NVDA and VoiceOver
+✅ **Focus Management**: Logical tab order and focus traps in modals
+✅ **Error Identification**: Clear error messages with suggestions
+✅ **Adjustable Text**: Font size controls (small, medium, large)
+✅ **High Contrast Mode**: Toggle for enhanced visibility
+
+**Example Accessible Component:**
+```tsx
+<button
+  onClick={handleSubmit}
+  aria-label="Submit your story"
+  className="focus:ring-2 focus:ring-blue-500 focus:outline-none"
+  disabled={isLoading}
+  aria-busy={isLoading}
+>
+  {isLoading ? (
+    <>
+      <span className="sr-only">Submitting...</span>
+      <Spinner aria-hidden="true" />
+    </>
+  ) : (
+    'Submit Story'
+  )}
+</button>
+```
+
+---
+
+## Deployment Architecture
+
+### Railway Deployment
+
+**Environment:**
+- **Platform**: Railway (managed PostgreSQL + web service)
+- **Region**: us-west (configurable)
+- **Scaling**: Vertical scaling (configurable memory/CPU)
+
+**Deployment Flow:**
+```mermaid
+graph LR
+    Git[GitHub Push] --> Actions[GitHub Actions]
+    Actions --> Build[Docker Build]
+    Build --> Test[Run Tests & Lint]
+    Test --> Deploy[Railway CLI Deploy]
+    Deploy --> Migrate[Prisma Migrate]
+    Migrate --> Start[Next.js Start]
+    Start --> Health[Health Check]
+    Health --> Live[Production]
+```
+
+### Docker Configuration
+
+```dockerfile
+# Multi-stage build
+FROM node:18-alpine AS base
+
+# Dependencies stage
+FROM base AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+
+# Builder stage
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npx prisma generate
+RUN npm run build
+
+# Runner stage
+FROM base AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Copy necessary files
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
+# Expose port
+EXPOSE 3000
+
+# Start command (includes migration)
+CMD ["npm", "start"]
+```
+
+### Environment Variables
+
+**Required for Production:**
+```bash
+DATABASE_URL="postgresql://user:pass@host:5432/db"
+JWT_SECRET="production-secret-key"
+JWT_REFRESH_SECRET="production-refresh-secret"
+NEXT_PUBLIC_APP_URL="https://magazine.centre404.org"
+```
+
+**Optional:**
+```bash
+CLOUDINARY_CLOUD_NAME="..."
+CLOUDINARY_API_KEY="..."
+CLOUDINARY_API_SECRET="..."
+SMTP_HOST="smtp.gmail.com"
+SMTP_USER="..."
+SMTP_PASS="..."
+```
+
+---
+
+## Performance Considerations
+
+### Optimization Strategies
+
+1. **Server-Side Rendering**: Pages render on server for faster initial load
+2. **Static Generation**: Public magazine pages use ISR (Incremental Static Regeneration)
+3. **Image Optimization**: Next.js Image component with lazy loading
+4. **Code Splitting**: Automatic route-based splitting
+5. **Database Indexing**: Indexes on frequently queried fields
+6. **Caching**: Next.js built-in cache for API routes
+
+### Database Indexes
+
+```prisma
+model Submission {
+  // ... fields
+
+  @@index([userId])
+  @@index([status])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model Magazine {
+  // ... fields
+
+  @@index([slug])
+  @@index([status])
+  @@index([publishedAt])
+}
+```
+
+---
+
+## Security Measures
+
+| Layer | Implementation |
+|-------|---------------|
+| **Authentication** | JWT with HTTP-only cookies, bcrypt password hashing |
+| **Authorization** | Role-based access control (RBAC) |
+| **Input Validation** | Zod schema validation on all endpoints |
+| **SQL Injection** | Prevented by Prisma parameterized queries |
+| **XSS** | React auto-escaping, CSP headers |
+| **CSRF** | SameSite cookies, token validation |
+| **Rate Limiting** | Configurable limits on API routes |
+| **CORS** | Restricted to allowed origins |
+| **Audit Logging** | All sensitive operations logged |
+
+---
+
+## Monitoring & Observability
+
+### Health Check Endpoint
+
+**GET `/api/health`**
+
+Returns system status:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2025-11-11T07:00:00Z",
+  "environment": {
+    "NODE_ENV": "production",
+    "DATABASE_URL": "SET ✓",
+    "JWT_SECRET": "SET ✓"
+  },
+  "database": {
+    "connected": true,
+    "tablesExist": true,
+    "submissionCount": 42
+  }
+}
+```
+
+### Metrics to Monitor
+
+- Database connection health
+- API response times
+- Error rates
+- Authentication failures
+- Submission approval rate
+- Magazine publication frequency
+
+---
+
+## Future Architecture Considerations
+
+### Planned Enhancements
+
+1. **Redis Caching**: Add Redis for session storage and API caching
+2. **Message Queue**: Implement background job processing (email notifications)
+3. **CDN**: CloudFlare or Fastly for global content delivery
+4. **PDF Generation**: Server-side magazine PDF export
+5. **WebSocket**: Real-time admin notifications
+6. **GraphQL**: Consider GraphQL API for complex data fetching
+7. **Microservices**: Split media processing into separate service
+
+### Scalability Path
+
+**Current Capacity**: 100-1,000 concurrent users
+**Scaling Strategy**: Vertical → Horizontal (multiple Next.js instances behind load balancer)
+
+---
+
+## Conclusion
+
+This architecture provides:
+- **Accessibility-first** design for users with disabilities
+- **Type-safe** development with TypeScript and Prisma
+- **Secure** authentication and authorization
+- **Scalable** foundation for growth
+- **Maintainable** codebase with clear separation of concerns
+- **Production-ready** deployment with Docker and Railway
+
+For implementation details, see:
+- [CLAUDE.md](./CLAUDE.md) - Development guidelines
+- [README.md](./README.md) - Setup instructions
+- [DEPLOYMENT.md](./DEPLOYMENT.md) - Deployment guide

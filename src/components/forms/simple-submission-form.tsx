@@ -15,31 +15,58 @@ export function SimpleSubmissionForm() {
   const [textContent, setTextContent] = useState('');
   const [authorName, setAuthorName] = useState('');
   const [showSymbols, setShowSymbols] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const [showDrawing, setShowDrawing] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [imagePreview, setImagePreview] = useState('');
-  
+  const [audioRecording, setAudioRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
   // Drawing state
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentColor, setCurrentColor] = useState('#000000');
   const [drawingData, setDrawingData] = useState('');
 
+  // Audio recording refs
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!category || (!textContent && !imagePreview && !drawingData)) {
-      alert('Please choose a category and add some content (text, image, or drawing)');
+    if (!category || (!textContent && !imagePreview && !drawingData && !audioBlob)) {
+      alert('Please choose a category and add some content (text, image, audio, or drawing)');
       return;
     }
 
     try {
+      // Upload audio if present
+      let audioMediaUrl = null;
+      if (audioBlob) {
+        const formData = new FormData();
+        formData.append('file', audioBlob, 'recording.webm');
+
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload audio');
+        }
+
+        const uploadData = await uploadResponse.json();
+        audioMediaUrl = uploadData.url;
+      }
+
       // Determine content type based on what's provided
       let contentType = 'TEXT';
-      if (imagePreview || drawingData) {
-        contentType = imagePreview && textContent ? 'MIXED' : (imagePreview ? 'IMAGE' : 'DRAWING');
-      }
+      if (audioMediaUrl && textContent) contentType = 'MIXED';
+      else if (audioMediaUrl) contentType = 'AUDIO';
+      else if (imagePreview && textContent) contentType = 'MIXED';
+      else if (imagePreview) contentType = 'IMAGE';
+      else if (drawingData) contentType = 'DRAWING';
 
       const response = await fetch('/api/submissions', {
         method: 'POST',
@@ -48,7 +75,7 @@ export function SimpleSubmissionForm() {
           category,
           textContent: textContent || '',
           contentType,
-          mediaUrl: imagePreview || drawingData || null,
+          mediaUrl: audioMediaUrl || imagePreview || drawingData || null,
           drawingData: drawingData || null,
           userName: authorName || 'Community Member',
         }),
@@ -61,6 +88,8 @@ export function SimpleSubmissionForm() {
         setAuthorName('');
         setImagePreview('');
         setDrawingData('');
+        setAudioBlob(null);
+        setAudioUrl(null);
         // Clear canvas if it exists
         if (canvasRef.current) {
           const ctx = canvasRef.current.getContext('2d');
@@ -78,41 +107,43 @@ export function SimpleSubmissionForm() {
     }
   };
 
-  const startSpeechRecognition = () => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
+  const startAudioRecording = async () => {
+    // If already recording, stop it
+    if (audioRecording && mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      return;
+    }
 
-      recognition.continuous = true;
-      recognition.interimResults = true;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
 
-      if (!isRecording) {
-        recognition.start();
-        setIsRecording(true);
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        recognition.onresult = (event: any) => {
-          let finalTranscript = '';
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            if (event.results[i].isFinal) {
-              finalTranscript += event.results[i][0].transcript;
-            }
-          }
-          if (finalTranscript) {
-            setTextContent(prev => prev + finalTranscript + ' ');
-          }
-        };
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setAudioBlob(audioBlob);
+        setAudioUrl(audioUrl);
+        setAudioRecording(false);
 
-        recognition.onerror = () => setIsRecording(false);
+        // Stop all tracks to release microphone
+        stream.getTracks().forEach(track => track.stop());
+      };
 
-        setTimeout(() => {
-          recognition.stop();
-          setIsRecording(false);
-        }, 30000); // Stop after 30 seconds
-      }
-    } else {
-      alert('Speech recognition is not supported in your browser.');
+      mediaRecorder.start();
+      setAudioRecording(true);
+      console.log('Audio recording started');
+    } catch (error) {
+      console.error('Failed to start audio recording:', error);
+      alert('Failed to start audio recording. Please allow microphone access.');
+      setAudioRecording(false);
     }
   };
 
@@ -329,10 +360,14 @@ export function SimpleSubmissionForm() {
           <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
             <button
               type="button"
-              className={`tool-button ${isRecording ? 'active' : ''}`}
-              onClick={startSpeechRecognition}
+              className={`tool-button ${audioRecording ? 'active' : ''}`}
+              onClick={startAudioRecording}
+              style={{
+                background: audioRecording ? '#dc3545' : undefined,
+                color: audioRecording ? 'white' : undefined
+              }}
             >
-              🎤 {isRecording ? 'Recording...' : 'Speak'}
+              🎙️ {audioRecording ? 'Stop Recording' : 'Record Audio'}
             </button>
             <button
               type="button"
@@ -349,6 +384,64 @@ export function SimpleSubmissionForm() {
               🗑️ Clear
             </button>
           </div>
+
+          {/* Audio Preview */}
+          {audioUrl && (
+            <div style={{
+              marginTop: '15px',
+              padding: '15px',
+              background: '#e3f2fd',
+              borderRadius: '8px',
+              border: '2px solid #2196f3'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '10px'
+              }}>
+                <span style={{
+                  fontWeight: '600',
+                  color: '#1976d2',
+                  fontSize: '16px'
+                }}>
+                  🎵 Audio Recorded
+                </span>
+                <button
+                  type="button"
+                  className="tool-button"
+                  onClick={() => {
+                    setAudioBlob(null);
+                    setAudioUrl(null);
+                    if (audioUrl) URL.revokeObjectURL(audioUrl);
+                  }}
+                  style={{
+                    background: '#dc3545',
+                    color: 'white',
+                    padding: '5px 10px'
+                  }}
+                >
+                  🗑️ Delete
+                </button>
+              </div>
+              <audio
+                controls
+                src={audioUrl}
+                style={{
+                  width: '100%',
+                  borderRadius: '4px'
+                }}
+              />
+              <div style={{
+                fontSize: '13px',
+                color: '#666',
+                marginTop: '8px',
+                textAlign: 'center'
+              }}>
+                This audio will be included with your submission
+              </div>
+            </div>
+          )}
 
           {/* Symbol Board - Matching original style */}
           {showSymbols && (

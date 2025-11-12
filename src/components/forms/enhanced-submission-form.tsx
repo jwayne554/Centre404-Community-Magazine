@@ -35,6 +35,7 @@ export function EnhancedSubmissionForm() {
   const [successMessage, setSuccessMessage] = useState('');
   const [contentMode, setContentMode] = useState<ContentMode>('text');
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const [mediaType, setMediaType] = useState<'image' | 'audio' | null>(null);
   const [drawingUrl, setDrawingUrl] = useState<string | null>(null);
 
   const {
@@ -61,7 +62,9 @@ export function EnhancedSubmissionForm() {
     setIsSubmitting(true);
     try {
       let contentType = 'TEXT';
-      if (mediaUrl && data.textContent) contentType = 'MIXED';
+      if (mediaType === 'audio' && data.textContent) contentType = 'MIXED';
+      else if (mediaType === 'audio') contentType = 'AUDIO';
+      else if (mediaUrl && data.textContent) contentType = 'MIXED';
       else if (mediaUrl) contentType = 'IMAGE';
       else if (drawingUrl) contentType = 'DRAWING';
 
@@ -85,6 +88,7 @@ export function EnhancedSubmissionForm() {
       setSuccessMessage('Thank you! Your contribution has been submitted.');
       reset();
       setMediaUrl(null);
+      setMediaType(null);
       setDrawingUrl(null);
       setContentMode('text');
       setTimeout(() => setSuccessMessage(''), 5000);
@@ -296,19 +300,24 @@ export function EnhancedSubmissionForm() {
           {contentMode === 'media' && (
             <div>
               <MediaUpload
-                onUpload={(url) => {
+                onUpload={(url, type) => {
                   setMediaUrl(url);
-                  // You might want to show a preview here
+                  setMediaType(type);
                 }}
               />
               {mediaUrl && (
                 <div className="mt-4 p-4 bg-accent rounded-lg flex items-center justify-between">
-                  <span className="text-sm">Media uploaded successfully</span>
+                  <span className="text-sm">
+                    {mediaType === 'audio' ? 'Audio' : 'Media'} uploaded successfully
+                  </span>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => setMediaUrl(null)}
+                    onClick={() => {
+                      setMediaUrl(null);
+                      setMediaType(null);
+                    }}
                   >
                     <X className="h-4 w-4" />
                   </Button>

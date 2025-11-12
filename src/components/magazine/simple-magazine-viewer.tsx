@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { playAudio, stopAudio, isPlaying } from '@/services/tts.service';
 
 interface Submission {
   id: string;
@@ -19,6 +20,8 @@ export function SimpleMagazineViewer() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [modalImage, setModalImage] = useState<string | null>(null);
+  const [currentlySpeaking, setCurrentlySpeaking] = useState<string | null>(null);
+  const [loadingAudio, setLoadingAudio] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSubmissions();
@@ -39,12 +42,45 @@ export function SimpleMagazineViewer() {
     }
   };
 
-  const speakText = (text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      window.speechSynthesis.speak(utterance);
+  const speakText = async (text: string, id: string) => {
+    // If this submission is already speaking, stop it
+    if (currentlySpeaking === id) {
+      stopAudio();
+      setCurrentlySpeaking(null);
+      setLoadingAudio(null);
+      return;
+    }
+
+    // Stop any other audio that might be playing
+    if (isPlaying()) {
+      stopAudio();
+      setCurrentlySpeaking(null);
+    }
+
+    // Show loading state
+    setLoadingAudio(id);
+
+    try {
+      // Play audio using the TTS service (with automatic fallback)
+      await playAudio(text, { voiceId: 'Scarlett', speed: 0, pitch: 1.0 }, {
+        onStart: () => {
+          setLoadingAudio(null);
+          setCurrentlySpeaking(id);
+        },
+        onEnd: () => {
+          setCurrentlySpeaking(null);
+          setLoadingAudio(null);
+        },
+        onError: (error) => {
+          console.error('[TTS] Playback error:', error);
+          setCurrentlySpeaking(null);
+          setLoadingAudio(null);
+        },
+      });
+    } catch (error) {
+      console.error('[TTS] Failed to play audio:', error);
+      setLoadingAudio(null);
+      setCurrentlySpeaking(null);
     }
   };
 
@@ -243,13 +279,22 @@ export function SimpleMagazineViewer() {
                     {submission.textContent && (
                       <button
                         className="tool-button"
-                        style={{ flex: 1, padding: '8px' }}
+                        style={{
+                          flex: 1,
+                          padding: '8px',
+                          opacity: loadingAudio === submission.id ? 0.6 : 1,
+                          background: currentlySpeaking === submission.id ? 'var(--primary-color)' : undefined,
+                          color: currentlySpeaking === submission.id ? 'white' : undefined
+                        }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          speakText(submission.textContent!);
+                          speakText(submission.textContent!, submission.id);
                         }}
+                        disabled={loadingAudio === submission.id}
                       >
-                        🔊 Listen
+                        {loadingAudio === submission.id ? '⏳ Loading...' :
+                         currentlySpeaking === submission.id ? '⏹️ Stop' :
+                         '🔊 Listen'}
                       </button>
                     )}
                   </div>
