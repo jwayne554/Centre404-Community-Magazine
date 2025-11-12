@@ -5,7 +5,9 @@
  * Run this to verify your DATABASE_URL is accessible
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { PrismaClient } = require('@prisma/client');
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 async function checkDatabase() {
   console.log('🔍 Checking database connection...\n');
@@ -35,7 +37,7 @@ async function checkDatabase() {
     try {
       const count = await prisma.submission.count();
       console.log(`✅ Database tables exist (${count} submissions found)`);
-    } catch (error) {
+    } catch {
       console.log('⚠️  Database connected but tables not found');
       console.log('📝 You need to run migrations:');
       console.log('   npm run db:push');

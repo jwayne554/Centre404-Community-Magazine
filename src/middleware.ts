@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // Authentication is handled directly in route handlers using src/lib/api-auth.ts
 // This middleware only runs for non-API routes (admin UI, etc.)
 
-export function middleware(request: NextRequest) {
+export function middleware(_request: NextRequest) {
   // For now, just pass through all requests
   // Authentication is handled in individual API routes
   return NextResponse.next();

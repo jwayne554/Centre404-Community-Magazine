@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     let payload;
     try {
       payload = AuthService.verifyRefreshToken(refreshToken);
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { error: 'Invalid or expired refresh token' },
         { status: 401 }

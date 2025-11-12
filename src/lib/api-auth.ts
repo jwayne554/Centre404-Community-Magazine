@@ -39,7 +39,7 @@ export async function requireAuth(
       const payload = AuthService.verifyAccessToken(token);
       userId = payload.userId;
       userRole = payload.role;
-    } catch (error) {
+    } catch {
       return {
         error: NextResponse.json(
           { error: 'Unauthorized - Invalid or expired token' },
