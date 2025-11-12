@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
   // Skip static optimization to avoid build errors with error pages
   skipTrailingSlashRedirect: true,
   trailingSlash: false,
+  reactStrictMode: true,
 };
 
 export default nextConfig;
