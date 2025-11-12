@@ -325,7 +325,7 @@ export function SimpleSubmissionForm() {
                 opacity: 0.95,
                 margin: '8px 0 16px 0'
               }}>
-                Thank you! Your contribution is being reviewed by our team. You'll see it in the next magazine edition once approved.
+                Thank you! Your contribution is being reviewed by our team. You&apos;ll see it in the next magazine edition once approved.
               </p>
               <button
                 onClick={handleSubmitAnother}
