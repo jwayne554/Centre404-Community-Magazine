@@ -321,7 +321,7 @@ The application is configured for deployment to Railway with Docker:
   - ⏭️ Inline Hover Handlers (deferred to Phase 2)
   - **Impact Achieved**: -416KB bundle, -11 packages, 10-50x faster queries, no admin lag
 
-- **Phase 1** (Critical Security): 🚧 **IN PROGRESS** (3/6 done - 2025-01-12)
+- **Phase 1** (Critical Security): 🚧 **IN PROGRESS** (4/6 done - 2025-01-12) - 67% Complete
   - ✅ Task 1.1: Authentication on Admin Endpoints
     - Created `src/lib/api-auth.ts` with requireAuth(), requireAdmin(), requireModerator()
     - Protected all admin endpoints (submissions status, magazines CRUD)
@@ -334,17 +334,21 @@ The application is configured for deployment to Railway with Docker:
     - In-memory rate limiter with sliding window algorithm
     - Login: 5/min, Register: 3/hr, Upload: 10/hr, Submissions: 20/hr, TTS: 100/day
     - HTTP 429 responses with Retry-After headers
-  - ⏳ Task 1.4: Switch to Prisma Migrate (pending)
+  - ✅ Task 1.4: Prisma Migrate (Production Safety)
+    - Created baseline migration `prisma/migrations/0_init/` (177 lines)
+    - Updated `package.json`: start now runs `prisma migrate deploy`
+    - Updated `Dockerfile`: Uses migrate deploy instead of db push
+    - Migration history tracked in git for production safety
   - ⏳ Task 1.5: Fix Media Model (pending)
   - ⏳ Task 1.6: File Upload Streaming (pending)
-  - **Security Impact**: D-grade → B-grade (3 critical vulnerabilities fixed)
+  - **Security Impact**: D-grade → B+ (4 critical vulnerabilities fixed, production safety added)
 
 - **Phase 2** (Performance): ⏳ Pending
 - **Phase 3** (Code Quality): ⏳ Pending
 - **Phase 4** (Polish): ⏳ Pending
 
-**Current Focus**: Phase 1, Task 1.4 (Switch to Prisma Migrate)
-**Overall Progress**: 25% complete (8/32 tasks)
+**Current Focus**: Phase 1, Task 1.5 (Fix Media Model)
+**Overall Progress**: 28% complete (9/32 tasks)
 
 ## Related Documentation
 
