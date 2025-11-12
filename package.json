@@ -9,7 +9,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "build:local": "next build",
-    "start": "prisma migrate deploy && next start",
+    "start": "node scripts/migrate-deploy.js && next start",
     "railway:install": "./scripts/railway-install.sh",
     "db:check": "node scripts/check-db.js",
     "lint": "eslint",
