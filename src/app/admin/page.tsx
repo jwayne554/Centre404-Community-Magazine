@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 
 interface Submission {
@@ -30,7 +30,6 @@ interface Magazine {
 }
 
 export default function AdminDashboard() {
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
   const [draftMagazines, setDraftMagazines] = useState<Magazine[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,15 +39,16 @@ export default function AdminDashboard() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Quick Win 5: Memoize filtered submissions to prevent recalculation on every render
+  const submissions = useMemo(() => {
+    if (activeTab === 'ALL') return allSubmissions;
+    return allSubmissions.filter(s => s.status === activeTab);
+  }, [activeTab, allSubmissions]);
+
   useEffect(() => {
     fetchAllSubmissions();
     fetchDraftMagazines();
   }, []);
-
-  useEffect(() => {
-    filterSubmissions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, allSubmissions]);
 
   const fetchAllSubmissions = async () => {
     setLoading(true);
@@ -122,14 +122,6 @@ export default function AdminDashboard() {
       alert('Failed to delete draft. Please try again.');
     } finally {
       setActionLoading(false);
-    }
-  };
-
-  const filterSubmissions = () => {
-    if (activeTab === 'ALL') {
-      setSubmissions(allSubmissions);
-    } else {
-      setSubmissions(allSubmissions.filter(s => s.status === activeTab));
     }
   };
 
@@ -227,12 +219,13 @@ export default function AdminDashboard() {
     }
   };
 
-  const stats = {
+  // Quick Win 5: Memoize stats calculation to prevent recalculation on every render
+  const stats = useMemo(() => ({
     total: allSubmissions.length,
     pending: allSubmissions.filter(s => s.status === 'PENDING').length,
     approved: allSubmissions.filter(s => s.status === 'APPROVED').length,
     rejected: allSubmissions.filter(s => s.status === 'REJECTED').length,
-  };
+  }), [allSubmissions]);
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>

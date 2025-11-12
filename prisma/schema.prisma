@@ -59,10 +59,17 @@ model Submission {
   
   // Relations
   magazineItems     MagazineItem[]
-  
+
+  // Existing indexes
   @@index([status, submittedAt])
   @@index([userId])
   @@index([category])
+
+  // Performance indexes (Quick Win 4)
+  @@index([status, category, submittedAt])  // Admin dashboard filtering
+  @@index([category, status])                // Magazine viewer filtering
+  @@index([reviewedById, reviewedAt])        // Reviewer productivity queries
+  @@index([reviewedAt])                      // Time-based analytics
 }
 
 // Magazine model for published collections
@@ -90,9 +97,14 @@ model Magazine {
   
   // Relations
   items             MagazineItem[]
-  
+
+  // Existing indexes
   @@index([status, publishedAt])
-  @@index([shareableSlug])
+  // Note: shareableSlug index removed (redundant with @unique)
+
+  // Performance indexes (Quick Win 4)
+  @@index([isPublic, status, publishedAt])  // Public magazine filtering
+  @@index([viewCount])                       // Popular magazines
 }
 
 // Junction table for magazine items
@@ -107,9 +119,10 @@ model MagazineItem {
   customDescription String?
   
   createdAt         DateTime        @default(now())
-  
+
   @@unique([magazineId, submissionId])
   @@index([magazineId, displayOrder])
+  @@index([submissionId])  // Reverse lookups (Quick Win 4)
 }
 
 // Audit log for tracking changes
@@ -124,9 +137,11 @@ model AuditLog {
   ipAddress         String?
   userAgent         String?
   timestamp         DateTime        @default(now())
-  
+
   @@index([entityType, entityId])
   @@index([userId, timestamp])
+  @@index([action, timestamp])   // Action-based queries (Quick Win 4)
+  @@index([timestamp])            // Time-based queries (Quick Win 4)
 }
 
 // Media storage tracking

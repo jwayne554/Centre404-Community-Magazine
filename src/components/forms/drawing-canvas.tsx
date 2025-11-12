@@ -3,7 +3,15 @@
 import { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Palette, Eraser, RotateCcw, Download, Pen } from 'lucide-react';
+
+// Icon replacements (emojis instead of lucide-react to reduce bundle size)
+const icons = {
+  palette: '🎨',
+  pen: '✏️',
+  eraser: '🧹',
+  rotate: '↻',
+  download: '⬇️',
+};
 
 interface DrawingCanvasProps {
   onSave?: (dataUrl: string) => void;
@@ -138,7 +146,7 @@ export function DrawingCanvas({
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Palette className="h-5 w-5" />
+          <span className="text-xl">{icons.palette}</span>
           Drawing Canvas
         </CardTitle>
       </CardHeader>
@@ -150,7 +158,7 @@ export function DrawingCanvas({
             size="sm"
             onClick={() => setTool('pen')}
           >
-            <Pen className="mr-2 h-4 w-4" />
+            <span className="mr-2">{icons.pen}</span>
             Draw
           </Button>
           <Button
@@ -158,7 +166,7 @@ export function DrawingCanvas({
             size="sm"
             onClick={() => setTool('eraser')}
           >
-            <Eraser className="mr-2 h-4 w-4" />
+            <span className="mr-2">{icons.eraser}</span>
             Erase
           </Button>
           <Button
@@ -166,7 +174,7 @@ export function DrawingCanvas({
             size="sm"
             onClick={clearCanvas}
           >
-            <RotateCcw className="mr-2 h-4 w-4" />
+            <span className="mr-2">{icons.rotate}</span>
             Clear
           </Button>
           <Button
@@ -174,7 +182,7 @@ export function DrawingCanvas({
             size="sm"
             onClick={saveDrawing}
           >
-            <Download className="mr-2 h-4 w-4" />
+            <span className="mr-2">{icons.download}</span>
             Save
           </Button>
         </div>
