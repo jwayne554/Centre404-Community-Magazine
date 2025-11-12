@@ -22,6 +22,11 @@ export function SimpleSubmissionForm() {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
+  // Submission state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+
   // Drawing state
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -32,13 +37,20 @@ export function SimpleSubmissionForm() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
+  // Top of form ref for scrolling
+  const formTopRef = useRef<HTMLDivElement>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!category || (!textContent && !imagePreview && !drawingData && !audioBlob)) {
       alert('Please choose a category and add some content (text, image, audio, or drawing)');
       return;
     }
+
+    // Step 1: Show loading state
+    setIsSubmitting(true);
+    setSubmitSuccess(false);
 
     try {
       // Upload audio if present
@@ -82,7 +94,17 @@ export function SimpleSubmissionForm() {
       });
 
       if (response.ok) {
+        // Step 2: Show success animation on button
+        setSubmitSuccess(true);
+
+        // Step 3: Show toast notification
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 6000);
+
+        // Step 4: Set success message for banner
         setSuccessMessage('✓ Thank you! Your contribution is being reviewed by our team. You\'ll see it in the next magazine edition once approved!');
+
+        // Step 5: Clear form
         setCategory('');
         setTextContent('');
         setAuthorName('');
@@ -90,12 +112,23 @@ export function SimpleSubmissionForm() {
         setDrawingData('');
         setAudioBlob(null);
         setAudioUrl(null);
+
         // Clear canvas if it exists
         if (canvasRef.current) {
           const ctx = canvasRef.current.getContext('2d');
           if (ctx) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
         }
-        setTimeout(() => setSuccessMessage(''), 8000);
+
+        // Step 6: Smooth scroll to top after brief delay
+        setTimeout(() => {
+          formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+
+        // Reset success states after delay
+        setTimeout(() => {
+          setSuccessMessage('');
+          setSubmitSuccess(false);
+        }, 10000);
       } else {
         const errorData = await response.text();
         console.error('Submission failed:', response.status, errorData);
@@ -104,7 +137,16 @@ export function SimpleSubmissionForm() {
     } catch (error) {
       console.error('Submission error:', error);
       alert('Failed to submit. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  // Function to reset form and hide success message
+  const handleSubmitAnother = () => {
+    setSuccessMessage('');
+    setSubmitSuccess(false);
+    setShowToast(false);
   };
 
   const startAudioRecording = async () => {
@@ -244,12 +286,69 @@ export function SimpleSubmissionForm() {
 
   return (
     <div>
+      {/* Scroll target ref */}
+      <div ref={formTopRef} style={{ position: 'absolute', top: '-20px' }} />
+
       <h2 style={{ fontSize: '20px', marginBottom: '20px', fontWeight: '600' }}>Share Your Story</h2>
-      
-      {/* Success Message */}
+
+      {/* Enhanced Success Banner */}
       {successMessage && (
-        <div className="success-message">
-          {successMessage}
+        <div style={{
+          background: 'linear-gradient(135deg, #27ae60 0%, #229954 100%)',
+          color: 'white',
+          padding: '20px 24px',
+          borderRadius: '12px',
+          marginBottom: '30px',
+          boxShadow: '0 4px 12px rgba(39, 174, 96, 0.3)',
+          animation: 'slideDown 0.4s ease-out',
+          border: '2px solid #1e8449'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'start', gap: '16px' }}>
+            <div style={{
+              fontSize: '32px',
+              animation: 'scaleIn 0.5s ease-out'
+            }}>
+              ✓
+            </div>
+            <div style={{ flex: 1 }}>
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: '700',
+                marginBottom: '8px',
+                margin: 0
+              }}>
+                Contribution Submitted Successfully!
+              </h3>
+              <p style={{
+                fontSize: '16px',
+                marginBottom: '16px',
+                opacity: 0.95,
+                margin: '8px 0 16px 0'
+              }}>
+                Thank you! Your contribution is being reviewed by our team. You'll see it in the next magazine edition once approved.
+              </p>
+              <button
+                onClick={handleSubmitAnother}
+                type="button"
+                style={{
+                  background: 'white',
+                  color: '#27ae60',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  transition: 'transform 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                ✏️ Submit Another Contribution
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -590,15 +689,168 @@ export function SimpleSubmissionForm() {
           )}
         </div>
 
-        {/* Submit Button - Matching original style */}
+        {/* Enhanced Submit Button with Loading/Success States */}
         <button
           type="submit"
           className="btn-large btn-primary"
-          style={{ width: '100%', marginTop: '30px' }}
+          disabled={isSubmitting}
+          style={{
+            width: '100%',
+            marginTop: '30px',
+            position: 'relative',
+            background: submitSuccess ? '#27ae60' : isSubmitting ? '#95a5a6' : undefined,
+            cursor: isSubmitting ? 'not-allowed' : 'pointer',
+            transition: 'all 0.3s ease',
+            transform: submitSuccess ? 'scale(1.02)' : 'scale(1)'
+          }}
         >
-          ✓ Submit My Contribution
+          {isSubmitting ? (
+            <>
+              <span style={{
+                display: 'inline-block',
+                width: '20px',
+                height: '20px',
+                border: '3px solid rgba(255,255,255,0.3)',
+                borderTopColor: 'white',
+                borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite',
+                marginRight: '10px'
+              }}/>
+              Submitting...
+            </>
+          ) : submitSuccess ? (
+            <>
+              <span style={{
+                display: 'inline-block',
+                fontSize: '24px',
+                marginRight: '8px',
+                animation: 'scaleIn 0.4s ease-out'
+              }}>
+                ✓
+              </span>
+              Submitted Successfully!
+            </>
+          ) : (
+            '✓ Submit My Contribution'
+          )}
         </button>
       </form>
+
+      {/* Toast Notification - Fixed at bottom-right */}
+      {showToast && (
+        <div
+          role="alert"
+          aria-live="polite"
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            background: 'linear-gradient(135deg, #27ae60 0%, #229954 100%)',
+            color: 'white',
+            padding: '16px 20px',
+            borderRadius: '12px',
+            boxShadow: '0 8px 24px rgba(39, 174, 96, 0.4)',
+            zIndex: 9999,
+            maxWidth: '400px',
+            animation: 'slideInRight 0.4s ease-out',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            border: '2px solid rgba(255,255,255,0.3)'
+          }}
+        >
+          <div style={{
+            fontSize: '28px',
+            animation: 'scaleIn 0.5s ease-out'
+          }}>
+            ✓
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{
+              fontSize: '16px',
+              fontWeight: '700',
+              marginBottom: '4px'
+            }}>
+              Success!
+            </div>
+            <div style={{
+              fontSize: '14px',
+              opacity: 0.95
+            }}>
+              Your contribution has been submitted for review.
+            </div>
+          </div>
+          <button
+            onClick={() => setShowToast(false)}
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              border: 'none',
+              color: 'white',
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              cursor: 'pointer',
+              fontSize: '18px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+            aria-label="Close notification"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes scaleIn {
+          from {
+            transform: scale(0);
+          }
+          to {
+            transform: scale(1);
+          }
+        }
+
+        @media (max-width: 640px) {
+          [role="alert"] {
+            bottom: 16px;
+            right: 16px;
+            left: 16px;
+            max-width: none;
+          }
+        }
+      `}</style>
     </div>
   );
 }
