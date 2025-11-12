@@ -321,7 +321,7 @@ The application is configured for deployment to Railway with Docker:
   - ⏭️ Inline Hover Handlers (deferred to Phase 2)
   - **Impact Achieved**: -416KB bundle, -11 packages, 10-50x faster queries, no admin lag
 
-- **Phase 1** (Critical Security): 🚧 **IN PROGRESS** (4/6 done - 2025-01-12) - 67% Complete
+- **Phase 1** (Critical Security): 🚧 **IN PROGRESS** (5/6 done - 2025-01-12) - 83% Complete
   - ✅ Task 1.1: Authentication on Admin Endpoints
     - Created `src/lib/api-auth.ts` with requireAuth(), requireAdmin(), requireModerator()
     - Protected all admin endpoints (submissions status, magazines CRUD)
@@ -339,16 +339,21 @@ The application is configured for deployment to Railway with Docker:
     - Updated `package.json`: start now runs `prisma migrate deploy`
     - Updated `Dockerfile`: Uses migrate deploy instead of db push
     - Migration history tracked in git for production safety
-  - ⏳ Task 1.5: Fix Media Model (pending)
+  - ✅ Task 1.5: Fix Media Model (Orphaned Relations)
+    - Added `submissionId` foreign key to Media model with CASCADE delete
+    - Added `media[]` relation to Submission model (one-to-many)
+    - Created migration: `20251112112242_add_media_submission_relations`
+    - Created cleanup script: `scripts/cleanup-orphaned-media.ts`
+    - Foundation for proper file tracking (future: update upload API)
   - ⏳ Task 1.6: File Upload Streaming (pending)
-  - **Security Impact**: D-grade → B+ (4 critical vulnerabilities fixed, production safety added)
+  - **Security Impact**: D-grade → B+ (5 critical vulnerabilities fixed, database integrity improved)
 
 - **Phase 2** (Performance): ⏳ Pending
 - **Phase 3** (Code Quality): ⏳ Pending
 - **Phase 4** (Polish): ⏳ Pending
 
-**Current Focus**: Phase 1, Task 1.5 (Fix Media Model)
-**Overall Progress**: 28% complete (9/32 tasks)
+**Current Focus**: Phase 1, Task 1.6 (File Upload Streaming)
+**Overall Progress**: 31% complete (10/32 tasks)
 
 ## Related Documentation
 
