@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
     tempFilePath = filePath;
 
     const fileStream = file.stream();
-    const nodeStream = Readable.fromWeb(
-      fileStream as ReadableStream<Uint8Array>
-    );
+    // Convert Web ReadableStream to Node.js Readable stream
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const nodeStream = Readable.fromWeb(fileStream as any);
     const writeStream = createWriteStream(filePath);
 
     await pipeline(nodeStream, writeStream);
