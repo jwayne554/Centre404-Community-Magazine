@@ -55,10 +55,27 @@ export async function POST(request: NextRequest) {
     // Generate tokens
     const tokens = AuthService.generateTokens(user);
 
-    return NextResponse.json({
-      user,
-      ...tokens,
+    // Create response with user data only (no tokens in JSON)
+    const response = NextResponse.json({ user });
+
+    // Set tokens in HTTP-only cookies for XSS protection
+    response.cookies.set('accessToken', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60, // 15 minutes
+      path: '/',
     });
+
+    response.cookies.set('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: '/api/auth',
+    });
+
+    return response;
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

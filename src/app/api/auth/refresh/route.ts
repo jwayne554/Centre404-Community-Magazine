@@ -1,47 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { AuthService } from '@/lib/auth';
 
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
-});
-
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const validatedData = loginSchema.parse(body);
+    // Get refresh token from cookies
+    const refreshToken = request.cookies.get('refreshToken')?.value;
 
-    // Find user by email
+    if (!refreshToken) {
+      return NextResponse.json(
+        { error: 'No refresh token provided' },
+        { status: 401 }
+      );
+    }
+
+    // Verify refresh token
+    let payload;
+    try {
+      payload = AuthService.verifyRefreshToken(refreshToken);
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Invalid or expired refresh token' },
+        { status: 401 }
+      );
+    }
+
+    // Get user from database
     const user = await prisma.user.findUnique({
-      where: { email: validatedData.email },
+      where: { id: payload.userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      },
     });
 
-    if (!user || !user.password) {
+    if (!user) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { error: 'User not found' },
         { status: 401 }
       );
     }
 
-    // Verify password
-    const isValidPassword = await AuthService.verifyPassword(
-      validatedData.password,
-      user.password
-    );
-
-    if (!isValidPassword) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
-
-    // Generate tokens
+    // Generate new tokens
     const tokens = AuthService.generateTokens(user);
 
-    // Create response with user data only (no tokens in JSON)
+    // Return user data
     const response = NextResponse.json({
       user: {
         id: user.id,
@@ -51,7 +56,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Set tokens in HTTP-only cookies for XSS protection
+    // Set new tokens in HTTP-only cookies
     response.cookies.set('accessToken', tokens.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -70,16 +75,9 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: error.issues },
-        { status: 400 }
-      );
-    }
-
-    console.error('Login error:', error);
+    console.error('Token refresh error:', error);
     return NextResponse.json(
-      { error: 'Failed to login' },
+      { error: 'Failed to refresh token' },
       { status: 500 }
     );
   }

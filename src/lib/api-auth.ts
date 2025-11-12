@@ -7,31 +7,34 @@ export interface AuthContext {
 }
 
 /**
- * Extracts and validates authentication from request headers
- * Supports both Authorization header and x-user-* headers (from middleware)
+ * Extracts and validates authentication from request
+ * Priority: cookies > Authorization header > x-user-* headers (from middleware)
  */
 export async function requireAuth(
   request: NextRequest,
   allowedRoles?: string[]
 ): Promise<{ error: NextResponse } | { success: true; auth: AuthContext }> {
-  // First check if middleware already added headers
-  let userId = request.headers.get('x-user-id');
-  let userRole = request.headers.get('x-user-role');
+  let userId: string | null = null;
+  let userRole: string | null = null;
+  let token: string | null = null;
 
-  // If not present, try to extract from Authorization header
-  if (!userId || !userRole) {
+  // Priority 1: Check for token in HTTP-only cookies (most secure)
+  token = request.cookies.get('accessToken')?.value || null;
+
+  // Priority 2: Check Authorization header (for API clients)
+  if (!token) {
     const authHeader = request.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
+    token = authHeader?.replace('Bearer ', '') || null;
+  }
 
-    if (!token) {
-      return {
-        error: NextResponse.json(
-          { error: 'Unauthorized - Authentication required' },
-          { status: 401 }
-        ),
-      };
-    }
+  // Priority 3: Check if middleware already added headers
+  if (!token) {
+    userId = request.headers.get('x-user-id');
+    userRole = request.headers.get('x-user-role');
+  }
 
+  // If we have a token, verify it
+  if (token) {
     try {
       const payload = AuthService.verifyAccessToken(token);
       userId = payload.userId;
@@ -44,6 +47,16 @@ export async function requireAuth(
         ),
       };
     }
+  }
+
+  // If still no authentication, reject
+  if (!userId || !userRole) {
+    return {
+      error: NextResponse.json(
+        { error: 'Unauthorized - Authentication required' },
+        { status: 401 }
+      ),
+    };
   }
 
   // Check role authorization if roles specified
