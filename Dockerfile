@@ -46,11 +46,14 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/prisma ./prisma
 
+# Ensure migrations are copied (critical for production deployments)
+COPY --from=builder /app/prisma/migrations ./prisma/migrations
+
 USER nextjs
 
 EXPOSE 3000
 
 ENV PORT 3000
 
-# Push schema to database and start server (using db push to avoid migration conflicts)
-CMD if [ -n "$DATABASE_URL" ]; then npx prisma db push --accept-data-loss; fi && npm start
+# Run migrations and start server (npm start handles prisma migrate deploy)
+CMD npm start
