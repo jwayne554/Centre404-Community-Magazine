@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
+import { mkdir, unlink, stat } from 'fs/promises';
+import { createWriteStream } from 'fs';
+import { pipeline } from 'stream/promises';
+import { Readable } from 'stream';
 import path from 'path';
 import { randomUUID } from 'crypto';
+import { fileTypeFromFile } from 'file-type';
 import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
@@ -11,10 +15,12 @@ export async function POST(request: NextRequest) {
     return rateLimitResponse;
   }
 
+  let tempFilePath: string | null = null;
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    
+
     if (!file) {
       return NextResponse.json(
         { error: 'No file provided' },
@@ -22,16 +28,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'audio/mpeg', 'audio/wav', 'audio/webm'];
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json(
-        { error: 'Invalid file type. Only images and audio files are allowed.' },
-        { status: 400 }
-      );
-    }
-
-    // Validate file size (10MB max)
+    // Validate file size BEFORE streaming (10MB max)
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
       return NextResponse.json(
@@ -41,32 +38,84 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate unique filename
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    
     const fileExtension = path.extname(file.name);
     const fileName = `${randomUUID()}${fileExtension}`;
-    
+
     // Ensure upload directory exists
     const uploadDir = path.join(process.cwd(), 'public', 'uploads');
     await mkdir(uploadDir, { recursive: true });
-    
-    // Save file
+
+    // Stream file to disk (Task 1.6 - no memory buffering)
     const filePath = path.join(uploadDir, fileName);
-    await writeFile(filePath, buffer);
-    
+    tempFilePath = filePath;
+
+    const fileStream = file.stream();
+    const nodeStream = Readable.fromWeb(fileStream as any);
+    const writeStream = createWriteStream(filePath);
+
+    await pipeline(nodeStream, writeStream);
+
+    // Validate file type AFTER streaming (can delete if invalid)
+    const detectedType = await fileTypeFromFile(filePath);
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'audio/mpeg',
+      'audio/wav',
+      'audio/webm',
+      'audio/ogg',
+    ];
+
+    if (!detectedType || !allowedMimeTypes.includes(detectedType.mime)) {
+      // Delete invalid file
+      await unlink(filePath);
+      return NextResponse.json(
+        {
+          error: 'Invalid file type. Only images and audio files are allowed.',
+          detected: detectedType?.mime || 'unknown',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Verify file size on disk matches reported size (security check)
+    const fileStats = await stat(filePath);
+    if (Math.abs(fileStats.size - file.size) > 100) {
+      // Allow small discrepancy for encoding
+      await unlink(filePath);
+      return NextResponse.json(
+        { error: 'File size mismatch. Upload may be corrupted.' },
+        { status: 400 }
+      );
+    }
+
+    // Clear temp file path (successful upload)
+    tempFilePath = null;
+
     // Return public URL
     const publicUrl = `/uploads/${fileName}`;
-    
+
     return NextResponse.json({
       url: publicUrl,
       fileName: fileName,
       originalName: file.name,
-      size: file.size,
-      type: file.type,
+      size: fileStats.size, // Use actual file size
+      type: detectedType.mime, // Use detected MIME type
     });
   } catch (error) {
     console.error('Upload error:', error);
+
+    // Clean up temp file on error
+    if (tempFilePath) {
+      try {
+        await unlink(tempFilePath);
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
+
     return NextResponse.json(
       { error: 'Failed to upload file' },
       { status: 500 }
