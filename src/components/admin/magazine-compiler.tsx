@@ -4,17 +4,6 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Plus,
-  Trash2,
-  Save,
-  Globe,
-  Lock,
-  ArrowUp,
-  ArrowDown,
-  Eye,
-  Loader2
-} from 'lucide-react';
 
 interface Submission {
   id: string;
@@ -150,7 +139,7 @@ export function MagazineCompiler() {
         <CardContent>
           {loading ? (
             <div className="text-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+              <span style={{ fontSize: '32px', display: 'block' }}>⏳</span>
               <p className="mt-2 text-muted-foreground">Loading submissions...</p>
             </div>
           ) : approvedSubmissions.length === 0 ? (
@@ -192,7 +181,7 @@ export function MagazineCompiler() {
                       </div>
                       {!isSelected && (
                         <Button size="sm" variant="ghost">
-                          <Plus className="h-4 w-4" />
+                          <span style={{ fontSize: '16px' }}>➕</span>
                         </Button>
                       )}
                     </div>
@@ -269,7 +258,7 @@ export function MagazineCompiler() {
                             onClick={() => moveUp(index)}
                             disabled={index === 0}
                           >
-                            <ArrowUp className="h-3 w-3" />
+                            <span style={{ fontSize: '12px' }}>⬆️</span>
                           </Button>
                           <Button
                             size="sm"
@@ -277,14 +266,14 @@ export function MagazineCompiler() {
                             onClick={() => moveDown(index)}
                             disabled={index === selectedSubmissions.length - 1}
                           >
-                            <ArrowDown className="h-3 w-3" />
+                            <span style={{ fontSize: '12px' }}>⬇️</span>
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => removeFromMagazine(submission.id)}
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <span style={{ fontSize: '12px' }}>🗑️</span>
                           </Button>
                         </div>
                       </div>
@@ -302,7 +291,7 @@ export function MagazineCompiler() {
               onClick={() => setIsPublic(true)}
               className="flex-1"
             >
-              <Globe className="mr-2 h-4 w-4" />
+              <span style={{ fontSize: '16px', marginRight: '8px' }}>🌐</span>
               Public
             </Button>
             <Button
@@ -310,7 +299,7 @@ export function MagazineCompiler() {
               onClick={() => setIsPublic(false)}
               className="flex-1"
             >
-              <Lock className="mr-2 h-4 w-4" />
+              <span style={{ fontSize: '16px', marginRight: '8px' }}>🔒</span>
               Draft
             </Button>
           </div>
@@ -324,18 +313,18 @@ export function MagazineCompiler() {
             >
               {saving ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <span style={{ fontSize: '16px', marginRight: '8px' }}>⏳</span>
                   Creating...
                 </>
               ) : (
                 <>
-                  <Save className="mr-2 h-4 w-4" />
+                  <span style={{ fontSize: '16px', marginRight: '8px' }}>💾</span>
                   Create Magazine
                 </>
               )}
             </Button>
             <Button variant="outline" disabled>
-              <Eye className="mr-2 h-4 w-4" />
+              <span style={{ fontSize: '16px', marginRight: '8px' }}>👁️</span>
               Preview
             </Button>
           </div>

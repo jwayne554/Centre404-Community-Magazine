@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Calendar } from 'lucide-react';
 import { useMagazineData } from '@/hooks/useMagazineData';
 import { MagazineSkeletonGrid } from '@/components/skeletons/magazine-skeleton';
 
@@ -68,7 +67,7 @@ export default function MagazinesPage() {
             fontWeight: '600'
           }}
         >
-          <ArrowLeft className="h-4 w-4" />
+          <span style={{ fontSize: '16px' }}>←</span>
           Back to Contribute
         </Link>
 
@@ -133,7 +132,7 @@ export default function MagazinesPage() {
                     )}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px', fontSize: '14px' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Calendar className="h-4 w-4" />
+                        <span style={{ fontSize: '16px' }}>📅</span>
                         {latestMagazine.publishedAt ? new Date(latestMagazine.publishedAt).toLocaleDateString('en-US', {
                           month: 'long',
                           day: 'numeric',
@@ -220,7 +219,7 @@ export default function MagazinesPage() {
                           gap: '6px',
                           marginBottom: '8px'
                         }}>
-                          <Calendar className="h-3 w-3" />
+                          <span style={{ fontSize: '12px' }}>📅</span>
                           {magazine.publishedAt ? new Date(magazine.publishedAt).toLocaleDateString('en-US', {
                             month: 'short',
                             year: 'numeric'

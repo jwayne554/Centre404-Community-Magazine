@@ -3,7 +3,6 @@
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Upload, X, Image as ImageIcon, Mic, Loader2 } from 'lucide-react';
 
 interface MediaUploadProps {
   onUpload: (url: string, type: 'image' | 'audio') => void;
@@ -134,12 +133,12 @@ export function MediaUpload({
           <CardContent className="flex flex-col items-center justify-center py-12">
             {uploading ? (
               <>
-                <Loader2 className="h-12 w-12 animate-spin mb-4 text-muted-foreground" />
+                <span style={{ fontSize: '48px' }} className="mb-4">⏳</span>
                 <p className="text-muted-foreground">Uploading...</p>
               </>
             ) : (
               <>
-                <Upload className="h-12 w-12 mb-4 text-muted-foreground" />
+                <span style={{ fontSize: '48px' }} className="mb-4">📤</span>
                 <p className="text-lg font-medium mb-2">Click to upload or drag and drop</p>
                 <p className="text-sm text-muted-foreground">Images or audio files (max 10MB)</p>
               </>
@@ -166,7 +165,7 @@ export function MediaUpload({
                 ) : (
                   <>
                     <div className="w-20 h-20 bg-accent rounded flex items-center justify-center">
-                      <Mic className="h-8 w-8" />
+                      <span style={{ fontSize: '32px' }}>🎤</span>
                     </div>
                     <div>
                       <p className="font-medium">Audio uploaded</p>
@@ -181,7 +180,7 @@ export function MediaUpload({
                 onClick={clearUpload}
                 disabled={uploading}
               >
-                <X className="h-4 w-4" />
+                <span style={{ fontSize: '16px' }}>✕</span>
               </Button>
             </div>
           </CardContent>
@@ -201,7 +200,7 @@ export function MediaUpload({
           disabled={uploading || !!preview}
           className="flex-1"
         >
-          <ImageIcon className="mr-2 h-4 w-4" />
+          <span style={{ fontSize: '16px', marginRight: '8px' }}>🖼️</span>
           Add Photo
         </Button>
         <Button
@@ -210,7 +209,7 @@ export function MediaUpload({
           disabled={uploading || !!preview}
           className="flex-1"
         >
-          <Mic className="mr-2 h-4 w-4" />
+          <span style={{ fontSize: '16px', marginRight: '8px' }}>🎤</span>
           Add Audio
         </Button>
       </div>

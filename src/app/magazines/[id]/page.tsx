@@ -3,7 +3,6 @@
 import { useState, use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Calendar, Heart, Volume2, ChevronDown, ChevronUp } from 'lucide-react';
 import { getCategoryEmoji, getCategoryColor, getCategoryName } from '@/utils/category-helpers';
 import { useMagazineData } from '@/hooks/useMagazineData';
 import { useTTSPlayback } from '@/hooks/useTTSPlayback';
@@ -107,7 +106,7 @@ export default function MagazinePage({ params }: { params: Promise<{ id: string 
             flexWrap: 'wrap'
           }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Calendar className="h-4 w-4" />
+              <span style={{ fontSize: '16px' }}>📅</span>
               {magazine.publishedAt ? new Date(magazine.publishedAt).toLocaleDateString('en-US', {
                 month: 'long',
                 day: 'numeric',
@@ -136,7 +135,7 @@ export default function MagazinePage({ params }: { params: Promise<{ id: string 
             fontWeight: '600'
           }}
         >
-          <ArrowLeft className="h-4 w-4" />
+          <span style={{ fontSize: '16px' }}>←</span>
           Back to Archive
         </Link>
 
@@ -234,11 +233,11 @@ export default function MagazinePage({ params }: { params: Promise<{ id: string 
                       >
                         {isExpanded ? (
                           <>
-                            Show Less <ChevronUp className="h-4 w-4" />
+                            Show Less <span style={{ fontSize: '16px' }}>▲</span>
                           </>
                         ) : (
                           <>
-                            Read More <ChevronDown className="h-4 w-4" />
+                            Read More <span style={{ fontSize: '16px' }}>▼</span>
                           </>
                         )}
                       </button>
@@ -289,7 +288,7 @@ export default function MagazinePage({ params }: { params: Promise<{ id: string 
                       transition: 'all 0.2s'
                     }}
                   >
-                    <Heart className="h-4 w-4" fill={isLiked ? 'white' : 'none'} />
+                    <span style={{ fontSize: '16px', opacity: isLiked ? 1 : 0.7 }}>❤️</span>
                     {isLiked ? 'Liked' : 'Like'}
                   </button>
 
@@ -311,7 +310,7 @@ export default function MagazinePage({ params }: { params: Promise<{ id: string 
                         transition: 'all 0.2s'
                       }}
                     >
-                      <Volume2 className="h-4 w-4" />
+                      <span style={{ fontSize: '16px' }}>🔊</span>
                       Listen
                     </button>
                   )}
