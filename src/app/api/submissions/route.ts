@@ -3,6 +3,7 @@ import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { rateLimit } from '@/lib/rate-limit';
 import { SubmissionStatus, SubmissionCategory } from '@prisma/client';
+import { handleApiError } from '@/lib/api-errors';
 
 const createSubmissionSchema = z.object({
   category: z.enum(['MY_NEWS', 'SAYING_HELLO', 'MY_SAY']),
@@ -65,10 +66,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to fetch submissions:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch submissions' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -127,18 +125,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(submission, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: error.issues },
-        { status: 400 }
-      );
-    }
-
     console.error('Failed to create submission - Full error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json(
-      { error: 'Failed to create submission', details: errorMessage },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
