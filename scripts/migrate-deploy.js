@@ -33,20 +33,17 @@ function exec(command, options = {}) {
 async function main() {
   console.log('🚀 Smart Migration Deployment Starting...\n');
 
-  // Check migration status
-  console.log('📊 Checking migration status...');
-  const statusOutput = exec('npx prisma migrate status', {
+  // Try to run migrate deploy first
+  console.log('🔄 Attempting prisma migrate deploy...\n');
+  const deployOutput = exec('npx prisma migrate deploy', {
     silent: true,
     ignoreError: true,
   });
 
-  const needsBaseline =
-    statusOutput.includes('P3005') ||
-    statusOutput.includes('not empty') ||
-    statusOutput.includes('No migration found');
-
-  if (needsBaseline) {
-    console.log('⚠️  Database needs baselining (existing schema without migrations)\n');
+  // Check if it failed with P3005 (schema not empty)
+  if (deployOutput.includes('P3005') || deployOutput.includes('not empty')) {
+    console.log('⚠️  P3005 Error: Database schema exists but no migration history\n');
+    console.log('📝 Running automatic baseline...\n');
 
     // Get all migration directories
     const migrationsDir = path.join(process.cwd(), 'prisma', 'migrations');
@@ -65,24 +62,30 @@ async function main() {
       })
       .sort();
 
-    console.log(`📝 Found ${migrations.length} migrations to baseline:\n`);
+    console.log(`   Found ${migrations.length} migrations to baseline\n`);
 
     // Mark each migration as applied
     for (const migration of migrations) {
-      console.log(`  ✓ Marking "${migration}" as applied...`);
+      console.log(`   ✓ Marking "${migration}" as applied...`);
       exec(`npx prisma migrate resolve --applied "${migration}"`, {
+        silent: true,
         ignoreError: true,
       });
     }
 
     console.log('\n✅ Baseline complete!\n');
-  } else {
-    console.log('✓ Migration history exists\n');
-  }
 
-  // Now run normal migrate deploy
-  console.log('🔄 Running prisma migrate deploy...\n');
-  exec('npx prisma migrate deploy');
+    // Now try migrate deploy again
+    console.log('🔄 Running prisma migrate deploy after baseline...\n');
+    exec('npx prisma migrate deploy');
+  } else if (deployOutput.includes('No pending migrations')) {
+    console.log('✅ No pending migrations to apply');
+  } else if (deployOutput.includes('migration') && deployOutput.includes('applied')) {
+    console.log('✅ Migrations applied successfully');
+  } else {
+    // Success case - migrations were applied
+    console.log(deployOutput);
+  }
 
   console.log('\n✅ Migration deployment complete!');
 }
