@@ -152,16 +152,29 @@ npm run db:migrate   # Create and apply migrations (recommended)
 npm run db:push      # Push schema changes (quick prototyping only)
 
 # Production
-npm run db:deploy    # Deploy migrations (Railway uses smart script)
+npm run db:deploy       # Deploy migrations (Railway uses smart script)
+npm run prod:fix-enums  # One-time enum migration fix (idempotent, safe)
+npm run prod:init       # Initialize admin user (upsert, safe for repeated runs)
 
 # Utilities
-npm run db:seed      # Seed database with sample data
+npm run db:seed      # Seed database with sample data (dev only - includes test data)
 npm run db:studio    # Open Prisma Studio (database GUI)
 npm run db:generate  # Regenerate Prisma client
 npm run media:cleanup -- --dry-run  # Check for orphaned media files
 ```
 
-**Note**: Production deployments use `scripts/migrate-deploy.js` which automatically handles schema baselining if needed (P3005 error recovery).
+**Production Scripts**:
+- `migrate-deploy.js`: Smart migration deployment with auto-baselining (P3005 recovery)
+- `fix-production-enums.ts`: One-time fix for enum migration (checks if needed, skips if exists)
+- `init-production.ts`: Production-safe admin user creation (no test data, upsert-based)
+
+**Production Start Flow** (automatic on Railway deploy):
+```
+1. node scripts/migrate-deploy.js  → Apply/baseline migrations
+2. npm run prod:fix-enums          → Ensure database enums exist
+3. npm run prod:init               → Create/verify admin user
+4. next start                      → Launch application
+```
 
 **Current Migrations** (3 total):
 1. `0_init` - Initial schema baseline
@@ -558,6 +571,96 @@ Successfully resolved 4 deployment blockers:
 - ✅ All Phase 1-4 features active
 - ✅ Security grade: A- (all critical vulnerabilities fixed)
 - ✅ Framework: Next.js 16.0.2 + React 19.2.0 + Node 22 LTS
+
+**Critical Production Fixes (2025-01-13 Evening) - 3 Blockers Resolved**:
+
+After codebase cleanup deployment, encountered 3 production crashes. All resolved:
+
+1. **Docker Build Failure - Missing public/ Directory** ✅ FIXED
+   - **Error**: `COPY --from=builder /app/public: not found`
+   - **Root Cause**: Cleanup removed all SVG files from public/, leaving it empty and untracked by git
+   - **Solution**:
+     - Created `public/.gitkeep` to track empty directory
+     - Added `RUN mkdir -p ./public` in both Dockerfile stages (builder, runner)
+   - **Commit**: `88830e6`
+   - **Result**: Build succeeds, public/ directory preserved
+
+2. **Production Login Failure - Admin User Missing** ✅ FIXED
+   - **Error**: "Invalid credentials" for admin@test.com / password123
+   - **Root Cause**: Database not seeded in production
+     - `prisma/seed.ts` creates test data + admin user
+     - Start script only ran migrations, NOT seeding
+     - Admin user never existed in production DB
+   - **Deep Analysis**:
+     - Seed script mixes admin creation with test submissions/magazines
+     - Running full seed on every deploy would duplicate test data
+     - Need production-safe initialization (admin only, no test data)
+   - **Solution**:
+     - Created `scripts/init-production.ts` (production-safe, admin only)
+     - Uses upsert - idempotent and safe for repeated runs
+     - Updated start script: `migrate → prod:init → start`
+   - **Commit**: `18622e1`
+   - **Result**: Admin user created on every deploy, login works
+
+3. **GitHub CI Lint Failure - ESLint 9 Circular Structure** ✅ FIXED
+   - **Error**: "Converting circular structure to JSON" during lint
+   - **Root Cause**: ESLint 9 + FlatCompat causing circular dependency in config
+   - **Solution**:
+     - Migrated to ESLint 9 native flat config (removed FlatCompat)
+     - Added typescript-eslint parser for proper TypeScript parsing
+     - Fixed 6 unused variable warnings (removed unused imports/assignments)
+   - **Commit**: `600135c`
+   - **Testing**:
+     - ✅ `npm run lint` - 0 errors, 0 warnings
+     - ✅ `npm run type-check` - passes
+   - **Result**: Clean CI builds, no circular structure errors
+
+4. **CRITICAL: Production Enum Migration Crisis** ✅ FIXED (After 2 Attempts)
+   - **Error**: `type "public.UserRole" does not exist`
+   - **Root Cause (Ultra-Deep Analysis)**:
+     - Timeline of disaster:
+       1. Production deployed with migrations #1 (0_init) and #2 (add_media_relations)
+       2. Database baselined - those 2 migrations marked as applied
+       3. Migration #3 (convert_to_database_enums) created AFTER production was live
+       4. Prisma marked #3 as "applied" but never ran the actual SQL
+       5. Production DB still had String columns, no enum types
+       6. `prod:init` tried to create user with `role: 'ADMIN'` → **crash**
+     - **Why baseline didn't help**: Smart migration script only baselines existing schema, doesn't apply future migrations retroactively
+   - **First Fix Attempt** (FAILED):
+     - Created `scripts/fix-production-enums.ts` with batch SQL execution
+     - **Error**: "cannot insert multiple commands into a prepared statement"
+     - **Why Failed**: PostgreSQL prepared statements can only execute ONE SQL command per call
+     - Prisma's `$executeRawUnsafe()` uses prepared statements
+     - Tried to batch 6 CREATE TYPE + 16 ALTER TABLE statements → rejected
+   - **Second Fix Attempt** (SUCCESS):
+     - Split ALL SQL into individual `$executeRawUnsafe()` calls
+     - 22 separate statements executed sequentially:
+       - 6 CREATE TYPE statements (one per enum)
+       - 16 ALTER TABLE statements (drop defaults, convert types, set defaults)
+     - Script checks if UserRole enum exists first (idempotent)
+     - Updated start script: `migrate → prod:fix-enums → prod:init → start`
+   - **Commits**:
+     - `c77a381` (initial enum fix with batch SQL - failed)
+     - `61b6b6d` (split into individual statements - success)
+   - **Testing**:
+     - ✅ Local test detects existing enums and skips
+     - ✅ Safe for repeated deploys (idempotent)
+   - **Result**: Enums created in production, admin user creation succeeds, app starts
+
+**Current Production Flow**:
+```
+1. migrate-deploy.js   → Apply/baseline migrations
+2. prod:fix-enums      → Ensure enums exist (one-time fix, then no-op)
+3. prod:init           → Create admin user (upsert, safe)
+4. next start          → Launch application
+```
+
+**Production Status**: ✅ **FULLY OPERATIONAL** (verified 2025-01-13)
+- All 4 blockers resolved
+- Admin login working (admin@test.com / password123)
+- Database enums properly migrated
+- CI/CD passing (lint, type-check, build)
+- Railway deployment successful
 
 ## Current Work: Admin Authentication Frontend (2025-01-13)
 
