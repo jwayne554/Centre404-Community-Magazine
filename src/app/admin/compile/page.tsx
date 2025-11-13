@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { getCategoryEmoji, getCategoryColor } from '@/utils/category-helpers';
 
 interface Submission {
   id: string;
@@ -116,23 +117,6 @@ export default function MagazineCompiler() {
     }
   };
 
-  const getCategoryEmoji = (category: string) => {
-    switch (category) {
-      case 'MY_NEWS': return '📰';
-      case 'SAYING_HELLO': return '👋';
-      case 'MY_SAY': return '💬';
-      default: return '📝';
-    }
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'MY_NEWS': return '#f39c12';
-      case 'SAYING_HELLO': return '#27ae60';
-      case 'MY_SAY': return '#9b59b6';
-      default: return '#3498db';
-    }
-  };
 
   const generateSuggestedTitle = () => {
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];

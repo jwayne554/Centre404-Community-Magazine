@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { SUBMISSION_CATEGORIES, SYMBOL_BOARD } from '@/constants/categories';
+import { getAllCategories, SYMBOL_BOARD } from '@/utils/category-helpers';
 
 // Task 2.5: Use shared constants (eliminates duplication across forms)
-const categories = SUBMISSION_CATEGORIES;
+const categories = getAllCategories();
 const symbols = SYMBOL_BOARD;
 
 export function SimpleSubmissionForm() {
@@ -394,7 +394,7 @@ export function SimpleSubmissionForm() {
                   htmlFor={cat.value}
                   className={`category-card ${category === cat.value ? 'selected' : ''}`}
                 >
-                  <div style={{ fontSize: '30px', marginBottom: '8px' }}>{cat.icon}</div>
+                  <div style={{ fontSize: '30px', marginBottom: '8px' }}>{cat.emoji}</div>
                   <div style={{ fontWeight: '600' }}>{cat.label}</div>
                   <div style={{ fontSize: '14px', marginTop: '5px', opacity: 0.8 }}>
                     {cat.description}

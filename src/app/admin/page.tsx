@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { SubmissionSkeletonGrid } from '@/components/skeletons/submission-skeleton';
+import { getCategoryEmoji, getCategoryColor } from '@/utils/category-helpers';
 
 interface Submission {
   id: string;
@@ -226,23 +227,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const getCategoryEmoji = (category: string) => {
-    switch (category) {
-      case 'MY_NEWS': return '📰';
-      case 'SAYING_HELLO': return '👋';
-      case 'MY_SAY': return '💬';
-      default: return '📝';
-    }
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'MY_NEWS': return '#f39c12';
-      case 'SAYING_HELLO': return '#27ae60';
-      case 'MY_SAY': return '#9b59b6';
-      default: return '#3498db';
-    }
-  };
 
   const getStatusBadgeStyle = (status: string) => {
     switch (status) {

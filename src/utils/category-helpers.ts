@@ -79,3 +79,6 @@ export function getAllCategories(): Array<{
       description: value.description
     }));
 }
+
+// Symbol board for quick emoji insertion in forms
+export const SYMBOL_BOARD = ['😊', '❤️', '👍', '🎉', '🌟', '☀️', '🌈', '🎵', '🏠', '🚗', '🍕', '⚽'] as const;
