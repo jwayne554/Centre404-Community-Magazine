@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { requireAdmin } from '@/lib/api-auth';
 
@@ -48,6 +49,10 @@ export async function PATCH(
         }),
       },
     });
+
+    // Revalidate magazine cache after publishing
+    revalidatePath('/api/magazines');
+    revalidatePath('/magazines');
 
     return NextResponse.json(magazine);
   } catch (error) {
@@ -106,6 +111,10 @@ export async function DELETE(
         }),
       },
     });
+
+    // Revalidate cache (for admin views showing drafts)
+    revalidatePath('/api/magazines');
+    revalidatePath('/magazines');
 
     return NextResponse.json({ success: true });
   } catch (error) {

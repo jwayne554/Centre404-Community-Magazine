@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { requireAdmin } from '@/lib/api-auth';
 
@@ -11,6 +12,7 @@ const createMagazineSchema = z.object({
 });
 
 // GET /api/magazines - Get all magazines
+// Public magazines cached for 5 minutes to reduce database load
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -48,7 +50,16 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(magazines);
+    // Cache public magazine responses for 5 minutes
+    const response = NextResponse.json(magazines);
+    if (isPublic) {
+      response.headers.set(
+        'Cache-Control',
+        'public, s-maxage=300, stale-while-revalidate=600'
+      );
+    }
+
+    return response;
   } catch (error) {
     console.error('Failed to fetch magazines:', error);
     return NextResponse.json(
@@ -116,6 +127,12 @@ export async function POST(request: NextRequest) {
         }),
       },
     });
+
+    // Revalidate magazine cache if publishing
+    if (validatedData.isPublic) {
+      revalidatePath('/api/magazines');
+      revalidatePath('/magazines');
+    }
 
     return NextResponse.json(magazine, { status: 201 });
   } catch (error) {
