@@ -24,6 +24,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Ensure public directory exists (may be empty after cleanup)
+RUN mkdir -p ./public
+
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"
@@ -40,6 +43,8 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy everything needed for production
+# Create public directory first (may be empty except for uploads)
+RUN mkdir -p ./public
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
