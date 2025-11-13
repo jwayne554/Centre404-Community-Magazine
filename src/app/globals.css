@@ -405,3 +405,45 @@ body {
   color: white;
   font-weight: 600;
 }
+/* Task 2.8: Hover effects using CSS transitions instead of inline handlers */
+
+/* Admin link hover effect */
+.hover-admin-link {
+  transition: all 0.2s ease;
+}
+
+.hover-admin-link:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  border-color: white !important;
+}
+
+/* Magazine card lift effect (large) */
+.hover-lift-lg {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift-lg:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Magazine card lift effect (small) */
+.hover-lift-sm {
+  transition: all 0.2s ease;
+}
+
+.hover-lift-sm:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Admin stat card hover */
+.hover-stat-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+}

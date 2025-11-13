@@ -66,6 +66,7 @@ export default function MagazinesPage() {
           {/* Admin Link */}
           <Link
             href="/admin"
+            className="hover-admin-link"
             style={{
               position: 'absolute',
               top: '20px',
@@ -77,16 +78,7 @@ export default function MagazinesPage() {
               borderRadius: '6px',
               fontSize: '14px',
               fontWeight: '600',
-              border: '2px solid rgba(255,255,255,0.3)',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.3)';
-              e.currentTarget.style.borderColor = 'white';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+              border: '2px solid rgba(255,255,255,0.3)'
             }}
           >
             🔐 Admin
@@ -156,24 +148,17 @@ export default function MagazinesPage() {
                   href={`/magazines/${latestMagazine.id}`}
                   style={{ textDecoration: 'none', color: 'inherit' }}
                 >
-                  <div style={{
-                    background: 'linear-gradient(135deg, var(--primary-color), var(--success-color))',
-                    color: 'white',
-                    padding: '30px',
-                    borderRadius: '12px',
-                    border: '3px solid var(--primary-color)',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-                  }}
+                  <div
+                    className="hover-lift-lg"
+                    style={{
+                      background: 'linear-gradient(135deg, var(--primary-color), var(--success-color))',
+                      color: 'white',
+                      padding: '30px',
+                      borderRadius: '12px',
+                      border: '3px solid var(--primary-color)',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                    }}
                   >
                     <h3 style={{
                       fontSize: '28px',
@@ -237,25 +222,16 @@ export default function MagazinesPage() {
                       href={`/magazines/${magazine.id}`}
                       style={{ textDecoration: 'none', color: 'inherit' }}
                     >
-                      <div style={{
-                        background: 'white',
-                        border: '2px solid #ddd',
-                        borderRadius: '8px',
-                        padding: '20px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        height: '100%'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--primary-color)';
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = '#ddd';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
+                      <div
+                        className="hover-lift-sm"
+                        style={{
+                          background: 'white',
+                          border: '2px solid #ddd',
+                          borderRadius: '8px',
+                          padding: '20px',
+                          cursor: 'pointer',
+                          height: '100%'
+                        }}
                       >
                         <h3 style={{
                           fontSize: '18px',

@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, Heart, Volume2, ChevronDown, ChevronUp } from 'lucide-react';
+import { getCategoryEmoji, getCategoryColor, getCategoryName } from '@/utils/category-helpers';
 
 interface Magazine {
   id: string;
@@ -81,28 +82,6 @@ export default function MagazinePage({ params }: { params: Promise<{ id: string 
       utterance.rate = 0.9;
       window.speechSynthesis.speak(utterance);
     }
-  };
-
-  const getCategoryEmoji = (category: string) => {
-    switch (category) {
-      case 'MY_NEWS': return '📰';
-      case 'SAYING_HELLO': return '👋';
-      case 'MY_SAY': return '💬';
-      default: return '📝';
-    }
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'MY_NEWS': return '#f39c12';
-      case 'SAYING_HELLO': return '#27ae60';
-      case 'MY_SAY': return '#9b59b6';
-      default: return '#3498db';
-    }
-  };
-
-  const getCategoryName = (category: string) => {
-    return category.replace(/_/g, ' ');
   };
 
   if (loading) {
