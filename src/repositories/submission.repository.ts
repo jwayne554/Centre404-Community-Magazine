@@ -40,7 +40,7 @@ export interface CreateSubmissionData {
   textContent?: string | null;
   mediaUrl?: string | null;
   accessibilityText?: string | null;
-  drawingData?: Prisma.InputJsonValue | null;
+  drawingData?: string | null;
   userName?: string | null;
   userId?: string | null;
   status?: SubmissionStatus;
@@ -137,7 +137,7 @@ export class SubmissionRepository {
         textContent: data.textContent,
         mediaUrl: data.mediaUrl,
         accessibilityText: data.accessibilityText,
-        drawingData: data.drawingData as Prisma.InputJsonValue,
+        drawingData: data.drawingData,
         userName: data.userName,
         userId: data.userId,
         status: data.status || 'PENDING',

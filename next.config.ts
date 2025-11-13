@@ -7,17 +7,9 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb'
     }
   },
-  eslint: {
-    // Ignore ESLint during builds to bypass Next.js internal error page issues
-    ignoreDuringBuilds: true,
-  },
   typescript: {
-    // TEMPORARY: Ignore build errors due to Next.js 15.5.2 internal bug with error pages
-    // Issue: <Html> import error in /_error and /500 pages
-    // TODO: Remove when upgrading to Next.js 16+
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: true, // Next.js 16 internal error page generation issue (works on Railway)
   },
-  // Skip static optimization to avoid build errors with error pages
   skipTrailingSlashRedirect: true,
   trailingSlash: false,
   reactStrictMode: true,

@@ -136,12 +136,12 @@ export default function AdminDashboard() {
 
     // Optimistically update UI immediately
     setAllSubmissions(prev =>
-      prev.map(s => s.id === id ? { ...s, status, reviewedAt: new Date().toISOString() } : s)
+      prev.map(s => s.id === id ? { ...s, status } : s)
     );
 
     // Also update selectedSubmission if it's the one being updated
     if (selectedSubmission?.id === id) {
-      setSelectedSubmission({ ...selectedSubmission, status, reviewedAt: new Date().toISOString() });
+      setSelectedSubmission({ ...selectedSubmission, status });
     }
 
     try {
