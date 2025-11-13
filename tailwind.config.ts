@@ -11,7 +11,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Centre404 exact colors from HTML
+        // New Design System Colors (Green Theme)
+        primary: '#34A853',      // Google green (was blue #2c5aa0)
+        accent: '#FFBB00',       // Yellow/gold
+        background: '#F8F9FA',   // Light gray
+        charcoal: '#333333',     // Dark text
+        'light-gray': '#E5E7EB', // Border/divider
+        'dark-gray': '#6B7280',  // Secondary text
+
+        // Legacy Centre404 colors (for gradual migration)
         'centre-primary': '#2c5aa0',
         'centre-secondary': '#f39c12',
         'centre-success': '#27ae60',
@@ -20,6 +28,15 @@ const config: Config = {
         'centre-border': '#dddddd',
         'centre-bg-light': '#f8f9fa',
         'centre-bg-hover': '#e3f2fd',
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      borderRadius: {
+        xl: '12px',
+      },
+      boxShadow: {
+        card: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
       },
     },
   },
