@@ -1,39 +1,81 @@
 /**
  * Shared category utility functions
  * Task 2.6: Consolidate Magazine Viewers - Extract shared helpers
+ * Task 3.2: Enhanced with complete category metadata and type safety
  */
 
-export function getCategoryEmoji(category: string): string {
-  switch (category) {
-    case 'MY_NEWS':
-      return '📰';
-    case 'SAYING_HELLO':
-      return '👋';
-    case 'MY_SAY':
-      return '💬';
-    default:
-      return '📝';
+import { SubmissionCategory } from '@prisma/client';
+
+// Complete category metadata
+export const CATEGORIES = {
+  MY_NEWS: {
+    emoji: '📰',
+    label: 'My News',
+    color: '#f39c12', // Orange
+    description: 'Share your updates and stories'
+  },
+  SAYING_HELLO: {
+    emoji: '👋',
+    label: 'Saying Hello',
+    color: '#27ae60', // Green
+    description: 'Connect with friends and community'
+  },
+  MY_SAY: {
+    emoji: '💬',
+    label: 'My Say',
+    color: '#9b59b6', // Purple
+    description: 'Share your thoughts and opinions'
+  },
+  default: {
+    emoji: '📝',
+    label: 'Story',
+    color: '#3498db', // Blue
+    description: 'Share your content'
   }
+} as const;
+
+// Type-safe category info retrieval
+export function getCategoryInfo(category: string) {
+  return CATEGORIES[category as keyof typeof CATEGORIES] || CATEGORIES.default;
+}
+
+// Individual getters for backward compatibility
+export function getCategoryEmoji(category: string): string {
+  return getCategoryInfo(category).emoji;
 }
 
 export function getCategoryColor(category: string): string {
-  switch (category) {
-    case 'MY_NEWS':
-      return '#f39c12'; // Orange
-    case 'SAYING_HELLO':
-      return '#27ae60'; // Green
-    case 'MY_SAY':
-      return '#9b59b6'; // Purple
-    default:
-      return '#3498db'; // Blue
-  }
+  return getCategoryInfo(category).color;
 }
 
+export function getCategoryLabel(category: string): string {
+  return getCategoryInfo(category).label;
+}
+
+export function getCategoryDescription(category: string): string {
+  return getCategoryInfo(category).description;
+}
+
+// Legacy function for name conversion
 export function getCategoryName(category: string): string {
   return category.replace(/_/g, ' ');
 }
 
-export function getCategoryLabel(category: string): string {
-  const name = getCategoryName(category);
-  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+// Get all available categories for forms/dropdowns
+export function getAllCategories(): Array<{
+  value: SubmissionCategory;
+  label: string;
+  emoji: string;
+  color: string;
+  description: string;
+}> {
+  return Object.entries(CATEGORIES)
+    .filter(([key]) => key !== 'default')
+    .map(([key, value]) => ({
+      value: key as SubmissionCategory,
+      label: value.label,
+      emoji: value.emoji,
+      color: value.color,
+      description: value.description
+    }));
 }
