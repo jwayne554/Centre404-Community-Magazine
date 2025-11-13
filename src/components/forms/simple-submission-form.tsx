@@ -1,14 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import { SUBMISSION_CATEGORIES, SYMBOL_BOARD } from '@/constants/categories';
-
-// Task 2.4: Dynamic import for DrawingCanvas (only loads when user opens drawing tool)
-const DrawingCanvas = dynamic(() => import('./drawing-canvas').then(mod => ({ default: mod.DrawingCanvas })), {
-  loading: () => <div style={{ padding: '20px', textAlign: 'center' }}>Loading drawing tool...</div>,
-  ssr: false
-});
 
 // Task 2.5: Use shared constants (eliminates duplication across forms)
 const categories = SUBMISSION_CATEGORIES;
@@ -32,6 +25,9 @@ export function SimpleSubmissionForm() {
   const [showToast, setShowToast] = useState(false);
 
   // Drawing state
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [currentColor, setCurrentColor] = useState('#000000');
   const [drawingData, setDrawingData] = useState('');
 
   // Audio recording refs
@@ -114,6 +110,12 @@ export function SimpleSubmissionForm() {
         setAudioBlob(null);
         setAudioUrl(null);
 
+        // Clear canvas if it exists
+        if (canvasRef.current) {
+          const ctx = canvasRef.current.getContext('2d');
+          if (ctx) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        }
+
         // Step 6: Smooth scroll to top after brief delay
         setTimeout(() => {
           formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -193,6 +195,90 @@ export function SimpleSubmissionForm() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // Drawing functions (restored from original simple implementation)
+  useEffect(() => {
+    if (showDrawing && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = 3;
+      }
+    }
+  }, [showDrawing]);
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current) return;
+
+    setIsDrawing(true);
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    let x, y;
+    if ('touches' in e) {
+      x = (e.touches[0].clientX - rect.left) * scaleX;
+      y = (e.touches[0].clientY - rect.top) * scaleY;
+    } else {
+      x = (e.clientX - rect.left) * scaleX;
+      y = (e.clientY - rect.top) * scaleY;
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.strokeStyle = currentColor;
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    let x, y;
+    if ('touches' in e) {
+      x = (e.touches[0].clientX - rect.left) * scaleX;
+      y = (e.touches[0].clientY - rect.top) * scaleY;
+    } else {
+      x = (e.clientX - rect.left) * scaleX;
+      y = (e.clientY - rect.top) * scaleY;
+    }
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+  };
+
+  const clearCanvas = () => {
+    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  };
+
+  const saveDrawing = () => {
+    if (!canvasRef.current) return;
+    const dataUrl = canvasRef.current.toDataURL();
+    setDrawingData(dataUrl);
+    setImagePreview(dataUrl);
+    alert('Drawing saved! It will be included with your submission.');
   };
 
   return (
@@ -544,15 +630,58 @@ export function SimpleSubmissionForm() {
             ✏️ {showDrawing ? 'Close' : 'Open'} Drawing Tool
           </button>
           {showDrawing && (
-            <div style={{ marginTop: '15px' }}>
-              <DrawingCanvas
-                onSave={(dataUrl) => {
-                  setDrawingData(dataUrl);
-                  alert('Drawing saved! You can now submit your story.');
-                }}
+            <div style={{
+              border: '2px solid var(--border-color)',
+              borderRadius: '8px',
+              marginTop: '15px',
+              overflow: 'hidden'
+            }}>
+              <canvas
+                ref={canvasRef}
                 width={600}
                 height={400}
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  height: 'auto',
+                  background: 'white',
+                  cursor: 'crosshair',
+                  touchAction: 'none'
+                }}
               />
+              <div style={{
+                display: 'flex',
+                gap: '10px',
+                padding: '10px',
+                background: '#f8f9fa',
+                justifyContent: 'center'
+              }}>
+                {['#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00'].map(color => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setCurrentColor(color)}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      background: color,
+                      border: currentColor === color ? '3px solid #2c5aa0' : '3px solid transparent',
+                      cursor: 'pointer',
+                      transform: currentColor === color ? 'scale(1.2)' : 'scale(1)'
+                    }}
+                  />
+                ))}
+                <button type="button" className="tool-button" onClick={clearCanvas}>Clear</button>
+                <button type="button" className="tool-button" onClick={saveDrawing}>Save Drawing</button>
+              </div>
             </div>
           )}
         </div>
