@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { SubmissionSkeletonGrid } from '@/components/skeletons/submission-skeleton';
 
 interface Submission {
   id: string;
@@ -658,12 +659,7 @@ export default function AdminDashboard() {
           </div>
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-              <div style={{ fontSize: '48px', marginBottom: '15px', animation: 'spin 2s linear infinite' }}>
-                🔄
-              </div>
-              <p style={{ color: '#666', fontSize: '16px' }}>Loading submissions...</p>
-            </div>
+            <SubmissionSkeletonGrid count={5} />
           ) : submissions.length === 0 ? (
             <div style={{
               textAlign: 'center',

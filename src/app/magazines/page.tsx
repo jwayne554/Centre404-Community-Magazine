@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Calendar, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Calendar } from 'lucide-react';
 import { useMagazineData } from '@/hooks/useMagazineData';
+import { MagazineSkeletonGrid } from '@/components/skeletons/magazine-skeleton';
 
 export default function MagazinesPage() {
   const { magazines, isLoading: loading } = useMagazineData({ publicOnly: true });
@@ -72,10 +73,7 @@ export default function MagazinesPage() {
         </Link>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-            <RefreshCw className="h-12 w-12 animate-spin" style={{ margin: '0 auto 20px', color: '#ccc' }} />
-            <p style={{ color: '#666' }}>Loading magazines...</p>
-          </div>
+          <MagazineSkeletonGrid />
         ) : magazines.length === 0 ? (
           <div style={{
             textAlign: 'center',

@@ -6,6 +6,7 @@ import { ArrowLeft, Calendar, Heart, Volume2, ChevronDown, ChevronUp } from 'luc
 import { getCategoryEmoji, getCategoryColor, getCategoryName } from '@/utils/category-helpers';
 import { useMagazineData } from '@/hooks/useMagazineData';
 import { useTTSPlayback } from '@/hooks/useTTSPlayback';
+import { MagazineViewerSkeleton } from '@/components/skeletons/magazine-skeleton';
 
 export default function MagazinePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -39,10 +40,9 @@ export default function MagazinePage({ params }: { params: Promise<{ id: string 
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: 'var(--bg-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '40px', marginBottom: '20px' }}>📖</div>
-          <p style={{ color: '#666' }}>Loading magazine...</p>
+      <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>
+        <div className="container" style={{ maxWidth: '900px', margin: '0 auto' }}>
+          <MagazineViewerSkeleton />
         </div>
       </div>
     );
