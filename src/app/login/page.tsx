@@ -9,11 +9,12 @@ export default function LoginPage() {
   const { login, isLoading, error } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const success = await login(email, password);
+    const success = await login(email, password, rememberMe);
     if (success) {
       // Redirect to admin dashboard on successful login
       router.push('/admin');
@@ -157,6 +158,35 @@ export default function LoginPage() {
                 e.target.style.borderColor = '#ddd';
               }}
             />
+          </div>
+
+          {/* Remember Me Checkbox */}
+          <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              id="rememberMe"
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              disabled={isLoading}
+              style={{
+                width: '18px',
+                height: '18px',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                opacity: isLoading ? 0.6 : 1
+              }}
+            />
+            <label
+              htmlFor="rememberMe"
+              style={{
+                fontSize: '14px',
+                color: '#2c3e50',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                userSelect: 'none',
+                opacity: isLoading ? 0.6 : 1
+              }}
+            >
+              Remember me for 30 days (instead of 7 days)
+            </label>
           </div>
 
           {/* Submit Button */}

@@ -17,7 +17,7 @@ export interface UseAuthReturn {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
@@ -64,7 +64,7 @@ export function useAuth(): UseAuthReturn {
    * Login with email and password
    * Returns true on success, false on failure
    */
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (email: string, password: string, rememberMe: boolean = false): Promise<boolean> => {
     try {
       setIsLoading(true);
       setError(null);
@@ -75,7 +75,7 @@ export function useAuth(): UseAuthReturn {
           'Content-Type': 'application/json',
         },
         credentials: 'include', // Include cookies
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, rememberMe }),
       });
 
       if (response.ok) {

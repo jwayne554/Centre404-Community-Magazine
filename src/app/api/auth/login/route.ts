@@ -7,6 +7,7 @@ import { rateLimit } from '@/lib/rate-limit';
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string(),
+  rememberMe: z.boolean().optional().default(false),
 });
 
 export async function POST(request: NextRequest) {
@@ -67,11 +68,16 @@ export async function POST(request: NextRequest) {
       path: '/',
     });
 
+    // Set refresh token with extended expiry if "remember me" is enabled
+    const refreshTokenMaxAge = validatedData.rememberMe
+      ? 30 * 24 * 60 * 60 // 30 days if remember me
+      : 7 * 24 * 60 * 60; // 7 days default
+
     response.cookies.set('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      maxAge: refreshTokenMaxAge,
       path: '/api/auth',
     });
 

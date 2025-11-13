@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { SubmissionSkeletonGrid } from '@/components/skeletons/submission-skeleton';
 
 interface Submission {
@@ -35,52 +36,7 @@ interface Magazine {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
-
-  // Auth check - must be done before rendering dashboard
-  if (authLoading) {
-    return (
-      <div style={{ minHeight: '100vh', padding: '40px' }}>
-        <SubmissionSkeletonGrid count={5} />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    router.push('/login');
-    return null;
-  }
-
-  if (user?.role !== 'ADMIN') {
-    return (
-      <div className="container" style={{ maxWidth: '800px', margin: '40px auto', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '32px', color: '#e74c3c', marginBottom: '20px' }}>
-          Access Denied
-        </h1>
-        <p style={{ fontSize: '18px', color: '#7f8c8d', marginBottom: '30px' }}>
-          You must be an administrator to access this page.
-        </p>
-        <p style={{ fontSize: '16px', color: '#95a5a6' }}>
-          Your role: {user?.role || 'Unknown'}
-        </p>
-        <button
-          onClick={() => router.push('/')}
-          style={{
-            marginTop: '20px',
-            padding: '12px 24px',
-            background: '#3498db',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '16px'
-          }}
-        >
-          Go Home
-        </button>
-      </div>
-    );
-  }
+  const { user, logout } = useAuth();
 
   const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
   const [draftMagazines, setDraftMagazines] = useState<Magazine[]>([]);
@@ -310,9 +266,10 @@ export default function AdminDashboard() {
   }), [allSubmissions]);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px' }}>
-        {/* Hero Header */}
+    <ProtectedRoute requiredRole="ADMIN">
+      <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px' }}>
+          {/* Hero Header */}
         <div style={{
           background: 'linear-gradient(135deg, #27ae60, #2c5aa0)',
           color: 'white',
@@ -1259,5 +1216,6 @@ export default function AdminDashboard() {
         )}
       </div>
     </div>
+    </ProtectedRoute>
   );
 }
