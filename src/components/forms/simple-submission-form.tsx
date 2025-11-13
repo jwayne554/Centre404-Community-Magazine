@@ -2,10 +2,22 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { getAllCategories, SYMBOL_BOARD } from '@/utils/category-helpers';
+import Button from '@/components/ui/Button';
+import Card, { CategoryCard } from '@/components/ui/Card';
+import { Input, TextArea } from '@/components/ui/Input';
+import Accordion from '@/components/ui/Accordion';
+import { Newspaper, Hand, MessageCircle, Mic, Smile, Trash2, Palette } from 'lucide-react';
 
 // Task 2.5: Use shared constants (eliminates duplication across forms)
 const categories = getAllCategories();
 const symbols = SYMBOL_BOARD;
+
+// Category icons mapping
+const categoryIcons = {
+  MY_NEWS: <Newspaper className="h-6 w-6" />,
+  SAYING_HELLO: <Hand className="h-6 w-6" />,
+  MY_SAY: <MessageCircle className="h-6 w-6" />,
+};
 
 export function SimpleSubmissionForm() {
   const [category, setCategory] = useState('');
@@ -298,455 +310,313 @@ export function SimpleSubmissionForm() {
   };
 
   return (
-    <div>
+    <div className="max-w-2xl mx-auto">
       {/* Scroll target ref */}
-      <div ref={formTopRef} style={{ position: 'absolute', top: '-20px' }} />
+      <div ref={formTopRef} className="absolute -top-5" />
 
-      <h2 style={{ fontSize: '20px', marginBottom: '20px', fontWeight: '600' }}>Share Your Story</h2>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Share Your Story</h1>
+        <p className="text-dark-gray">
+          Contribute to our community magazine by sharing your news, thoughts, or just saying hello!
+        </p>
+      </div>
+
+      {/* Accordion: How does this work? */}
+      <Accordion title="How does this work?">
+        <p className="mb-2">
+          The Centre404 Community Magazine is a platform for our community members to share their stories, news, and thoughts.
+        </p>
+        <p className="mb-2">
+          Your contribution will be reviewed and may be featured in our next edition. You can include text, photos, audio, or even drawings!
+        </p>
+        <p>
+          Select a category, fill out the form, and hit submit. It&apos;s that easy!
+        </p>
+      </Accordion>
 
       {/* Enhanced Success Banner */}
       {successMessage && (
-        <div style={{
-          background: 'linear-gradient(135deg, #27ae60 0%, #229954 100%)',
-          color: 'white',
-          padding: '20px 24px',
-          borderRadius: '12px',
-          marginBottom: '30px',
-          boxShadow: '0 4px 12px rgba(39, 174, 96, 0.3)',
-          animation: 'slideDown 0.4s ease-out',
-          border: '2px solid #1e8449'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'start', gap: '16px' }}>
-            <div style={{
-              fontSize: '32px',
-              animation: 'scaleIn 0.5s ease-out'
-            }}>
-              ✓
-            </div>
-            <div style={{ flex: 1 }}>
-              <h3 style={{
-                fontSize: '20px',
-                fontWeight: '700',
-                marginBottom: '8px',
-                margin: 0
-              }}>
-                Contribution Submitted Successfully!
-              </h3>
-              <p style={{
-                fontSize: '16px',
-                marginBottom: '16px',
-                opacity: 0.95,
-                margin: '8px 0 16px 0'
-              }}>
-                Thank you! Your contribution is being reviewed by our team. You&apos;ll see it in the next magazine edition once approved.
-              </p>
-              <button
-                onClick={handleSubmitAnother}
-                type="button"
-                style={{
-                  background: 'white',
-                  color: '#27ae60',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                  transition: 'transform 0.2s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              >
-                ✏️ Submit Another Contribution
-              </button>
+        <Card className="mb-8 bg-gradient-to-br from-primary to-primary/90 text-white border-primary shadow-lg">
+          <div className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="text-4xl">✓</div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold mb-2">
+                  Contribution Submitted Successfully!
+                </h3>
+                <p className="mb-4 opacity-95">
+                  Thank you! Your contribution is being reviewed by our team. You&apos;ll see it in the next magazine edition once approved.
+                </p>
+                <Button
+                  variant="secondary"
+                  onClick={handleSubmitAnother}
+                  className="bg-white text-primary hover:bg-background"
+                >
+                  ✏️ Submit Another Contribution
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </Card>
       )}
 
       <form onSubmit={handleSubmit}>
-        {/* Category Selection - Matching original style */}
-        <div style={{ marginBottom: '25px' }}>
-          <label style={{ 
-            display: 'block', 
-            fontSize: '18px', 
-            fontWeight: '600', 
-            marginBottom: '10px',
-            color: 'var(--text-color)'
-          }}>
-            Choose a category:
+        {/* Category Selection with CategoryCard */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-3">
+            Select a category for your contribution
           </label>
-          <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {categories.map((cat) => (
-              <div key={cat.value} style={{ flex: 1, minWidth: '200px' }}>
-                <input
-                  type="radio"
-                  id={cat.value}
-                  name="category"
-                  value={cat.value}
-                  checked={category === cat.value}
-                  onChange={(e) => setCategory(e.target.value)}
-                  style={{ position: 'absolute', opacity: 0 }}
-                  required
-                />
-                <label
-                  htmlFor={cat.value}
-                  className={`category-card ${category === cat.value ? 'selected' : ''}`}
-                >
-                  <div style={{ fontSize: '30px', marginBottom: '8px' }}>{cat.emoji}</div>
-                  <div style={{ fontWeight: '600' }}>{cat.label}</div>
-                  <div style={{ fontSize: '14px', marginTop: '5px', opacity: 0.8 }}>
-                    {cat.description}
-                  </div>
-                </label>
-              </div>
+              <CategoryCard
+                key={cat.value}
+                title={cat.label}
+                icon={categoryIcons[cat.value as keyof typeof categoryIcons]}
+                active={category === cat.value}
+                onClick={() => setCategory(cat.value)}
+              />
             ))}
           </div>
         </div>
 
         {/* Author Name - Optional field */}
-        <div style={{ marginBottom: '25px' }}>
-          <label style={{ 
-            display: 'block', 
-            fontSize: '18px', 
-            fontWeight: '600', 
-            marginBottom: '10px',
-            color: 'var(--text-color)'
-          }}>
-            Your name (optional):
-          </label>
-          <input
-            type="text"
-            value={authorName}
-            onChange={(e) => setAuthorName(e.target.value)}
-            placeholder="Tell us your name or leave blank"
-            style={{
-              width: '100%',
-              padding: '15px',
-              fontSize: '18px',
-              border: '2px solid var(--border-color)',
-              borderRadius: '8px',
-              fontFamily: 'inherit',
-              background: 'white'
-            }}
-            maxLength={50}
-          />
-          <div style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
-            If left blank, your post will show as &quot;Community Member&quot;
-          </div>
-        </div>
-
-        {/* Text Content - Matching original style */}
-        <div style={{ marginBottom: '25px' }}>
-          <label style={{ 
-            display: 'block', 
-            fontSize: '18px', 
-            fontWeight: '600', 
-            marginBottom: '10px',
-            color: 'var(--text-color)'
-          }}>
-            Write your message:
-          </label>
-          <textarea
-            value={textContent}
-            onChange={(e) => setTextContent(e.target.value)}
-            placeholder="Type your message here..."
-            style={{
-              width: '100%',
-              minHeight: '150px',
-              padding: '15px',
-              fontSize: '18px',
-              border: '2px solid var(--border-color)',
-              borderRadius: '8px',
-              resize: 'vertical',
-              fontFamily: 'inherit'
-            }}
-            maxLength={500}
-          />
-          <div style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
-            {textContent.length} / 500 characters
-          </div>
-
-          {/* Input Tools - Matching original style */}
-          <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              className={`tool-button ${audioRecording ? 'active' : ''}`}
-              onClick={startAudioRecording}
-              style={{
-                background: audioRecording ? '#dc3545' : undefined,
-                color: audioRecording ? 'white' : undefined
-              }}
-            >
-              🎙️ {audioRecording ? 'Stop Recording' : 'Record Audio'}
-            </button>
-            <button
-              type="button"
-              className="tool-button"
-              onClick={() => setShowSymbols(!showSymbols)}
-            >
-              😊 Symbols
-            </button>
-            <button
-              type="button"
-              className="tool-button"
-              onClick={() => setTextContent('')}
-            >
-              🗑️ Clear
-            </button>
-          </div>
-
-          {/* Audio Preview */}
-          {audioUrl && (
-            <div style={{
-              marginTop: '15px',
-              padding: '15px',
-              background: '#e3f2fd',
-              borderRadius: '8px',
-              border: '2px solid #2196f3'
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '10px'
-              }}>
-                <span style={{
-                  fontWeight: '600',
-                  color: '#1976d2',
-                  fontSize: '16px'
-                }}>
-                  🎵 Audio Recorded
-                </span>
-                <button
-                  type="button"
-                  className="tool-button"
-                  onClick={() => {
-                    setAudioBlob(null);
-                    setAudioUrl(null);
-                    if (audioUrl) URL.revokeObjectURL(audioUrl);
-                  }}
-                  style={{
-                    background: '#dc3545',
-                    color: 'white',
-                    padding: '5px 10px'
-                  }}
-                >
-                  🗑️ Delete
-                </button>
-              </div>
-              <audio
-                controls
-                src={audioUrl}
-                style={{
-                  width: '100%',
-                  borderRadius: '4px'
-                }}
-              />
-              <div style={{
-                fontSize: '13px',
-                color: '#666',
-                marginTop: '8px',
-                textAlign: 'center'
-              }}>
-                This audio will be included with your submission
-              </div>
-            </div>
-          )}
-
-          {/* Symbol Board - Matching original style */}
-          {showSymbols && (
-            <div className="symbol-board">
-              {symbols.map((symbol) => (
-                <button
-                  key={symbol}
-                  type="button"
-                  className="symbol-btn"
-                  onClick={() => setTextContent(prev => prev + symbol + ' ')}
-                >
-                  {symbol}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Image Upload - Matching original style */}
-        <div style={{ marginBottom: '25px' }}>
-          <label style={{ 
-            display: 'block', 
-            fontSize: '18px', 
-            fontWeight: '600', 
-            marginBottom: '10px',
-            color: 'var(--text-color)'
-          }}>
-            Add a photo (optional):
-          </label>
-          <div 
-            onClick={() => document.getElementById('imageInput')?.click()}
-            style={{
-              border: '3px dashed var(--border-color)',
-              borderRadius: '8px',
-              padding: '40px',
-              textAlign: 'center',
-              cursor: 'pointer',
-              background: '#f8f9fa',
-              transition: 'all 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--primary-color)';
-              e.currentTarget.style.background = '#e3f2fd';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border-color)';
-              e.currentTarget.style.background = '#f8f9fa';
-            }}
-          >
-            <p style={{ fontSize: '20px', marginBottom: '10px' }}>📷 Click to add a photo</p>
-            <p style={{ color: '#666' }}>or drag and drop here</p>
-            <input
-              type="file"
-              id="imageInput"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleImageUpload}
+        {category && (
+          <>
+            <Input
+              label="Your name"
+              id="authorName"
+              value={authorName}
+              onChange={(e) => setAuthorName(e.target.value)}
+              placeholder="Enter your name (optional)"
             />
-          </div>
-          {imagePreview && (
-            <img
-              src={imagePreview}
-              alt="Uploaded image preview"
-              style={{
-                maxWidth: '100%',
-                marginTop: '20px',
-                borderRadius: '8px',
-                boxShadow: 'var(--shadow)'
-              }}
-            />
-          )}
-        </div>
+            <p className="text-sm text-dark-gray -mt-3 mb-4">
+              If left blank, your post will show as &quot;Community Member&quot;
+            </p>
+          </>
+        )}
 
-        {/* Drawing Tool - Matching original style */}
-        <div style={{ marginBottom: '25px' }}>
-          <label style={{ 
-            display: 'block', 
-            fontSize: '18px', 
-            fontWeight: '600', 
-            marginBottom: '10px',
-            color: 'var(--text-color)'
-          }}>
-            Or draw a picture (optional):
-          </label>
-          <button
-            type="button"
-            className="tool-button"
-            onClick={() => setShowDrawing(!showDrawing)}
-          >
-            ✏️ {showDrawing ? 'Close' : 'Open'} Drawing Tool
-          </button>
-          {showDrawing && (
-            <div style={{
-              border: '2px solid var(--border-color)',
-              borderRadius: '8px',
-              marginTop: '15px',
-              overflow: 'hidden'
-            }}>
-              <canvas
-                ref={canvasRef}
-                width={600}
-                height={400}
-                onMouseDown={startDrawing}
-                onMouseMove={draw}
-                onMouseUp={stopDrawing}
-                onMouseLeave={stopDrawing}
-                onTouchStart={startDrawing}
-                onTouchMove={draw}
-                onTouchEnd={stopDrawing}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  height: 'auto',
-                  background: 'white',
-                  cursor: 'crosshair',
-                  touchAction: 'none'
-                }}
-              />
-              <div style={{
-                display: 'flex',
-                gap: '10px',
-                padding: '10px',
-                background: '#f8f9fa',
-                justifyContent: 'center'
-              }}>
-                {['#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00'].map(color => (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => setCurrentColor(color)}
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      background: color,
-                      border: currentColor === color ? '3px solid #2c5aa0' : '3px solid transparent',
-                      cursor: 'pointer',
-                      transform: currentColor === color ? 'scale(1.2)' : 'scale(1)'
-                    }}
+        {/* Text Content with Toolbar */}
+        {category && (
+          <div className="mb-4">
+            <TextArea
+              label="Write your message"
+              id="message"
+              value={textContent}
+              onChange={(e) => setTextContent(e.target.value)}
+              placeholder="Share your story, news, or just say hello..."
+              rows={6}
+            />
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-dark-gray">
+                {textContent.length} / 500 characters
+              </span>
+            </div>
+
+            {/* Input Tools */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                type="button"
+                variant={audioRecording ? 'secondary' : 'icon'}
+                onClick={startAudioRecording}
+                icon={<Mic className="h-5 w-5" />}
+                className={audioRecording ? 'bg-red-500 hover:bg-red-600 text-white' : ''}
+              >
+                {audioRecording ? 'Stop Recording' : 'Record Audio'}
+              </Button>
+              <Button
+                type="button"
+                variant="icon"
+                onClick={() => setShowSymbols(!showSymbols)}
+                icon={<Smile className="h-5 w-5" />}
+              >
+                Symbols
+              </Button>
+              <Button
+                type="button"
+                variant="icon"
+                onClick={() => setTextContent('')}
+                icon={<Trash2 className="h-5 w-5" />}
+              >
+                Clear
+              </Button>
+            </div>
+
+            {/* Audio Preview */}
+            {audioUrl && (
+              <Card className="mt-4 bg-primary/5 border-primary">
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-semibold text-primary flex items-center gap-2">
+                      <Mic className="h-5 w-5" /> Audio Recorded
+                    </span>
+                    <Button
+                      type="button"
+                      variant="icon"
+                      onClick={() => {
+                        setAudioBlob(null);
+                        setAudioUrl(null);
+                        if (audioUrl) URL.revokeObjectURL(audioUrl);
+                      }}
+                      icon={<Trash2 className="h-4 w-4" />}
+                      className="bg-red-500 hover:bg-red-600 text-white"
+                    />
+                  </div>
+                  <audio
+                    controls
+                    src={audioUrl}
+                    className="w-full rounded"
                   />
-                ))}
-                <button type="button" className="tool-button" onClick={clearCanvas}>Clear</button>
-                <button type="button" className="tool-button" onClick={saveDrawing}>Save Drawing</button>
-              </div>
+                  <p className="text-sm text-dark-gray text-center mt-2">
+                    This audio will be included with your submission
+                  </p>
+                </div>
+              </Card>
+            )}
+
+            {/* Symbol Board */}
+            {showSymbols && (
+              <Card className="mt-3 p-2">
+                <div className="grid grid-cols-6 gap-2">
+                  {symbols.map((symbol) => (
+                    <button
+                      key={symbol}
+                      type="button"
+                      className="h-10 w-10 flex items-center justify-center text-xl rounded hover:bg-background transition-colors"
+                      onClick={() => {
+                        setTextContent(prev => prev + symbol + ' ');
+                        setShowSymbols(false);
+                      }}
+                    >
+                      {symbol}
+                    </button>
+                  ))}
+                </div>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* Image Upload - Note: Using custom implementation to maintain existing functionality */}
+        {category && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Add a photo (optional)</label>
+            <div
+              onClick={() => document.getElementById('imageInput')?.click()}
+              className="border-2 border-dashed border-light-gray rounded-xl p-6 text-center cursor-pointer bg-background hover:border-primary hover:bg-primary/5 transition-colors"
+            >
+              <p className="text-dark-gray mb-2">📷 Click to add a photo</p>
+              <p className="text-sm text-dark-gray/70">or drag and drop here</p>
+              <p className="text-sm text-dark-gray/70 mt-1">JPG, PNG or GIF (max. 5MB)</p>
+              <input
+                type="file"
+                id="imageInput"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
             </div>
-          )}
-        </div>
+            {imagePreview && (
+              <div className="mt-4">
+                <img
+                  src={imagePreview}
+                  alt="Uploaded image preview"
+                  className="max-w-full rounded-xl shadow-card"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Drawing Tool with Green Theme */}
+        {category && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">
+              Or draw a picture (optional)
+            </label>
+            <Button
+              type="button"
+              variant="icon"
+              onClick={() => setShowDrawing(!showDrawing)}
+              icon={<Palette className="h-5 w-5" />}
+            >
+              {showDrawing ? 'Close' : 'Open'} Drawing Tool
+            </Button>
+            {showDrawing && (
+              <Card className="mt-3 overflow-hidden">
+                <canvas
+                  ref={canvasRef}
+                  width={600}
+                  height={400}
+                  onMouseDown={startDrawing}
+                  onMouseMove={draw}
+                  onMouseUp={stopDrawing}
+                  onMouseLeave={stopDrawing}
+                  onTouchStart={startDrawing}
+                  onTouchMove={draw}
+                  onTouchEnd={stopDrawing}
+                  className="block w-full h-auto bg-white cursor-crosshair touch-none"
+                />
+                <div className="flex gap-2 p-3 bg-background justify-center items-center flex-wrap">
+                  {['#000000', '#FF0000', '#34A853', '#0000FF', '#FFBB00'].map(color => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setCurrentColor(color)}
+                      className={`w-10 h-10 rounded-full cursor-pointer transition-transform ${
+                        currentColor === color ? 'scale-125 ring-2 ring-primary' : 'scale-100'
+                      }`}
+                      style={{ background: color }}
+                      aria-label={`Select ${color} color`}
+                    />
+                  ))}
+                  <Button
+                    type="button"
+                    variant="icon"
+                    onClick={clearCanvas}
+                    icon={<Trash2 className="h-4 w-4" />}
+                  >
+                    Clear
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={saveDrawing}
+                  >
+                    Save Drawing
+                  </Button>
+                </div>
+              </Card>
+            )}
+          </div>
+        )}
 
         {/* Enhanced Submit Button with Loading/Success States */}
-        <button
-          type="submit"
-          className="btn-large btn-primary"
-          disabled={isSubmitting}
-          style={{
-            width: '100%',
-            marginTop: '30px',
-            position: 'relative',
-            background: submitSuccess ? '#27ae60' : isSubmitting ? '#95a5a6' : undefined,
-            cursor: isSubmitting ? 'not-allowed' : 'pointer',
-            transition: 'all 0.3s ease',
-            transform: submitSuccess ? 'scale(1.02)' : 'scale(1)'
-          }}
-        >
-          {isSubmitting ? (
-            <>
-              <span style={{
-                display: 'inline-block',
-                width: '20px',
-                height: '20px',
-                border: '3px solid rgba(255,255,255,0.3)',
-                borderTopColor: 'white',
-                borderRadius: '50%',
-                animation: 'spin 0.8s linear infinite',
-                marginRight: '10px'
-              }}/>
-              Submitting...
-            </>
-          ) : submitSuccess ? (
-            <>
-              <span style={{
-                display: 'inline-block',
-                fontSize: '24px',
-                marginRight: '8px',
-                animation: 'scaleIn 0.4s ease-out'
-              }}>
-                ✓
-              </span>
-              Submitted Successfully!
-            </>
-          ) : (
-            '✓ Submit My Contribution'
-          )}
-        </button>
+        {category && (
+          <div className="mt-8">
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              disabled={isSubmitting}
+              className="w-full relative transition-all"
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="inline-block w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                  Submitting...
+                </>
+              ) : submitSuccess ? (
+                <>
+                  <span className="inline-block text-2xl mr-2">✓</span>
+                  Submitted Successfully!
+                </>
+              ) : (
+                '✓ Submit My Contribution'
+              )}
+            </Button>
+          </div>
+        )}
       </form>
 
       {/* Toast Notification - Fixed at bottom-right */}
