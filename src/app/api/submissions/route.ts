@@ -5,6 +5,7 @@ import { SubmissionStatus, SubmissionCategory } from '@prisma/client';
 import { handleApiError } from '@/lib/api-errors';
 import { SubmissionService } from '@/services/submission.service';
 import { SubmissionFilters } from '@/repositories/submission.repository';
+import { RequestLogger } from '@/lib/api-logger';
 
 const createSubmissionSchema = z.object({
   category: z.enum(['MY_NEWS', 'SAYING_HELLO', 'MY_SAY']),
@@ -18,6 +19,8 @@ const createSubmissionSchema = z.object({
 
 // GET /api/submissions - Get all submissions (with filters)
 export async function GET(request: NextRequest) {
+  const logger = new RequestLogger(request);
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status'); // Don't default - let admin see all
@@ -41,9 +44,15 @@ export async function GET(request: NextRequest) {
 
     const result = await SubmissionService.getSubmissions(filters);
 
+    logger.success(200, {
+      resultCount: result.submissions.length,
+      total: result.total,
+      filters: { status, category, limit, offset },
+    });
+
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Failed to fetch submissions:', error);
+    logger.error(error);
     return handleApiError(error);
   }
 }
@@ -56,25 +65,26 @@ export async function POST(request: NextRequest) {
     return rateLimitResponse;
   }
 
-  console.log('POST /api/submissions - Request received');
+  const userId = request.headers.get('x-user-id') || undefined;
+  const logger = new RequestLogger(request, { userId });
+
   try {
     const body = await request.json();
-    console.log('Request body:', body);
     const validatedData = createSubmissionSchema.parse(body);
 
-    // Get user ID from header (set by middleware) or allow anonymous
-    const userId = request.headers.get('x-user-id') || null;
-
-    console.log('Creating submission with data:', { ...validatedData, userId, status: 'PENDING' });
-
     // Use service layer - handles transaction and audit logging
-    const submission = await SubmissionService.createSubmission(validatedData, userId);
+    const submission = await SubmissionService.createSubmission(validatedData, userId || null);
 
-    console.log('Submission created successfully:', submission.id);
+    logger.success(201, {
+      submissionId: submission.id,
+      category: submission.category,
+      contentType: submission.contentType,
+      isAnonymous: !userId,
+    });
 
     return NextResponse.json(submission, { status: 201 });
   } catch (error) {
-    console.error('Failed to create submission - Full error:', error);
+    logger.error(error, { userId });
     return handleApiError(error);
   }
 }
