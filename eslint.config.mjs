@@ -1,25 +1,52 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import tseslint from "typescript-eslint";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+// ESLint 9 flat config for Next.js
+export default [
   {
     ignores: [
       "node_modules/**",
       ".next/**",
       "out/**",
       "build/**",
+      "dist/**",
       "next-env.d.ts",
+      "**/*.config.js",
+      "**/*.config.mjs",
+      "scripts/**/*.js",
+      "prisma/**/*.js",
     ],
   },
+  {
+    files: ["**/*.{js,jsx,ts,tsx}"],
+    ...tseslint.configs.recommended[0],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      parser: tseslint.parser,
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+        project: "./tsconfig.json",
+      },
+    },
+    rules: {
+      // Next.js specific rules
+      "@next/next/no-html-link-for-pages": "off",
+      // React rules
+      "react/react-in-jsx-scope": "off",
+      "react/prop-types": "off",
+      // General rules
+      "prefer-const": "error",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
+      ],
+      "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
 ];
-
-export default eslintConfig;

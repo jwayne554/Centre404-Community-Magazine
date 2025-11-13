@@ -4,7 +4,7 @@
  */
 
 import prisma from '@/lib/prisma';
-import { Prisma, Magazine, MagazineStatus } from '@prisma/client';
+import { Prisma, MagazineStatus } from '@prisma/client';
 
 /**
  * Magazine with full relations

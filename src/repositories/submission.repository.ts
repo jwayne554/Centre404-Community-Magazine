@@ -4,7 +4,7 @@
  */
 
 import prisma from '@/lib/prisma';
-import { Prisma, Submission, SubmissionStatus, SubmissionCategory } from '@prisma/client';
+import { Prisma, SubmissionStatus, SubmissionCategory } from '@prisma/client';
 
 /**
  * Submission with user relation

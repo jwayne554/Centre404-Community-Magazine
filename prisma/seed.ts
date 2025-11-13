@@ -89,7 +89,7 @@ async function main() {
   console.log('✅ Created 4 sample submissions (3 approved, 1 pending)');
 
   // Create a sample magazine
-  const _magazine = await prisma.magazine.create({
+  await prisma.magazine.create({
     data: {
       title: 'Community Voices - Winter Edition',
       description: 'Our first community magazine featuring stories from our members',
