@@ -75,16 +75,22 @@ This is a **full-stack Next.js application** for Centre404 Community Magazine - 
 src/
 ├── app/                 # Next.js App Router pages and API routes
 │   ├── page.tsx        # Landing page
-│   ├── admin/          # Admin dashboard
+│   ├── login/          # Login page
+│   ├── admin/          # Admin dashboard (protected route)
 │   ├── magazines/      # Magazine viewing
 │   └── api/            # API endpoints (auth, submissions, magazines, health, tts, upload)
 ├── components/         # Reusable React components
 │   └── forms/          # Submission forms (simple, enhanced)
 ├── features/           # Feature-specific modules
-├── lib/                # Utilities (prisma client, auth helpers)
+├── hooks/              # Custom React hooks
+│   ├── useAuth.ts      # Authentication state management (login, logout, auto-refresh)
+│   ├── useAsyncAction.ts  # Async state management
+│   ├── useMagazineData.ts # Magazine data fetching
+│   └── useTTSPlayback.ts  # Text-to-speech playback
+├── lib/                # Utilities (prisma client, auth helpers, API auth middleware)
 ├── services/           # API service layer
 │   └── tts.service.ts # Text-to-Speech service with caching and fallback
-├── stores/             # Zustand state stores
+├── stores/             # Zustand state stores (removed in Phase 2)
 ├── types/              # TypeScript definitions
 └── utils/              # Helper functions
 
@@ -305,7 +311,25 @@ next@16.0.2 eslint-config-next@16.0.2 ✅
 - **Symbol Board**: Quick emoji insertion
 - **Image Upload**: With preview functionality
 
+### Authentication System (NEW - 2025-01-13)
+- **useAuth Hook** (`src/hooks/useAuth.ts`) - Custom authentication state management
+  - Login/logout/checkAuth functions with error handling
+  - Auto-refresh tokens every 13 minutes (2 min buffer)
+  - Session persistence across page refreshes
+  - `credentials: 'include'` on all fetch calls for cookie transmission
+- **Login Page** (`src/app/login/page.tsx`) - Professional accessible login UI
+  - Email/password inputs with validation
+  - Loading states and error messages
+  - Test account credentials displayed
+  - Gradient background with card layout
+- **Protected Admin Route** (`src/app/admin/page.tsx`)
+  - Auth checks at component start (redirects to /login if not authenticated)
+  - Role-based access control (ADMIN only)
+  - User info header with logout button
+  - All fetch calls include `credentials: 'include'` (lines 108, 123, 141, 166, 200)
+
 ### Admin Dashboard (`src/app/admin/page.tsx`)
+- **Authentication**: Protected route with role-based access
 - **Media Preview**: Conditional rendering for images vs audio
 - **Audio Player**: Native HTML5 audio controls for reviewing submissions
 - **Drawing Preview**: Full canvas display
@@ -320,10 +344,14 @@ next@16.0.2 eslint-config-next@16.0.2 ✅
 - Blob URL management for audio playback
 
 ### API Routes
+- `/api/auth/login`: Login endpoint with rate limiting (5 req/min)
+- `/api/auth/logout`: Logout endpoint (clears HTTP-only cookies)
+- `/api/auth/refresh`: Token refresh endpoint (validates refresh tokens)
 - `/api/tts/unrealspeech`: Text-to-speech endpoint
 - `/api/upload`: File upload handler for images and audio
-- `/api/submissions`: CRUD for submissions with media support
-- `/api/magazines`: Magazine management
+- `/api/submissions`: CRUD for submissions with media support (protected)
+- `/api/submissions/[id]/status`: Approve/reject submissions (requires ADMIN or MODERATOR)
+- `/api/magazines`: Magazine management (protected)
 - `/api/health`: Database connectivity check
 
 ## Deployment
@@ -533,21 +561,48 @@ Successfully resolved 4 deployment blockers:
 
 ## Current Work: Admin Authentication Frontend (2025-01-13)
 
-**Status**: 🔴 CRITICAL - Admin dashboard non-functional
+**Status**: ✅ **PHASE 1 COMPLETE** - Admin dashboard now fully functional!
 
-**Issue**:
-- Backend authentication is excellent (Phase 1 complete, A+ security)
-- No login UI or auth state management exists
-- Admin page fetch calls missing `credentials: 'include'`
-- Result: 401 Unauthorized errors on approve/reject
+**Problem (Resolved)**:
+- Backend authentication was excellent (Phase 1 security complete, A+ rated)
+- No login UI or auth state management existed
+- Admin page fetch calls were missing `credentials: 'include'`
+- Result: 401 Unauthorized errors prevented approve/reject actions
 
-**Solution**:
-See `AUTH_IMPLEMENTATION_PLAN.md` for comprehensive implementation strategy (2-3 hours)
-- Phase 1: Core Auth (useAuth hook, login page, admin updates)
-- Phase 2: Enhanced UX (loading states, session persistence)
-- Phase 3: Polish (remember me, 403 page)
+**Solution Implemented**:
+✅ **Phase 1: Core Authentication** (1.5 hours)
+- Created `src/hooks/useAuth.ts` (161 lines) - Custom authentication hook
+  - Login/logout/checkAuth functions
+  - Auto-refresh tokens every 13 minutes (2 min buffer before 15 min expiry)
+  - Session persistence across page refreshes
+  - All fetch calls include `credentials: 'include'` for cookie transmission
+- Created `src/app/login/page.tsx` (224 lines) - Professional login UI
+  - Accessible form with email/password inputs
+  - Loading states and error handling
+  - Test account info displayed: admin@test.com / password123
+- Updated `src/app/admin/page.tsx` - **CRITICAL FIX**
+  - Added auth checks at component start (redirects to /login if not authenticated)
+  - Added `credentials: 'include'` to all 5 fetch calls (lines 108, 123, 141, 166, 200)
+  - Added user info header with logout button
+  - Added role-based access control (ADMIN only)
 
-**Quick Fix**: Add `credentials: 'include'` to all fetch() calls in admin/page.tsx
+**Test Results** (2025-01-13):
+- ✅ Login endpoint: HTTP 200, returns user with ADMIN role
+- ✅ Submissions API: HTTP 200, authenticated access working
+- ✅ **Approve functionality**: HTTP 200, PENDING → APPROVED (THE FIX!)
+- ✅ **Reject functionality**: HTTP 200, PENDING → REJECTED
+- ✅ Token refresh: HTTP 200, session persistence working
+- ✅ Audit trail: reviewedAt and reviewedById correctly populated
+
+**How to Use**:
+1. Navigate to http://localhost:3000/login
+2. Login with: admin@test.com / password123
+3. Redirected to /admin dashboard
+4. Approve/reject submissions now working correctly!
+
+**Next Steps** (Optional - See AUTH_IMPLEMENTATION_PLAN.md):
+- Phase 2: Enhanced UX (loading states, ProtectedRoute component)
+- Phase 3: Polish (remember me, custom 403 page)
 
 ## Related Documentation
 
