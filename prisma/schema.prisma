@@ -10,13 +10,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Enums (Task 3.1: Convert to Database Enums)
+enum UserRole {
+  ADMIN
+  MODERATOR
+  CONTRIBUTOR
+}
+
+enum SubmissionCategory {
+  MY_NEWS
+  SAYING_HELLO
+  MY_SAY
+}
+
+enum SubmissionContentType {
+  TEXT
+  IMAGE
+  AUDIO
+  DRAWING
+  MIXED
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+enum MagazineStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum MediaType {
+  IMAGE
+  AUDIO
+  VIDEO
+  DOCUMENT
+}
+
 // User model for authentication and authorization
 model User {
   id                     String       @id @default(uuid())
   email                  String?      @unique
   name                   String
   password               String?      // Hashed password
-  role                   String       @default("CONTRIBUTOR")
+  role                   UserRole     @default(CONTRIBUTOR)
   accessibilityPrefs     String       @default("{}")
   createdAt              DateTime     @default(now())
   updatedAt              DateTime     @updatedAt
@@ -34,9 +75,9 @@ model Submission {
   userId            String?
   user              User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  category          String
-  contentType       String
-  status            String          @default("PENDING")
+  category          SubmissionCategory
+  contentType       SubmissionContentType
+  status            SubmissionStatus          @default(PENDING)
 
   // Content fields
   textContent       String?
@@ -79,7 +120,7 @@ model Magazine {
   title             String
   description       String?
   version           String
-  status            String          @default("DRAFT")
+  status            MagazineStatus  @default(DRAFT)
   theme             String          @default("{}")
   
   // Publishing info
@@ -151,7 +192,7 @@ model Media {
   url               String
   thumbnailUrl      String?
   publicId          String?         // Cloudinary public ID
-  type              String
+  type              MediaType
   size              Int             // File size in bytes
   mimeType          String
   metadata          String          @default("{}")

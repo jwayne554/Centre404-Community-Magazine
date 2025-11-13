@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { rateLimit } from '@/lib/rate-limit';
+import { SubmissionStatus, SubmissionCategory } from '@prisma/client';
 
 const createSubmissionSchema = z.object({
   category: z.enum(['MY_NEWS', 'SAYING_HELLO', 'MY_SAY']),
@@ -23,17 +24,17 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     const where: {
-      status?: string;
-      category?: string;
+      status?: SubmissionStatus;
+      category?: SubmissionCategory;
     } = {};
 
     // Only filter by status if explicitly provided
     if (status) {
-      where.status = status;
+      where.status = status as SubmissionStatus;
     }
 
     if (category) {
-      where.category = category;
+      where.category = category as SubmissionCategory;
     }
 
     const [submissions, total] = await Promise.all([
