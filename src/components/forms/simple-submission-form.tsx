@@ -210,6 +210,22 @@ export function SimpleSubmissionForm() {
     }
   }, [showDrawing]);
 
+  // Cleanup blob URLs to prevent memory leaks (Task 4.4)
+  useEffect(() => {
+    return () => {
+      // Revoke blob URLs when component unmounts
+      if (audioUrl && audioUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(audioUrl);
+      }
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+      if (drawingData && drawingData.startsWith('blob:')) {
+        URL.revokeObjectURL(drawingData);
+      }
+    };
+  }, [audioUrl, imagePreview, drawingData]);
+
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!canvasRef.current) return;
 
