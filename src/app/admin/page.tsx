@@ -128,6 +128,21 @@ export default function AdminDashboard() {
 
   const updateSubmissionStatus = async (id: string, status: 'APPROVED' | 'REJECTED') => {
     setActionLoading(true);
+
+    // Optimistic Update: Save previous state for potential rollback
+    const previousSubmissions = allSubmissions;
+    const previousSelectedSubmission = selectedSubmission;
+
+    // Optimistically update UI immediately
+    setAllSubmissions(prev =>
+      prev.map(s => s.id === id ? { ...s, status, reviewedAt: new Date().toISOString() } : s)
+    );
+
+    // Also update selectedSubmission if it's the one being updated
+    if (selectedSubmission?.id === id) {
+      setSelectedSubmission({ ...selectedSubmission, status, reviewedAt: new Date().toISOString() });
+    }
+
     try {
       const response = await fetch(`/api/submissions/${id}/status`, {
         method: 'PATCH',
@@ -138,16 +153,24 @@ export default function AdminDashboard() {
       });
 
       if (response.ok) {
+        // Success: Refetch to get server truth (includes reviewer info, etc.)
         await fetchAllSubmissions();
         setSelectedSubmission(null);
         setSelectedIds(new Set());
       } else {
-        // Handle non-OK responses
+        // Rollback on error
+        setAllSubmissions(previousSubmissions);
+        setSelectedSubmission(previousSelectedSubmission);
+
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         console.error('Failed to update submission:', errorData);
         alert(`Failed to update submission: ${errorData.error || response.statusText}`);
       }
     } catch (error) {
+      // Rollback on error
+      setAllSubmissions(previousSubmissions);
+      setSelectedSubmission(previousSelectedSubmission);
+
       console.error('Failed to update submission:', error);
       alert('Failed to update submission. Please try again.');
     } finally {
