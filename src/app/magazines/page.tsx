@@ -1,51 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, RefreshCw } from 'lucide-react';
-
-interface Magazine {
-  id: string;
-  title: string;
-  description: string | null;
-  version: string | null;
-  publishedAt: string | null;
-  items: {
-    id: string;
-    displayOrder: number;
-    submission: {
-      id: string;
-      category: string;
-      textContent: string | null;
-      mediaUrl: string | null;
-      userName: string | null;
-      user: {
-        name: string;
-      } | null;
-    };
-  }[];
-}
+import { useMagazineData } from '@/hooks/useMagazineData';
 
 export default function MagazinesPage() {
-  const [magazines, setMagazines] = useState<Magazine[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchMagazines();
-  }, []);
-
-  const fetchMagazines = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/magazines?public=true');
-      const data = await response.json();
-      setMagazines(data || []);
-    } catch (error) {
-      console.error('Failed to fetch magazines:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { magazines, isLoading: loading } = useMagazineData({ publicOnly: true });
 
   const latestMagazine = magazines.length > 0 ? magazines[0] : null;
   const olderMagazines = magazines.slice(1);

@@ -1,59 +1,21 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, use } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, Heart, Volume2, ChevronDown, ChevronUp } from 'lucide-react';
 import { getCategoryEmoji, getCategoryColor, getCategoryName } from '@/utils/category-helpers';
-
-interface Magazine {
-  id: string;
-  title: string;
-  description: string | null;
-  version: string | null;
-  publishedAt: string | null;
-  items: {
-    id: string;
-    displayOrder: number;
-    submission: {
-      id: string;
-      category: string;
-      textContent: string | null;
-      mediaUrl: string | null;
-      userName: string | null;
-      user: {
-        name: string;
-      } | null;
-    };
-  }[];
-}
+import { useMagazineData } from '@/hooks/useMagazineData';
+import { useTTSPlayback } from '@/hooks/useTTSPlayback';
 
 export default function MagazinePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const [magazine, setMagazine] = useState<Magazine | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { magazine, isLoading: loading } = useMagazineData({
+    magazineId: resolvedParams.id,
+    publicOnly: true,
+  });
+  const { play: speakText } = useTTSPlayback();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    fetchMagazine();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resolvedParams.id]);
-
-  const fetchMagazine = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/magazines?public=true`);
-      const data = await response.json();
-      const foundMagazine = data.find((m: Magazine) => m.id === resolvedParams.id);
-      if (foundMagazine) {
-        setMagazine(foundMagazine);
-      }
-    } catch (error) {
-      console.error('Failed to fetch magazine:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const toggleExpanded = (id: string) => {
     const newSet = new Set(expandedItems);
@@ -73,15 +35,6 @@ export default function MagazinePage({ params }: { params: Promise<{ id: string 
       newSet.add(id);
     }
     setLikedItems(newSet);
-  };
-
-  const speakText = (text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      window.speechSynthesis.speak(utterance);
-    }
   };
 
   if (loading) {
