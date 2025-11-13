@@ -2,6 +2,7 @@
 
 import { useState, use } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, Calendar, Heart, Volume2, ChevronDown, ChevronUp } from 'lucide-react';
 import { getCategoryEmoji, getCategoryColor, getCategoryName } from '@/utils/category-helpers';
 import { useMagazineData } from '@/hooks/useMagazineData';
@@ -248,14 +249,18 @@ export default function MagazinePage({ params }: { params: Promise<{ id: string 
                 {/* Media */}
                 {submission.mediaUrl && (
                   <div style={{ marginBottom: '15px' }}>
-                    <img
+                    <Image
                       src={submission.mediaUrl}
                       alt={`Content from ${submission.user?.name || 'Anonymous'}`}
+                      width={800}
+                      height={600}
                       style={{
-                        maxWidth: '100%',
+                        width: '100%',
+                        height: 'auto',
                         borderRadius: '8px',
                         border: '1px solid #ddd'
                       }}
+                      unoptimized={submission.mediaUrl.startsWith('data:')}
                     />
                   </div>
                 )}

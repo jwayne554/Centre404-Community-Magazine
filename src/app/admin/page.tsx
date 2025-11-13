@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { SubmissionSkeletonGrid } from '@/components/skeletons/submission-skeleton';
 
 interface Submission {
@@ -824,9 +825,11 @@ export default function AdminDashboard() {
                               </>
                             ) : (
                               <>
-                                <img
+                                <Image
                                   src={submission.mediaUrl || submission.drawingData || ''}
                                   alt="Preview"
+                                  width={200}
+                                  height={150}
                                   style={{
                                     maxWidth: '200px',
                                     maxHeight: '150px',
@@ -835,6 +838,7 @@ export default function AdminDashboard() {
                                     objectFit: 'cover',
                                     boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                   }}
+                                  unoptimized={(submission.mediaUrl || submission.drawingData || '').startsWith('data:')}
                                 />
                                 {submission.drawingData && (
                                   <div style={{
@@ -1045,15 +1049,19 @@ export default function AdminDashboard() {
                         <h3 style={{ fontSize: '14px', color: '#999', fontWeight: '700', marginBottom: '12px', letterSpacing: '1px' }}>
                           {selectedSubmission.drawingData ? '🎨 DRAWING' : '📷 IMAGE ATTACHMENT'}
                         </h3>
-                        <img
+                        <Image
                           src={selectedSubmission.mediaUrl}
                           alt="Submission media"
+                          width={800}
+                          height={600}
                           style={{
-                            maxWidth: '100%',
+                            width: '100%',
+                            height: 'auto',
                             borderRadius: '8px',
                             border: '2px solid #ddd',
                             boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                           }}
+                          unoptimized={selectedSubmission.mediaUrl?.startsWith('data:')}
                         />
                       </>
                     )}
