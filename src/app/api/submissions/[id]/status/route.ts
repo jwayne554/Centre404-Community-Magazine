@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import prisma from '@/lib/prisma';
 import { requireModerator } from '@/lib/api-auth';
+import { handleApiError, ValidationError } from '@/lib/api-errors';
+import { SubmissionService } from '@/services/submission.service';
 
 const updateStatusSchema = z.object({
   status: z.enum(['PENDING', 'APPROVED', 'REJECTED', 'ARCHIVED']),
@@ -26,60 +27,26 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = updateStatusSchema.parse(body);
 
-    // Get current status before update
-    const currentSubmission = await prisma.submission.findUnique({
-      where: { id },
-      select: { status: true },
-    });
-
-    // Update submission
-    const submission = await prisma.submission.update({
-      where: { id },
-      data: {
-        status: validatedData.status,
-        reviewNotes: validatedData.reviewNotes,
-        reviewedAt: new Date(),
-        reviewedById: userId,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
-
-    // Log the action (userId can be null for anonymous admin actions)
-    await prisma.auditLog.create({
-      data: {
-        userId: userId,  // null is valid for anonymous actions
-        action: `UPDATE_SUBMISSION_STATUS_${validatedData.status}`,
-        entityType: 'submission',
-        entityId: id,
-        details: JSON.stringify({
-          previousStatus: currentSubmission?.status || 'UNKNOWN',
-          newStatus: validatedData.status,
-          reviewNotes: validatedData.reviewNotes,
-        }),
-      },
-    });
-
-    return NextResponse.json(submission);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: error.issues },
-        { status: 400 }
+    // Only support APPROVED and REJECTED for now
+    // (PENDING and ARCHIVED would need additional logic)
+    if (validatedData.status !== 'APPROVED' && validatedData.status !== 'REJECTED') {
+      throw new ValidationError(
+        'Only APPROVED and REJECTED statuses are supported',
+        { supportedStatuses: ['APPROVED', 'REJECTED'] }
       );
     }
 
-    console.error('Failed to update submission status:', error);
-    return NextResponse.json(
-      { error: 'Failed to update submission status' },
-      { status: 500 }
+    // Use service layer - handles transaction and audit logging
+    const submission = await SubmissionService.updateSubmissionStatus(
+      id,
+      validatedData.status,
+      userId,
+      validatedData.reviewNotes
     );
+
+    return NextResponse.json(submission);
+  } catch (error) {
+    console.error('Failed to update submission status:', error);
+    return handleApiError(error);
   }
 }

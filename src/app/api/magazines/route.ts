@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import prisma from '@/lib/prisma';
 import { requireAdmin } from '@/lib/api-auth';
+import { handleApiError } from '@/lib/api-errors';
+import { MagazineService, CreateMagazineInput } from '@/services/magazine.service';
+import { MagazineFilters } from '@/repositories/magazine.repository';
 
 const createMagazineSchema = z.object({
   title: z.string().min(1).max(255),
@@ -18,37 +20,15 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const isPublic = searchParams.get('public') === 'true';
 
-    const magazines = await prisma.magazine.findMany({
-      where: isPublic ? { isPublic: true, status: 'PUBLISHED' } : {},
-      include: {
-        items: {
-          include: {
-            submission: {
-              include: {
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
-          orderBy: {
-            displayOrder: 'asc',
-          },
-        },
-        publishedBy: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-      orderBy: {
-        publishedAt: 'desc',
-      },
-    });
+    const filters: MagazineFilters = {};
+
+    if (isPublic) {
+      filters.isPublic = true;
+      filters.status = 'PUBLISHED';
+    }
+
+    // Use service layer
+    const magazines = await MagazineService.getMagazines(filters);
 
     // Cache public magazine responses for 5 minutes
     const response = NextResponse.json(magazines);
@@ -62,10 +42,7 @@ export async function GET(request: NextRequest) {
     return response;
   } catch (error) {
     console.error('Failed to fetch magazines:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch magazines' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -83,50 +60,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createMagazineSchema.parse(body);
 
-    // Generate unique slug
-    const slug = `${validatedData.title.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+    const input: CreateMagazineInput = {
+      title: validatedData.title,
+      description: validatedData.description,
+      submissionIds: validatedData.submissionIds,
+      isPublic: validatedData.isPublic,
+    };
 
-    // Create magazine with items
-    const magazine = await prisma.magazine.create({
-      data: {
-        title: validatedData.title,
-        description: validatedData.description,
-        version: `v${new Date().toISOString().split('T')[0]}`,
-        shareableSlug: slug,
-        isPublic: validatedData.isPublic,
-        status: validatedData.isPublic ? 'PUBLISHED' : 'DRAFT',
-        publishedAt: validatedData.isPublic ? new Date() : null,
-        publishedById: userId,
-        items: {
-          create: validatedData.submissionIds.map((submissionId, index) => ({
-            submissionId,
-            displayOrder: index,
-          })),
-        },
-      },
-      include: {
-        items: {
-          include: {
-            submission: true,
-          },
-        },
-      },
-    });
-
-    // Log the action (userId can be null for anonymous admin actions)
-    await prisma.auditLog.create({
-      data: {
-        userId: userId,  // null is valid for anonymous actions
-        action: 'CREATE_MAGAZINE',
-        entityType: 'magazine',
-        entityId: magazine.id,
-        details: JSON.stringify({
-          title: magazine.title,
-          itemCount: validatedData.submissionIds.length,
-          isPublic: validatedData.isPublic,
-        }),
-      },
-    });
+    // Use service layer - handles transaction and audit logging
+    const magazine = await MagazineService.createMagazine(input, userId);
 
     // Revalidate magazine cache if publishing
     if (validatedData.isPublic) {
@@ -136,17 +78,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(magazine, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: error.issues },
-        { status: 400 }
-      );
-    }
-
     console.error('Failed to create magazine:', error);
-    return NextResponse.json(
-      { error: 'Failed to create magazine' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

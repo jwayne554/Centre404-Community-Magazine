@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import prisma from '@/lib/prisma';
 import { rateLimit } from '@/lib/rate-limit';
 import { SubmissionStatus, SubmissionCategory } from '@prisma/client';
 import { handleApiError } from '@/lib/api-errors';
+import { SubmissionService } from '@/services/submission.service';
+import { SubmissionFilters } from '@/repositories/submission.repository';
 
 const createSubmissionSchema = z.object({
   category: z.enum(['MY_NEWS', 'SAYING_HELLO', 'MY_SAY']),
@@ -24,46 +25,23 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100'); // Increased default limit
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const where: {
-      status?: SubmissionStatus;
-      category?: SubmissionCategory;
-    } = {};
+    const filters: SubmissionFilters = {
+      limit,
+      offset,
+    };
 
     // Only filter by status if explicitly provided
     if (status) {
-      where.status = status as SubmissionStatus;
+      filters.status = status as SubmissionStatus;
     }
 
     if (category) {
-      where.category = category as SubmissionCategory;
+      filters.category = category as SubmissionCategory;
     }
 
-    const [submissions, total] = await Promise.all([
-      prisma.submission.findMany({
-        where,
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-        orderBy: {
-          submittedAt: 'desc',
-        },
-        take: limit,
-        skip: offset,
-      }),
-      prisma.submission.count({ where }),
-    ]);
+    const result = await SubmissionService.getSubmissions(filters);
 
-    return NextResponse.json({
-      submissions,
-      total,
-      limit,
-      offset,
-    });
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Failed to fetch submissions:', error);
     return handleApiError(error);
@@ -83,45 +61,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Request body:', body);
     const validatedData = createSubmissionSchema.parse(body);
-    
+
     // Get user ID from header (set by middleware) or allow anonymous
     const userId = request.headers.get('x-user-id') || null;
 
     console.log('Creating submission with data:', { ...validatedData, userId, status: 'PENDING' });
 
-    const submission = await prisma.submission.create({
-      data: {
-        ...validatedData,
-        userId,
-        status: 'PENDING', // Submissions require admin review before publication
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    });
-    
-    console.log('Submission created successfully:', submission.id);
+    // Use service layer - handles transaction and audit logging
+    const submission = await SubmissionService.createSubmission(validatedData, userId);
 
-    // Log the submission creation
-    if (userId) {
-      await prisma.auditLog.create({
-        data: {
-          userId,
-          action: 'CREATE_SUBMISSION',
-          entityType: 'submission',
-          entityId: submission.id,
-          details: JSON.stringify({
-            category: submission.category,
-            contentType: submission.contentType,
-          }),
-        },
-      });
-    }
+    console.log('Submission created successfully:', submission.id);
 
     return NextResponse.json(submission, { status: 201 });
   } catch (error) {
