@@ -1,9 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getCategoryEmoji, getCategoryColor } from '@/utils/category-helpers';
+import Layout from '@/components/ui/Layout';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import { ArrowLeft, Plus, Trash2, Save, Globe, ArrowUp, ArrowDown, X, Loader2 } from 'lucide-react';
 
 interface Submission {
   id: string;
@@ -39,7 +42,9 @@ export default function MagazineCompiler() {
   const fetchApprovedSubmissions = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/submissions?status=APPROVED');
+      const response = await fetch('/api/submissions?status=APPROVED', {
+        credentials: 'include',
+      });
       const data = await response.json();
       setApprovedSubmissions(data.submissions || []);
     } catch (error) {
@@ -93,6 +98,7 @@ export default function MagazineCompiler() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim(),
@@ -103,7 +109,6 @@ export default function MagazineCompiler() {
 
       if (response.ok) {
         alert(`Magazine ${publishNow ? 'published' : 'saved as draft'} successfully!`);
-        // Redirect to admin dashboard if draft (to view it), or magazines if published
         router.push(publishNow ? '/magazines' : '/admin');
       } else {
         const error = await response.json();
@@ -116,7 +121,6 @@ export default function MagazineCompiler() {
       setSaving(false);
     }
   };
-
 
   const generateSuggestedTitle = () => {
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -132,73 +136,44 @@ export default function MagazineCompiler() {
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px' }}>
-        {/* Hero Header */}
-        <div style={{
-          background: 'linear-gradient(135deg, #f39c12, #e67e22)',
-          color: 'white',
-          padding: '40px 30px',
-          borderRadius: '12px',
-          marginBottom: '30px'
-        }}>
-          <Link
-            href="/admin"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 16px',
-              background: 'rgba(255, 255, 255, 0.2)',
-              border: '2px solid rgba(255, 255, 255, 0.3)',
-              borderRadius: '6px',
-              color: 'white',
-              textDecoration: 'none',
-              fontWeight: '600',
-              fontSize: '14px',
-              marginBottom: '20px',
-              transition: 'all 0.3s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-            }}
+    <Layout>
+      {/* Hero Header */}
+      <Card className="bg-gradient-to-br from-primary to-primary/80 text-white border-primary mb-8">
+        <div className="p-8">
+          <Button
+            variant="secondary"
+            onClick={() => router.push('/admin')}
+            icon={<ArrowLeft className="h-4 w-4" />}
+            className="mb-6 bg-white/20 border-white/30 text-white hover:bg-white/30"
           >
-            ← Back to Dashboard
-          </Link>
+            Back to Dashboard
+          </Button>
 
-          <div style={{ fontSize: '48px', marginBottom: '10px' }}>📖</div>
-          <h1 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '10px', color: 'white' }}>
-            Compile Magazine Edition
-          </h1>
-          <p style={{ fontSize: '18px', opacity: 0.95 }}>
+          <div className="text-5xl mb-3">📖</div>
+          <h1 className="text-3xl font-bold mb-2">Compile Magazine Edition</h1>
+          <p className="text-white/95 text-lg">
             Select and arrange approved submissions to create a beautiful magazine
           </p>
         </div>
+      </Card>
 
-        {/* Magazine Information */}
-        <div style={{
-          background: 'white',
-          borderRadius: '12px',
-          padding: '30px',
-          marginBottom: '25px',
-          boxShadow: 'var(--shadow)'
-        }}>
-          <div style={{ marginBottom: '25px' }}>
-            <h2 style={{ fontSize: '22px', fontWeight: '700', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+      {/* Magazine Information */}
+      <Card className="mb-6">
+        <div className="p-6">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
               ✨ Magazine Information
             </h2>
-            <p style={{ color: '#666', fontSize: '15px' }}>
+            <p className="text-dark-gray text-sm">
               Give your magazine a title and description
             </p>
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
-              <div style={{ flex: '1', minWidth: '300px' }}>
-                <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px', fontSize: '14px' }}>
+          <div className="space-y-5">
+            {/* Title Input */}
+            <div className="flex gap-3 flex-wrap">
+              <div className="flex-1 min-w-[300px]">
+                <label className="block font-semibold mb-2 text-sm">
                   Title *
                 </label>
                 <input
@@ -207,32 +182,21 @@ export default function MagazineCompiler() {
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g., Spring 2025 Edition, Issue #5"
                   maxLength={255}
-                  style={{
-                    width: '100%',
-                    padding: '12px 15px',
-                    fontSize: '16px',
-                    border: '2px solid #ddd',
-                    borderRadius: '8px',
-                    fontFamily: 'inherit'
-                  }}
+                  className="w-full px-4 py-3 text-base border-2 border-light-gray rounded-xl focus:outline-none focus:border-primary transition-colors"
                 />
               </div>
-              <button
+              <Button
+                variant="outline"
                 onClick={generateSuggestedTitle}
-                className="tool-button"
-                style={{
-                  alignSelf: 'flex-end',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
+                className="self-end"
               >
                 ✨ Suggest Title
-              </button>
+              </Button>
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px', fontSize: '14px' }}>
+            {/* Description Textarea */}
+            <div>
+              <label className="block font-semibold mb-2 text-sm">
                 Description (Optional)
               </label>
               <textarea
@@ -240,149 +204,89 @@ export default function MagazineCompiler() {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Brief description of this edition"
                 maxLength={500}
-                style={{
-                  width: '100%',
-                  padding: '12px 15px',
-                  fontSize: '16px',
-                  border: '2px solid #ddd',
-                  borderRadius: '8px',
-                  minHeight: '90px',
-                  fontFamily: 'inherit',
-                  resize: 'vertical'
-                }}
+                className="w-full px-4 py-3 text-base border-2 border-light-gray rounded-xl focus:outline-none focus:border-primary transition-colors resize-vertical min-h-[90px]"
               />
             </div>
 
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              padding: '15px',
-              background: '#e3f2fd',
-              border: '2px solid #2196f3',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: '600'
-            }}>
+            {/* Publish Now Checkbox */}
+            <label className="flex items-center gap-3 p-4 bg-primary/10 border-2 border-primary rounded-xl cursor-pointer font-semibold hover:bg-primary/20 transition-colors">
               <input
                 type="checkbox"
                 checked={publishNow}
                 onChange={(e) => setPublishNow(e.target.checked)}
-                style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                className="w-5 h-5 cursor-pointer accent-primary"
               />
               🌐 Publish immediately (make visible to all users)
             </label>
           </div>
         </div>
+      </Card>
 
-        {/* Two Column Layout */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))',
-          gap: '25px',
-          marginBottom: '25px'
-        }}>
-          {/* Available Submissions */}
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '25px',
-            boxShadow: 'var(--shadow)',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '2px solid #eee' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '5px' }}>
-                📚 Available Submissions ({availableSubmissions.length})
-              </h2>
-              <p style={{ color: '#666', fontSize: '14px' }}>
-                Approved submissions ready to be added
-              </p>
-            </div>
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Available Submissions */}
+        <Card className="flex flex-col">
+          <div className="p-6 pb-4 border-b-2 border-light-gray">
+            <h2 className="text-lg font-bold mb-1">
+              📚 Available Submissions ({availableSubmissions.length})
+            </h2>
+            <p className="text-dark-gray text-sm">
+              Approved submissions ready to be added
+            </p>
+          </div>
 
+          <div className="p-6 flex-1">
             {loading ? (
-              <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-                <div style={{ fontSize: '48px', marginBottom: '15px' }}>⏳</div>
-                <p style={{ color: '#666', fontSize: '16px' }}>Loading submissions...</p>
+              <div className="text-center py-16">
+                <div className="text-5xl mb-4">⏳</div>
+                <p className="text-dark-gray">Loading submissions...</p>
               </div>
             ) : availableSubmissions.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '60px 20px', background: '#f8f9fa', borderRadius: '8px' }}>
-                <div style={{ fontSize: '64px', marginBottom: '15px' }}>✅</div>
-                <p style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>
+              <div className="text-center py-16 bg-background rounded-xl">
+                <div className="text-6xl mb-4">✅</div>
+                <p className="text-lg font-semibold mb-2">
                   {selectedSubmissions.length > 0 ? 'All Added!' : 'No Submissions'}
                 </p>
-                <p style={{ color: '#666', fontSize: '14px' }}>
+                <p className="text-dark-gray text-sm">
                   {selectedSubmissions.length > 0
                     ? 'All approved submissions have been added!'
                     : 'No approved submissions yet.'}
                 </p>
               </div>
             ) : (
-              <div style={{ maxHeight: '650px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="max-h-[650px] overflow-y-auto space-y-3">
                 {availableSubmissions.map((submission) => {
                   const categoryColor = getCategoryColor(submission.category);
 
                   return (
                     <div
                       key={submission.id}
-                      style={{
-                        border: '2px solid #ddd',
-                        borderRadius: '8px',
-                        padding: '15px',
-                        borderLeft: `5px solid ${categoryColor}`,
-                        transition: 'all 0.3s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#f8f9fa';
-                        e.currentTarget.style.transform = 'translateX(3px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'white';
-                        e.currentTarget.style.transform = 'translateX(0)';
-                      }}
+                      className="border-2 border-light-gray rounded-xl p-4 hover:bg-background hover:translate-x-1 transition-all"
+                      style={{ borderLeft: `5px solid ${categoryColor}` }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '10px' }}>
-                        <span style={{ fontSize: '28px' }}>
+                      <div className="flex items-start gap-3 mb-3">
+                        <span className="text-3xl">
                           {getCategoryEmoji(submission.category)}
                         </span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: '15px', fontWeight: '700', marginBottom: '3px' }}>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-bold mb-1">
                             {submission.category.replace(/_/g, ' ')}
                           </div>
-                          <div style={{ fontSize: '13px', color: '#666' }}>
+                          <div className="text-xs text-dark-gray">
                             By {submission.user?.name || submission.userName || 'Anonymous'}
                           </div>
                         </div>
-                        <button
+                        <Button
+                          variant="primary"
+                          size="sm"
                           onClick={() => addToMagazine(submission)}
-                          style={{
-                            padding: '6px 14px',
-                            background: '#27ae60',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            fontWeight: '600',
-                            fontSize: '13px',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s',
-                            whiteSpace: 'nowrap'
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = '#229954')}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = '#27ae60')}
+                          icon={<Plus className="h-4 w-4" />}
                         >
-                          + Add
-                        </button>
+                          Add
+                        </Button>
                       </div>
                       {submission.textContent && (
-                        <p style={{
-                          fontSize: '14px',
-                          lineHeight: '1.5',
-                          color: '#555',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden'
-                        }}>
+                        <p className="text-sm leading-relaxed text-dark-gray line-clamp-2">
                           {submission.textContent}
                         </p>
                       )}
@@ -392,128 +296,81 @@ export default function MagazineCompiler() {
               </div>
             )}
           </div>
+        </Card>
 
-          {/* Selected for Magazine */}
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '25px',
-            boxShadow: 'var(--shadow)',
-            border: '3px solid #f39c12',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '2px solid #eee' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '5px' }}>
-                📖 Selected for Edition ({selectedSubmissions.length})
-              </h2>
-              <p style={{ color: '#666', fontSize: '14px' }}>
-                Arrange these in the order they&apos;ll appear
-              </p>
-            </div>
+        {/* Selected for Magazine */}
+        <Card className="flex flex-col border-4 border-accent">
+          <div className="p-6 pb-4 border-b-2 border-light-gray">
+            <h2 className="text-lg font-bold mb-1">
+              📖 Selected for Edition ({selectedSubmissions.length})
+            </h2>
+            <p className="text-dark-gray text-sm">
+              Arrange these in the order they'll appear
+            </p>
+          </div>
 
+          <div className="p-6 flex-1">
             {selectedSubmissions.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '60px 20px', background: '#f8f9fa', borderRadius: '8px' }}>
-                <div style={{ fontSize: '64px', marginBottom: '15px' }}>📭</div>
-                <p style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>
+              <div className="text-center py-16 bg-background rounded-xl">
+                <div className="text-6xl mb-4">📭</div>
+                <p className="text-lg font-semibold mb-2">
                   No Submissions Selected
                 </p>
-                <p style={{ color: '#666', fontSize: '14px' }}>
-                  Click &quot;Add&quot; on submissions from the left to include them
+                <p className="text-dark-gray text-sm">
+                  Click "Add" on submissions from the left to include them
                 </p>
               </div>
             ) : (
-              <div style={{ maxHeight: '650px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="max-h-[650px] overflow-y-auto space-y-3">
                 {selectedSubmissions.map((submission, index) => {
                   const categoryColor = getCategoryColor(submission.category);
 
                   return (
                     <div
                       key={submission.id}
-                      style={{
-                        border: '2px solid #f39c12',
-                        borderRadius: '8px',
-                        padding: '15px',
-                        background: '#fffbf5',
-                        borderLeft: `5px solid ${categoryColor}`
-                      }}
+                      className="border-2 border-accent rounded-xl p-4 bg-accent/5"
+                      style={{ borderLeft: `5px solid ${categoryColor}` }}
                     >
-                      <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                      <div className="flex gap-3 items-start">
                         {/* Reorder Controls */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div className="flex flex-col gap-1">
                           <button
                             onClick={() => moveUp(index)}
                             disabled={index === 0}
-                            style={{
-                              width: '32px',
-                              height: '32px',
-                              background: index === 0 ? '#e0e0e0' : '#f8f9fa',
-                              border: '2px solid #ddd',
-                              borderRadius: '6px',
-                              cursor: index === 0 ? 'not-allowed' : 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '16px',
-                              opacity: index === 0 ? 0.4 : 1
-                            }}
+                            className="w-8 h-8 bg-background border-2 border-light-gray rounded-lg flex items-center justify-center text-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-light-gray transition-colors"
                           >
-                            ↑
+                            <ArrowUp className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => moveDown(index)}
                             disabled={index === selectedSubmissions.length - 1}
-                            style={{
-                              width: '32px',
-                              height: '32px',
-                              background: index === selectedSubmissions.length - 1 ? '#e0e0e0' : '#f8f9fa',
-                              border: '2px solid #ddd',
-                              borderRadius: '6px',
-                              cursor: index === selectedSubmissions.length - 1 ? 'not-allowed' : 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '16px',
-                              opacity: index === selectedSubmissions.length - 1 ? 0.4 : 1
-                            }}
+                            className="w-8 h-8 bg-background border-2 border-light-gray rounded-lg flex items-center justify-center text-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-light-gray transition-colors"
                           >
-                            ↓
+                            <ArrowDown className="h-4 w-4" />
                           </button>
                         </div>
 
                         {/* Content */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                            <span style={{ fontSize: '24px' }}>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <span className="text-2xl">
                               {getCategoryEmoji(submission.category)}
                             </span>
-                            <span style={{
-                              background: categoryColor,
-                              color: 'white',
-                              padding: '2px 10px',
-                              borderRadius: '12px',
-                              fontSize: '12px',
-                              fontWeight: '700'
-                            }}>
+                            <span
+                              className="text-white px-2 py-0.5 rounded-full text-xs font-bold"
+                              style={{ backgroundColor: categoryColor }}
+                            >
                               #{index + 1}
                             </span>
-                            <div style={{ fontSize: '15px', fontWeight: '700' }}>
+                            <div className="text-sm font-bold">
                               {submission.category.replace(/_/g, ' ')}
                             </div>
                           </div>
-                          <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+                          <div className="text-xs text-dark-gray mb-2">
                             By {submission.user?.name || submission.userName || 'Anonymous'}
                           </div>
                           {submission.textContent && (
-                            <p style={{
-                              fontSize: '13px',
-                              lineHeight: '1.5',
-                              color: '#555',
-                              display: '-webkit-box',
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: 'vertical',
-                              overflow: 'hidden'
-                            }}>
+                            <p className="text-xs leading-relaxed text-dark-gray line-clamp-2">
                               {submission.textContent}
                             </p>
                           )}
@@ -522,31 +379,9 @@ export default function MagazineCompiler() {
                         {/* Remove Button */}
                         <button
                           onClick={() => removeFromMagazine(submission.id)}
-                          style={{
-                            width: '32px',
-                            height: '32px',
-                            background: '#fee',
-                            border: '2px solid #e74c3c',
-                            borderRadius: '6px',
-                            color: '#e74c3c',
-                            cursor: 'pointer',
-                            fontSize: '18px',
-                            fontWeight: '700',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'all 0.3s'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#e74c3c';
-                            e.currentTarget.style.color = 'white';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = '#fee';
-                            e.currentTarget.style.color = '#e74c3c';
-                          }}
+                          className="w-8 h-8 bg-red-50 border-2 border-red-300 rounded-lg text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors"
                         >
-                          ×
+                          <X className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -555,74 +390,49 @@ export default function MagazineCompiler() {
               </div>
             )}
           </div>
-        </div>
+        </Card>
+      </div>
 
-        {/* Action Bar */}
-        <div style={{
-          background: 'linear-gradient(135deg, #f8f9fa, #e8e9ea)',
-          borderRadius: '12px',
-          padding: '25px 30px',
-          border: '3px solid #ddd',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '20px'
-        }}>
+      {/* Action Bar */}
+      <Card className="bg-gradient-to-br from-background to-white border-2 border-light-gray">
+        <div className="p-6 flex justify-between items-center flex-wrap gap-5">
           <div>
-            <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '5px' }}>
+            <div className="text-lg font-bold mb-1">
               Ready to {publishNow ? 'Publish' : 'Save'}? 🚀
             </div>
-            <div style={{ fontSize: '14px', color: '#666' }}>
+            <div className="text-sm text-dark-gray">
               {selectedSubmissions.length} submission{selectedSubmissions.length !== 1 ? 's' : ''} selected
               {publishNow && ' • Will be visible to all users immediately'}
               {!publishNow && ' • Can be published later from the archive'}
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
               onClick={() => router.push('/admin')}
               disabled={saving}
-              className="tool-button"
-              style={{
-                opacity: saving ? 0.5 : 1,
-                cursor: saving ? 'not-allowed' : 'pointer'
-              }}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               onClick={saveMagazine}
               disabled={saving || !title.trim() || selectedSubmissions.length === 0}
-              className="btn-large"
-              style={{
-                background: publishNow ? '#27ae60' : '#2c5aa0',
-                color: 'white',
-                opacity: (saving || !title.trim() || selectedSubmissions.length === 0) ? 0.5 : 1,
-                cursor: (saving || !title.trim() || selectedSubmissions.length === 0) ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
+              icon={saving ? <Loader2 className="h-4 w-4 animate-spin" /> : publishNow ? <Globe className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+              className={publishNow ? 'bg-primary hover:bg-primary/90' : 'bg-charcoal hover:bg-charcoal/90'}
             >
               {saving ? (
-                <>
-                  ⏳ {publishNow ? 'Publishing...' : 'Saving...'}
-                </>
+                publishNow ? 'Publishing...' : 'Saving...'
               ) : publishNow ? (
-                <>
-                  🌐 Publish Magazine
-                </>
+                'Publish Magazine'
               ) : (
-                <>
-                  💾 Save as Draft
-                </>
+                'Save as Draft'
               )}
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </Card>
+    </Layout>
   );
 }
