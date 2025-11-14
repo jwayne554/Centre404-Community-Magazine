@@ -1,156 +1,126 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { useMagazineData } from '@/hooks/useMagazineData';
-import { MagazineSkeletonGrid } from '@/components/skeletons/magazine-skeleton';
-import Layout from '@/components/ui/Layout';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { BookOpen, Calendar } from 'lucide-react';
+import React from 'react'
+import Link from 'next/link'
+import Layout from '@/components/ui/Layout'
+import Card from '@/components/ui/Card'
+import Button from '@/components/ui/Button'
+import { BookOpen, Calendar, ArrowRight } from 'lucide-react'
 
-export default function MagazinesPage() {
-  const { magazines, isLoading: loading } = useMagazineData({ publicOnly: true });
+const MagazineArchive = () => {
+  // Mock data for magazine editions
+  const editions = [
+    {
+      id: 'latest',
+      title: 'Summer 2023',
+      date: 'June 2023',
+      isLatest: true,
+    },
+    {
+      id: '2',
+      title: 'Spring 2023',
+      date: 'March 2023',
+    },
+    {
+      id: '3',
+      title: 'Winter 2022',
+      date: 'December 2022',
+    },
+    {
+      id: '4',
+      title: 'Fall 2022',
+      date: 'September 2022',
+    },
+    {
+      id: '5',
+      title: 'Summer 2022',
+      date: 'June 2022',
+    },
+    {
+      id: '6',
+      title: 'Spring 2022',
+      date: 'March 2022',
+    },
+  ]
 
-  const latestMagazine = magazines.length > 0 ? magazines[0] : null;
-  const olderMagazines = magazines.slice(1);
+  const latestEdition = editions.find((edition) => edition.isLatest)
+  const previousEditions = editions.filter((edition) => !edition.isLatest)
 
   return (
     <Layout>
-      {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Magazine Archive</h1>
-        <p className="text-dark-gray">
-          Read all our community editions and discover stories from our members
-        </p>
-      </div>
-
-      {loading ? (
-        <MagazineSkeletonGrid />
-      ) : magazines.length === 0 ? (
-        <Card className="text-center p-12">
-          <div className="text-6xl mb-4">📚</div>
-          <h2 className="text-xl font-semibold mb-2">No magazines published yet</h2>
-          <p className="text-dark-gray mb-6">
-            Check back soon! Our first edition is being compiled from your wonderful contributions.
+      <div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Magazine Archive</h1>
+          <p className="text-dark-gray">
+            Browse through all editions of our community magazine
           </p>
-          <Link href="/">
-            <Button variant="primary">Share Your Story</Button>
-          </Link>
-        </Card>
-      ) : (
-        <>
-          {/* Latest Magazine - Large 2-Column Highlight */}
-          {latestMagazine && (
-            <div className="mb-12">
-              <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-2xl font-bold">Latest Edition</h2>
-                <span className="bg-accent text-charcoal px-3 py-1 rounded-full text-sm font-semibold">
-                  New
-                </span>
+        </div>
+        {latestEdition && (
+          <div className="mb-12">
+            <h2 className="text-xl font-semibold mb-4">Latest Edition</h2>
+            <Card className="overflow-hidden">
+              <div className="md:flex">
+                <div className="bg-primary/10 p-8 flex items-center justify-center md:w-1/3">
+                  <div className="text-center">
+                    <BookOpen className="h-16 w-16 text-primary mx-auto mb-2" />
+                    <h3 className="text-xl font-bold">{latestEdition.title}</h3>
+                    <p className="text-dark-gray flex items-center justify-center mt-1">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      {latestEdition.date}
+                    </p>
+                  </div>
+                </div>
+                <div className="p-6 md:p-8 md:w-2/3">
+                  <div className="flex items-start">
+                    <div className="bg-accent/10 text-accent px-2 py-1 rounded-full text-xs font-medium uppercase">
+                      New
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold mt-3">
+                    Centre404 Community Magazine
+                  </h3>
+                  <p className="mt-2 text-dark-gray">
+                    Our latest edition features stories from community members,
+                    local news, and special announcements. Dive in to discover
+                    what's happening in our community!
+                  </p>
+                  <div className="mt-6">
+                    <Link href={`/magazines/${latestEdition.id}`}>
+                      <Button
+                        variant="primary"
+                        icon={<ArrowRight className="h-4 w-4" />}
+                      >
+                        Read Now
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
               </div>
-              <Link href={`/magazines/${latestMagazine.id}`} className="block">
-                <Card
-                  hover={true}
-                  className="bg-gradient-to-br from-primary to-primary/80 text-white border-primary overflow-hidden"
-                >
-                  <div className="grid md:grid-cols-2 gap-6 p-8">
-                    {/* Left Column - Content */}
-                    <div className="flex flex-col justify-center">
-                      <h3 className="text-3xl font-bold mb-3 text-white">
-                        {latestMagazine.title}
-                      </h3>
-                      {latestMagazine.description && (
-                        <p className="text-white/95 mb-4 text-lg leading-relaxed">
-                          {latestMagazine.description}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-4 text-sm mb-6">
-                        <span className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          {latestMagazine.publishedAt
-                            ? new Date(latestMagazine.publishedAt).toLocaleDateString('en-US', {
-                                month: 'long',
-                                day: 'numeric',
-                                year: 'numeric',
-                              })
-                            : 'Recently'}
-                        </span>
-                        <span>•</span>
-                        <span>
-                          {latestMagazine.items.length}{' '}
-                          {latestMagazine.items.length === 1 ? 'story' : 'stories'}
-                        </span>
-                      </div>
-                      <div>
-                        <Button variant="secondary" size="lg">
-                          📖 Read Edition
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Right Column - Visual Element */}
-                    <div className="hidden md:flex items-center justify-center">
-                      <div className="bg-white/20 rounded-xl p-8 backdrop-blur-sm">
-                        <BookOpen className="h-32 w-32 text-white" />
-                      </div>
-                    </div>
+            </Card>
+          </div>
+        )}
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Previous Editions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {previousEditions.map((edition) => (
+              <Link href={`/magazines/${edition.id}`} key={edition.id}>
+                <Card className="h-full hover:shadow-lg transition-shadow p-6">
+                  <div className="text-center">
+                    <BookOpen className="h-12 w-12 text-primary mx-auto mb-3" />
+                    <h3 className="font-bold">{edition.title}</h3>
+                    <p className="text-dark-gray flex items-center justify-center mt-1">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      {edition.date}
+                    </p>
                   </div>
                 </Card>
               </Link>
-            </div>
-          )}
-
-          {/* Previous Editions - 3 Column Grid */}
-          {olderMagazines.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold mb-4">Previous Editions</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {olderMagazines.map((magazine) => (
-                  <Link key={magazine.id} href={`/magazines/${magazine.id}`}>
-                    <Card hover={true} className="h-full flex flex-col">
-                      <div className="p-6 flex flex-col h-full">
-                        {/* Book Icon */}
-                        <div className="bg-primary/10 rounded-xl p-4 mb-4 inline-flex items-center justify-center self-start">
-                          <BookOpen className="h-8 w-8 text-primary" />
-                        </div>
-
-                        {/* Title */}
-                        <h3 className="text-lg font-semibold mb-2 line-clamp-2">
-                          {magazine.title}
-                        </h3>
-
-                        {/* Description */}
-                        {magazine.description && (
-                          <p className="text-dark-gray text-sm mb-4 line-clamp-2 flex-grow">
-                            {magazine.description}
-                          </p>
-                        )}
-
-                        {/* Metadata */}
-                        <div className="mt-auto space-y-2">
-                          <div className="flex items-center gap-2 text-sm text-dark-gray">
-                            <Calendar className="h-4 w-4" />
-                            {magazine.publishedAt
-                              ? new Date(magazine.publishedAt).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  year: 'numeric',
-                                })
-                              : 'Recently'}
-                          </div>
-                          <div className="text-sm font-medium text-charcoal">
-                            {magazine.items.length}{' '}
-                            {magazine.items.length === 1 ? 'story' : 'stories'}
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-        </>
-      )}
+            ))}
+          </div>
+        </div>
+      </div>
     </Layout>
-  );
+  )
 }
+
+export default MagazineArchive

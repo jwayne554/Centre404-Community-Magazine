@@ -1,207 +1,209 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { SimpleSubmissionForm } from '@/components/forms/simple-submission-form';
-import Link from 'next/link';
+import React, { useState } from 'react'
+import {
+  Newspaper,
+  Hand,
+  MessageCircle,
+  Mic,
+  Smile,
+  Trash2,
+  ArrowRight,
+} from 'lucide-react'
+import Layout from '@/components/ui/Layout'
+import Button from '@/components/ui/Button'
+import { CategoryCard } from '@/components/ui/Card'
+import { Input, TextArea, FileUpload } from '@/components/ui/Input'
+import Accordion from '@/components/ui/Accordion'
 
-export default function Home() {
-  const [showInfo, setShowInfo] = useState(false);
+const ContributionForm = () => {
+  const [category, setCategory] = useState<string>('')
+  const [name, setName] = useState<string>('')
+  const [message, setMessage] = useState<string>('')
+  const [symbolsOpen, setSymbolsOpen] = useState<boolean>(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    // Handle form submission
+    console.log({
+      category,
+      name,
+      message,
+      selectedFile,
+    })
+    alert('Form submitted successfully!')
+  }
+
+  const handleFileSelect = (file: File) => {
+    setSelectedFile(file)
+  }
+
+  const handleAddSymbol = (symbol: string) => {
+    setMessage((prev) => prev + symbol)
+    setSymbolsOpen(false)
+  }
+
+  const symbols = [
+    '😊',
+    '👍',
+    '❤️',
+    '🎉',
+    '👋',
+    '🙏',
+    '✅',
+    '⭐',
+    '🔥',
+    '💯',
+    '🌟',
+    '👏',
+  ]
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>
-      <div className="container" style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-        {/* Header */}
-        <div className="main-header" style={{
-          background: 'var(--primary-color)',
-          color: 'white',
-          padding: '20px',
-          textAlign: 'center',
-          marginBottom: '30px',
-          borderRadius: '8px',
-          position: 'relative'
-        }}>
-          {/* Admin Link */}
-          <Link
-            href="/admin"
-            style={{
-              position: 'absolute',
-              top: '20px',
-              right: '20px',
-              padding: '8px 16px',
-              background: 'rgba(255,255,255,0.2)',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '6px',
-              fontSize: '14px',
-              fontWeight: '600',
-              border: '2px solid rgba(255,255,255,0.3)',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.3)';
-              e.currentTarget.style.borderColor = 'white';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
-            }}
-          >
-            🔐 Admin
-          </Link>
-
-          <h1 style={{ fontSize: '24px', marginBottom: '10px', color: 'white' }}>
-            Centre404 Community Magazine
-          </h1>
-          <p style={{ color: 'white' }}>Your Voice, Your Stories</p>
-        </div>
-
-        {/* Info Banner */}
-        <div style={{
-          background: '#e3f2fd',
-          border: '2px solid #2196f3',
-          borderRadius: '8px',
-          padding: '15px',
-          marginBottom: '30px',
-          textAlign: 'center'
-        }}>
-          <p style={{ marginBottom: '10px', fontWeight: '600' }}>
-            📖 Want to read our community magazines?
+    <Layout>
+      <div className="max-w-2xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Share Your Story</h1>
+          <p className="text-dark-gray">
+            Contribute to our community magazine by sharing your news, thoughts,
+            or just saying hello!
           </p>
-          <Link
-            href="/magazines"
-            style={{
-              display: 'inline-block',
-              padding: '10px 20px',
-              background: 'var(--primary-color)',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '6px',
-              fontWeight: '600'
-            }}
-          >
-            View Magazine Archive →
-          </Link>
         </div>
-
-        {/* Info Section */}
-        <div style={{
-          background: 'white',
-          border: '2px solid #ddd',
-          borderRadius: '8px',
-          padding: '20px',
-          marginBottom: '30px'
-        }}>
-          <button
-            onClick={() => setShowInfo(!showInfo)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              width: '100%',
-              justifyContent: 'space-between'
-            }}
-          >
-            <span>ℹ️ How does this work?</span>
-            <span>{showInfo ? '▲' : '▼'}</span>
-          </button>
-
-          {showInfo && (
-            <div style={{ marginTop: '15px', lineHeight: '1.8' }}>
-              <ol style={{ paddingLeft: '20px' }}>
-                <li><strong>You submit</strong> your stories, photos, and drawings below</li>
-                <li><strong>Our team reviews</strong> each contribution carefully</li>
-                <li><strong>We compile</strong> approved submissions into beautiful magazine editions</li>
-                <li><strong>You read</strong> the published magazines in our archive!</li>
-              </ol>
-              <p style={{ marginTop: '15px', fontStyle: 'italic', color: '#666' }}>
-                Every voice matters in our community. We can&apos;t wait to see what you share!
-              </p>
+        <Accordion title="How does this work?">
+          <p className="mb-2">
+            The Centre404 Community Magazine is a platform for our community
+            members to share their stories, news, and thoughts.
+          </p>
+          <p className="mb-2">
+            Your contribution will be reviewed and may be featured in our next
+            edition. You can include text, photos, or even record audio!
+          </p>
+          <p>
+            Select a category, fill out the form, and hit submit. It's that easy!
+          </p>
+        </Accordion>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-3">
+              Select a category for your contribution
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <CategoryCard
+                title="My News"
+                icon={<Newspaper className="h-6 w-6" />}
+                active={category === 'MY_NEWS'}
+                onClick={() => setCategory('MY_NEWS')}
+              />
+              <CategoryCard
+                title="Saying Hello"
+                icon={<Hand className="h-6 w-6" />}
+                active={category === 'SAYING_HELLO'}
+                onClick={() => setCategory('SAYING_HELLO')}
+              />
+              <CategoryCard
+                title="My Say"
+                icon={<MessageCircle className="h-6 w-6" />}
+                active={category === 'MY_SAY'}
+                onClick={() => setCategory('MY_SAY')}
+              />
             </div>
+          </div>
+          {category && (
+            <>
+              <Input
+                label="Your name"
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your name"
+                required
+              />
+              <div className="mb-4">
+                <TextArea
+                  label="Write your message"
+                  id="message"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Share your story, news, or just say hello..."
+                  required
+                  rows={6}
+                />
+                <div className="flex items-center space-x-2 mt-2">
+                  <Button
+                    variant="icon"
+                    icon={<Mic className="h-5 w-5" />}
+                    onClick={() => alert('Record audio feature')}
+                  >
+                    Record Audio
+                  </Button>
+                  <div className="relative">
+                    <Button
+                      variant="icon"
+                      icon={<Smile className="h-5 w-5" />}
+                      onClick={() => setSymbolsOpen(!symbolsOpen)}
+                    >
+                      Symbols
+                    </Button>
+                    {symbolsOpen && (
+                      <div className="absolute z-10 mt-1 w-64 p-2 bg-white rounded-xl shadow-lg border border-light-gray">
+                        <div className="grid grid-cols-6 gap-2">
+                          {symbols.map((symbol) => (
+                            <button
+                              key={symbol}
+                              type="button"
+                              className="h-10 w-10 flex items-center justify-center text-xl rounded hover:bg-background"
+                              onClick={() => handleAddSymbol(symbol)}
+                            >
+                              {symbol}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                    variant="icon"
+                    icon={<Trash2 className="h-5 w-5" />}
+                    onClick={() => setMessage('')}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </div>
+              <FileUpload
+                onFileSelect={handleFileSelect}
+                label="Add a photo to your contribution"
+              />
+              {selectedFile && (
+                <div className="mb-4 p-3 bg-background rounded-xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm truncate">{selectedFile.name}</span>
+                    <Button
+                      variant="icon"
+                      size="sm"
+                      icon={<Trash2 className="h-4 w-4" />}
+                      onClick={() => setSelectedFile(null)}
+                    />
+                  </div>
+                </div>
+              )}
+              <div className="mt-8">
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  className="w-full"
+                  icon={<ArrowRight className="h-5 w-5" />}
+                >
+                  Submit My Contribution
+                </Button>
+              </div>
+            </>
           )}
-        </div>
-
-        {/* Contribution Form */}
-        <div className="animate-in">
-          <SimpleSubmissionForm />
-        </div>
+        </form>
       </div>
-
-      {/* Accessibility Controls - Fixed position like original */}
-      <div style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        display: 'flex',
-        gap: '10px',
-        zIndex: 100
-      }}>
-        <button
-          onClick={() => document.body.classList.toggle('high-contrast')}
-          style={{
-            width: '50px',
-            height: '50px',
-            borderRadius: '50%',
-            background: 'var(--bg-color)',
-            border: '2px solid #27ae60',
-            cursor: 'pointer',
-            fontSize: '20px',
-            boxShadow: 'var(--shadow)',
-            color: 'var(--text-color)'
-          }}
-          title="Toggle High Contrast"
-        >
-          ◐
-        </button>
-        <button
-          onClick={() => {
-            const root = document.documentElement;
-            const currentSize = parseInt(getComputedStyle(root).fontSize);
-            root.style.fontSize = `${currentSize + 2}px`;
-          }}
-          style={{
-            width: '50px',
-            height: '50px',
-            borderRadius: '50%',
-            background: 'var(--bg-color)',
-            border: '2px solid #27ae60',
-            cursor: 'pointer',
-            fontSize: '20px',
-            boxShadow: 'var(--shadow)',
-            color: 'var(--text-color)'
-          }}
-          title="Increase Font Size"
-        >
-          A+
-        </button>
-        <button
-          onClick={() => {
-            const root = document.documentElement;
-            const currentSize = parseInt(getComputedStyle(root).fontSize);
-            if (currentSize > 14) {
-              root.style.fontSize = `${currentSize - 2}px`;
-            }
-          }}
-          style={{
-            width: '50px',
-            height: '50px',
-            borderRadius: '50%',
-            background: 'var(--bg-color)',
-            border: '2px solid #27ae60',
-            cursor: 'pointer',
-            fontSize: '20px',
-            boxShadow: 'var(--shadow)',
-            color: 'var(--text-color)'
-          }}
-          title="Decrease Font Size"
-        >
-          A-
-        </button>
-      </div>
-    </div>
-  );
+    </Layout>
+  )
 }
+
+export default ContributionForm
