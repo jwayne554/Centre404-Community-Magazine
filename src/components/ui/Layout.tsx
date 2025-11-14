@@ -45,6 +45,9 @@ const Layout = ({ children }: LayoutProps) => {
             <NavLink href="/magazines/latest" current={pathname?.includes('/magazines/') && pathname !== '/magazines'}>
               Latest Edition
             </NavLink>
+            <NavLink href="/admin" current={pathname === '/admin' || pathname?.startsWith('/admin/')}>
+              Admin
+            </NavLink>
           </nav>
         </div>
 
@@ -60,6 +63,9 @@ const Layout = ({ children }: LayoutProps) => {
               </NavLink>
               <NavLink href="/magazines/latest" current={pathname?.includes('/magazines/') && pathname !== '/magazines'}>
                 Latest Edition
+              </NavLink>
+              <NavLink href="/admin" current={pathname === '/admin' || pathname?.startsWith('/admin/')}>
+                Admin
               </NavLink>
             </div>
           </div>
