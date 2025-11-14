@@ -56,3 +56,8 @@ Thumbs.db
 # Logs
 logs/
 *.log
+# Screenshots and temp images
+*.png
+!public/**/*.png
+Screenshot*.png
+current*.png
