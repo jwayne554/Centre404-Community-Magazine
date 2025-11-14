@@ -18,7 +18,7 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <Link href="/" className="flex items-center gap-2">
             <BookOpen className="h-8 w-8 text-primary" />
             <span className="text-xl font-bold">
               Centre404 Community Magazine
@@ -39,11 +39,11 @@ const Layout = ({ children }: LayoutProps) => {
             <NavLink href="/" current={pathname === '/'}>
               Share Your Story
             </NavLink>
-            <NavLink href="/magazines" current={pathname?.includes('/magazines')}>
+            <NavLink href="/magazines" current={pathname === '/magazines'}>
               Archive
             </NavLink>
-            <NavLink href="/admin" current={pathname?.includes('/admin')}>
-              Admin
+            <NavLink href="/magazines/latest" current={pathname?.includes('/magazines/') && pathname !== '/magazines'}>
+              Latest Edition
             </NavLink>
           </nav>
         </div>
@@ -55,11 +55,11 @@ const Layout = ({ children }: LayoutProps) => {
               <NavLink href="/" current={pathname === '/'}>
                 Share Your Story
               </NavLink>
-              <NavLink href="/magazines" current={pathname?.includes('/magazines')}>
+              <NavLink href="/magazines" current={pathname === '/magazines'}>
                 Archive
               </NavLink>
-              <NavLink href="/admin" current={pathname?.includes('/admin')}>
-                Admin
+              <NavLink href="/magazines/latest" current={pathname?.includes('/magazines/') && pathname !== '/magazines'}>
+                Latest Edition
               </NavLink>
             </div>
           </div>
