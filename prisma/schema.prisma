@@ -159,12 +159,35 @@ model MagazineItem {
   displayOrder      Int
   customTitle       String?
   customDescription String?
-  
+
   createdAt         DateTime        @default(now())
+
+  // Relations
+  likes             Like[]
 
   @@unique([magazineId, submissionId])
   @@index([magazineId, displayOrder])
   @@index([submissionId])  // Reverse lookups (Quick Win 4)
+}
+
+// Like model for tracking article likes
+model Like {
+  id                String          @id @default(uuid())
+  magazineItemId    String
+  magazineItem      MagazineItem    @relation(fields: [magazineItemId], references: [id], onDelete: Cascade)
+
+  // Optional user tracking (null for anonymous likes)
+  userId            String?
+  sessionId         String?         // For anonymous user tracking
+  ipAddress         String?         // Additional anonymous tracking
+
+  createdAt         DateTime        @default(now())
+
+  // Ensure one like per user/session per item
+  @@unique([magazineItemId, userId])
+  @@unique([magazineItemId, sessionId])
+  @@index([magazineItemId])
+  @@index([userId])
 }
 
 // Audit log for tracking changes

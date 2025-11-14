@@ -1,12 +1,28 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, use, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getCategoryEmoji, getCategoryColor, getCategoryName } from '@/utils/category-helpers';
 import { useMagazineData } from '@/hooks/useMagazineData';
 import { useTTSPlayback } from '@/hooks/useTTSPlayback';
 import { MagazineViewerSkeleton } from '@/components/skeletons/magazine-skeleton';
+import Layout from '@/components/ui/Layout';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import { Calendar, Heart, Volume2, ChevronDown, ChevronUp } from 'lucide-react';
+
+// Generate or retrieve session ID for anonymous users
+const getSessionId = () => {
+  if (typeof window === 'undefined') return null;
+
+  let sessionId = localStorage.getItem('magazine_session_id');
+  if (!sessionId) {
+    sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    localStorage.setItem('magazine_session_id', sessionId);
+  }
+  return sessionId;
+};
 
 export default function MagazinePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -17,6 +33,40 @@ export default function MagazinePage({ params }: { params: Promise<{ id: string 
   const { play: speakText } = useTTSPlayback();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  // Initialize session ID on mount
+  useEffect(() => {
+    setSessionId(getSessionId());
+  }, []);
+
+  // Fetch likes when magazine loads
+  useEffect(() => {
+    if (magazine && sessionId) {
+      fetchLikes();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [magazine, sessionId]);
+
+  const fetchLikes = async () => {
+    if (!magazine) return;
+
+    try {
+      const response = await fetch(`/api/magazines/${magazine.id}/likes`);
+      const result = await response.json();
+
+      if (result.success) {
+        const counts: Record<string, number> = {};
+        Object.entries(result.data).forEach(([itemId, data]) => {
+          counts[itemId] = (data as { count: number }).count;
+        });
+        setLikeCounts(counts);
+      }
+    } catch (error) {
+      console.error('Failed to fetch likes:', error);
+    }
+  };
 
   const toggleExpanded = (id: string) => {
     const newSet = new Set(expandedItems);
@@ -28,187 +78,147 @@ export default function MagazinePage({ params }: { params: Promise<{ id: string 
     setExpandedItems(newSet);
   };
 
-  const toggleLike = (id: string) => {
-    const newSet = new Set(likedItems);
-    if (newSet.has(id)) {
-      newSet.delete(id);
+  const toggleLike = async (itemId: string) => {
+    if (!magazine || !sessionId) return;
+
+    // Optimistic UI update
+    const wasLiked = likedItems.has(itemId);
+    const newLikedItems = new Set(likedItems);
+    if (wasLiked) {
+      newLikedItems.delete(itemId);
     } else {
-      newSet.add(id);
+      newLikedItems.add(itemId);
     }
-    setLikedItems(newSet);
+    setLikedItems(newLikedItems);
+
+    // Update like count optimistically
+    const newCounts = { ...likeCounts };
+    newCounts[itemId] = (newCounts[itemId] || 0) + (wasLiked ? -1 : 1);
+    setLikeCounts(newCounts);
+
+    try {
+      const response = await fetch(`/api/magazines/${magazine.id}/likes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          magazineItemId: itemId,
+          sessionId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update with actual like count from server
+        setLikeCounts((prev) => ({
+          ...prev,
+          [itemId]: result.data.likeCount,
+        }));
+      } else {
+        // Revert optimistic update on failure
+        setLikedItems(likedItems);
+        setLikeCounts(likeCounts);
+      }
+    } catch (error) {
+      console.error('Failed to toggle like:', error);
+      // Revert optimistic update on error
+      setLikedItems(likedItems);
+      setLikeCounts(likeCounts);
+    }
   };
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>
-        <div className="container" style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <MagazineViewerSkeleton />
-        </div>
-      </div>
+      <Layout>
+        <MagazineViewerSkeleton />
+      </Layout>
     );
   }
 
   if (!magazine) {
     return (
-      <div style={{ minHeight: '100vh', background: 'var(--bg-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', padding: '40px' }}>
-          <div style={{ fontSize: '60px', marginBottom: '20px' }}>📚</div>
-          <h2 style={{ fontSize: '24px', marginBottom: '10px' }}>Magazine Not Found</h2>
-          <p style={{ color: '#666', marginBottom: '30px' }}>This magazine doesn&apos;t exist or has been unpublished.</p>
-          <Link
-            href="/magazines"
-            style={{
-              display: 'inline-block',
-              padding: '12px 24px',
-              background: 'var(--primary-color)',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '6px',
-              fontWeight: '600'
-            }}
-          >
-            ← Back to Archive
+      <Layout>
+        <Card className="text-center p-12 max-w-lg mx-auto mt-12">
+          <div className="text-6xl mb-4">📚</div>
+          <h2 className="text-2xl font-bold mb-2">Magazine Not Found</h2>
+          <p className="text-dark-gray mb-6">
+            This magazine doesn&apos;t exist or has been unpublished.
+          </p>
+          <Link href="/magazines">
+            <Button variant="primary">← Back to Archive</Button>
           </Link>
-        </div>
-      </div>
+        </Card>
+      </Layout>
     );
   }
 
   const sortedItems = [...magazine.items].sort((a, b) => a.displayOrder - b.displayOrder);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>
-      <div className="container" style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-        {/* Magazine Header */}
-        <div style={{
-          background: 'linear-gradient(135deg, var(--primary-color), var(--success-color))',
-          color: 'white',
-          padding: '40px 30px',
-          borderRadius: '12px',
-          marginBottom: '30px',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '48px', marginBottom: '15px' }}>📖</div>
-          <h1 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '15px', color: 'white' }}>
-            {magazine.title}
-          </h1>
+    <Layout>
+      {/* Magazine Header */}
+      <Card className="bg-gradient-to-br from-primary to-primary/80 text-white border-primary mb-8">
+        <div className="p-8 text-center">
+          <div className="text-5xl mb-4">📖</div>
+          <h1 className="text-3xl md:text-4xl font-bold mb-3">{magazine.title}</h1>
           {magazine.description && (
-            <p style={{ fontSize: '18px', marginBottom: '20px', opacity: 0.95 }}>
-              {magazine.description}
-            </p>
+            <p className="text-white/95 text-lg mb-6 max-w-2xl mx-auto">{magazine.description}</p>
           )}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '20px',
-            fontSize: '14px',
-            flexWrap: 'wrap'
-          }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '16px' }}>📅</span>
-              {magazine.publishedAt ? new Date(magazine.publishedAt).toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric'
-              }) : 'Recently published'}
+          <div className="flex items-center justify-center gap-4 text-sm flex-wrap">
+            <span className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              {magazine.publishedAt
+                ? new Date(magazine.publishedAt).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })
+                : 'Recently published'}
             </span>
             <span>•</span>
-            <span>{sortedItems.length} {sortedItems.length === 1 ? 'story' : 'stories'} from our community</span>
+            <span>
+              {sortedItems.length} {sortedItems.length === 1 ? 'story' : 'stories'} from our community
+            </span>
           </div>
         </div>
+      </Card>
 
-        {/* Back Button */}
-        <Link
-          href="/magazines"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 20px',
-            background: '#f8f9fa',
-            border: '2px solid #ddd',
-            borderRadius: '6px',
-            textDecoration: 'none',
-            color: 'var(--text-color)',
-            marginBottom: '30px',
-            fontWeight: '600'
-          }}
-        >
-          <span style={{ fontSize: '16px' }}>←</span>
-          Back to Archive
-        </Link>
+      {/* Magazine Articles */}
+      <div className="space-y-6 mb-12">
+        {sortedItems.map((item, index) => {
+          const submission = item.submission;
+          const isExpanded = expandedItems.has(item.id);
+          const isLiked = likedItems.has(item.id);
+          const categoryColor = getCategoryColor(submission.category);
+          const shouldTruncate = submission.textContent && submission.textContent.length > 300;
 
-        {/* Magazine Content */}
-        <div style={{ marginBottom: '40px' }}>
-          {sortedItems.map((item, index) => {
-            const submission = item.submission;
-            const isExpanded = expandedItems.has(item.id);
-            const isLiked = likedItems.has(item.id);
-            const categoryColor = getCategoryColor(submission.category);
-            const shouldTruncate = submission.textContent && submission.textContent.length > 300;
-
-            return (
-              <div
-                key={item.id}
-                style={{
-                  background: 'white',
-                  border: '2px solid #ddd',
-                  borderRadius: '12px',
-                  padding: '25px',
-                  marginBottom: '20px',
-                  borderTop: `4px solid ${categoryColor}`,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-                }}
-              >
-                {/* Header */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: '15px',
-                  paddingBottom: '15px',
-                  borderBottom: '1px solid #eee'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '32px' }}>
-                      {getCategoryEmoji(submission.category)}
-                    </span>
+          return (
+            <Card key={item.id} className="overflow-hidden" style={{ borderTop: `4px solid ${categoryColor}` }}>
+              <div className="p-6">
+                {/* Article Header */}
+                <div className="flex items-center justify-between mb-4 pb-4 border-b border-light-gray">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{getCategoryEmoji(submission.category)}</span>
                     <div>
-                      <div style={{
-                        fontSize: '16px',
-                        fontWeight: '700',
-                        color: categoryColor,
-                        marginBottom: '4px'
-                      }}>
+                      <div className="font-bold text-lg" style={{ color: categoryColor }}>
                         {getCategoryName(submission.category)}
                       </div>
-                      <div style={{ fontSize: '13px', color: '#999' }}>
+                      <div className="text-sm text-dark-gray">
                         By {submission.user?.name || submission.userName || 'Anonymous'}
                       </div>
                     </div>
                   </div>
-                  <div style={{
-                    background: '#f8f9fa',
-                    padding: '4px 12px',
-                    borderRadius: '20px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    color: '#666'
-                  }}>
+                  <div className="bg-background px-3 py-1 rounded-full text-xs font-semibold text-dark-gray">
                     #{index + 1}
                   </div>
                 </div>
 
-                {/* Content */}
+                {/* Article Content */}
                 {submission.textContent && (
-                  <div style={{ marginBottom: '15px' }}>
-                    <p style={{
-                      fontSize: '16px',
-                      lineHeight: '1.8',
-                      color: 'var(--text-color)',
-                      whiteSpace: 'pre-wrap'
-                    }}>
+                  <div className="mb-4">
+                    <p className="text-base leading-relaxed whitespace-pre-wrap">
                       {shouldTruncate && !isExpanded
                         ? submission.textContent.substring(0, 300) + '...'
                         : submission.textContent}
@@ -216,28 +226,20 @@ export default function MagazinePage({ params }: { params: Promise<{ id: string 
                     {shouldTruncate && (
                       <button
                         onClick={() => toggleExpanded(item.id)}
+                        className="mt-3 px-4 py-2 rounded-xl border-2 font-semibold text-sm flex items-center gap-2 transition-colors"
                         style={{
-                          marginTop: '10px',
-                          padding: '8px 16px',
-                          background: 'transparent',
-                          border: `2px solid ${categoryColor}`,
-                          borderRadius: '6px',
+                          borderColor: categoryColor,
                           color: categoryColor,
-                          cursor: 'pointer',
-                          fontWeight: '600',
-                          fontSize: '14px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px'
+                          backgroundColor: 'transparent',
                         }}
                       >
                         {isExpanded ? (
                           <>
-                            Show Less <span style={{ fontSize: '16px' }}>▲</span>
+                            Show Less <ChevronUp className="h-4 w-4" />
                           </>
                         ) : (
                           <>
-                            Read More <span style={{ fontSize: '16px' }}>▼</span>
+                            Read More <ChevronDown className="h-4 w-4" />
                           </>
                         )}
                       </button>
@@ -245,112 +247,61 @@ export default function MagazinePage({ params }: { params: Promise<{ id: string 
                   </div>
                 )}
 
-                {/* Media */}
+                {/* Article Media */}
                 {submission.mediaUrl && (
-                  <div style={{ marginBottom: '15px' }}>
+                  <div className="mb-4">
                     <Image
                       src={submission.mediaUrl}
                       alt={`Content from ${submission.user?.name || 'Anonymous'}`}
                       width={800}
                       height={600}
-                      style={{
-                        width: '100%',
-                        height: 'auto',
-                        borderRadius: '8px',
-                        border: '1px solid #ddd'
-                      }}
+                      className="w-full h-auto rounded-xl border border-light-gray"
                       unoptimized={submission.mediaUrl.startsWith('data:')}
                     />
                   </div>
                 )}
 
-                {/* Actions */}
-                <div style={{
-                  display: 'flex',
-                  gap: '10px',
-                  paddingTop: '15px',
-                  borderTop: '1px solid #eee'
-                }}>
-                  <button
+                {/* Article Actions */}
+                <div className="flex gap-3 pt-4 border-t border-light-gray">
+                  <Button
+                    variant={isLiked ? 'primary' : 'outline'}
+                    size="sm"
                     onClick={() => toggleLike(item.id)}
-                    style={{
-                      padding: '8px 16px',
-                      background: isLiked ? 'var(--danger-color)' : '#f8f9fa',
-                      border: `2px solid ${isLiked ? 'var(--danger-color)' : '#ddd'}`,
-                      borderRadius: '6px',
-                      color: isLiked ? 'white' : 'var(--text-color)',
-                      cursor: 'pointer',
-                      fontWeight: '600',
-                      fontSize: '14px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      transition: 'all 0.2s'
-                    }}
+                    icon={<Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />}
                   >
-                    <span style={{ fontSize: '16px', opacity: isLiked ? 1 : 0.7 }}>❤️</span>
                     {isLiked ? 'Liked' : 'Like'}
-                  </button>
+                    {likeCounts[item.id] > 0 && (
+                      <span className="ml-1 font-semibold">({likeCounts[item.id]})</span>
+                    )}
+                  </Button>
 
                   {submission.textContent && (
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => speakText(submission.textContent!)}
-                      style={{
-                        padding: '8px 16px',
-                        background: '#f8f9fa',
-                        border: '2px solid #ddd',
-                        borderRadius: '6px',
-                        color: 'var(--text-color)',
-                        cursor: 'pointer',
-                        fontWeight: '600',
-                        fontSize: '14px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        transition: 'all 0.2s'
-                      }}
+                      icon={<Volume2 className="h-4 w-4" />}
                     >
-                      <span style={{ fontSize: '16px' }}>🔊</span>
                       Listen
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
-            );
-          })}
-        </div>
-
-        {/* Footer */}
-        <div style={{
-          textAlign: 'center',
-          padding: '30px',
-          background: 'white',
-          border: '2px solid #ddd',
-          borderRadius: '12px',
-          marginBottom: '40px'
-        }}>
-          <p style={{ fontSize: '18px', fontWeight: '600', marginBottom: '10px' }}>
-            Thank you for reading! 💚
-          </p>
-          <p style={{ color: '#666', marginBottom: '20px' }}>
-            Want to contribute to the next edition?
-          </p>
-          <Link
-            href="/"
-            style={{
-              display: 'inline-block',
-              padding: '12px 24px',
-              background: 'var(--primary-color)',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '6px',
-              fontWeight: '600'
-            }}
-          >
-            Share Your Story →
-          </Link>
-        </div>
+            </Card>
+          );
+        })}
       </div>
-    </div>
+
+      {/* Footer CTA */}
+      <Card className="text-center p-8 bg-gradient-to-br from-background to-white">
+        <p className="text-xl font-semibold mb-2">Thank you for reading! 💚</p>
+        <p className="text-dark-gray mb-6">Want to contribute to the next edition?</p>
+        <Link href="/">
+          <Button variant="primary" size="lg">
+            Share Your Story →
+          </Button>
+        </Link>
+      </Card>
+    </Layout>
   );
 }
