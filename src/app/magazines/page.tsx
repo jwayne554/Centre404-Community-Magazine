@@ -3,6 +3,10 @@
 import Link from 'next/link';
 import { useMagazineData } from '@/hooks/useMagazineData';
 import { MagazineSkeletonGrid } from '@/components/skeletons/magazine-skeleton';
+import Layout from '@/components/ui/Layout';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import { BookOpen, Calendar } from 'lucide-react';
 
 export default function MagazinesPage() {
   const { magazines, isLoading: loading } = useMagazineData({ publicOnly: true });
@@ -11,236 +15,142 @@ export default function MagazinesPage() {
   const olderMagazines = magazines.slice(1);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>
-      <div className="container" style={{ maxWidth: '900px', margin: '0 auto', padding: '20px' }}>
-        {/* Header */}
-        <div className="main-header" style={{
-          background: 'var(--primary-color)',
-          color: 'white',
-          padding: '20px',
-          textAlign: 'center',
-          marginBottom: '30px',
-          borderRadius: '8px',
-          position: 'relative'
-        }}>
-          {/* Admin Link */}
-          <Link
-            href="/admin"
-            className="hover-admin-link"
-            style={{
-              position: 'absolute',
-              top: '20px',
-              right: '20px',
-              padding: '8px 16px',
-              background: 'rgba(255,255,255,0.2)',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '6px',
-              fontSize: '14px',
-              fontWeight: '600',
-              border: '2px solid rgba(255,255,255,0.3)'
-            }}
-          >
-            🔐 Admin
+    <Layout>
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Magazine Archive</h1>
+        <p className="text-dark-gray">
+          Read all our community editions and discover stories from our members
+        </p>
+      </div>
+
+      {loading ? (
+        <MagazineSkeletonGrid />
+      ) : magazines.length === 0 ? (
+        <Card className="text-center p-12">
+          <div className="text-6xl mb-4">📚</div>
+          <h2 className="text-xl font-semibold mb-2">No magazines published yet</h2>
+          <p className="text-dark-gray mb-6">
+            Check back soon! Our first edition is being compiled from your wonderful contributions.
+          </p>
+          <Link href="/">
+            <Button variant="primary">Share Your Story</Button>
           </Link>
-
-          <h1 style={{ fontSize: '24px', marginBottom: '10px', color: 'white' }}>
-            Centre404 Community Magazine Archive
-          </h1>
-          <p style={{ color: 'white' }}>Read all our community editions</p>
-        </div>
-
-        {/* Back Button */}
-        <Link
-          href="/"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 20px',
-            background: '#f8f9fa',
-            border: '2px solid #ddd',
-            borderRadius: '6px',
-            textDecoration: 'none',
-            color: 'var(--text-color)',
-            marginBottom: '30px',
-            fontWeight: '600'
-          }}
-        >
-          <span style={{ fontSize: '16px' }}>←</span>
-          Back to Contribute
-        </Link>
-
-        {loading ? (
-          <MagazineSkeletonGrid />
-        ) : magazines.length === 0 ? (
-          <div style={{
-            textAlign: 'center',
-            padding: '60px 20px',
-            background: 'white',
-            border: '2px solid #ddd',
-            borderRadius: '8px'
-          }}>
-            <p style={{ fontSize: '20px', marginBottom: '10px', fontWeight: '600' }}>
-              📚 No magazines published yet
-            </p>
-            <p style={{ color: '#666' }}>
-              Check back soon! Our first edition is being compiled from your wonderful contributions.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Latest Magazine */}
-            {latestMagazine && (
-              <div style={{ marginBottom: '50px' }}>
-                <h2 style={{
-                  fontSize: '20px',
-                  fontWeight: '700',
-                  marginBottom: '20px',
-                  color: 'var(--text-color)'
-                }}>
-                  🏆 Latest Edition
-                </h2>
-                <Link
-                  href={`/magazines/${latestMagazine.id}`}
-                  style={{ textDecoration: 'none', color: 'inherit' }}
+        </Card>
+      ) : (
+        <>
+          {/* Latest Magazine - Large 2-Column Highlight */}
+          {latestMagazine && (
+            <div className="mb-12">
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="text-2xl font-bold">Latest Edition</h2>
+                <span className="bg-accent text-charcoal px-3 py-1 rounded-full text-sm font-semibold">
+                  New
+                </span>
+              </div>
+              <Link href={`/magazines/${latestMagazine.id}`} className="block">
+                <Card
+                  hover={true}
+                  className="bg-gradient-to-br from-primary to-primary/80 text-white border-primary overflow-hidden"
                 >
-                  <div
-                    className="hover-lift-lg"
-                    style={{
-                      background: 'linear-gradient(135deg, var(--primary-color), var(--success-color))',
-                      color: 'white',
-                      padding: '30px',
-                      borderRadius: '12px',
-                      border: '3px solid var(--primary-color)',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                    }}
-                  >
-                    <h3 style={{
-                      fontSize: '28px',
-                      fontWeight: '700',
-                      marginBottom: '10px',
-                      color: 'white'
-                    }}>
-                      {latestMagazine.title}
-                    </h3>
-                    {latestMagazine.description && (
-                      <p style={{ fontSize: '16px', marginBottom: '15px', opacity: 0.95 }}>
-                        {latestMagazine.description}
-                      </p>
-                    )}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', fontSize: '14px' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '16px' }}>📅</span>
-                        {latestMagazine.publishedAt ? new Date(latestMagazine.publishedAt).toLocaleDateString('en-US', {
-                          month: 'long',
-                          day: 'numeric',
-                          year: 'numeric'
-                        }) : 'Recently'}
-                      </span>
-                      <span>•</span>
-                      <span>{latestMagazine.items.length} {latestMagazine.items.length === 1 ? 'story' : 'stories'}</span>
+                  <div className="grid md:grid-cols-2 gap-6 p-8">
+                    {/* Left Column - Content */}
+                    <div className="flex flex-col justify-center">
+                      <h3 className="text-3xl font-bold mb-3 text-white">
+                        {latestMagazine.title}
+                      </h3>
+                      {latestMagazine.description && (
+                        <p className="text-white/95 mb-4 text-lg leading-relaxed">
+                          {latestMagazine.description}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-4 text-sm mb-6">
+                        <span className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          {latestMagazine.publishedAt
+                            ? new Date(latestMagazine.publishedAt).toLocaleDateString('en-US', {
+                                month: 'long',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })
+                            : 'Recently'}
+                        </span>
+                        <span>•</span>
+                        <span>
+                          {latestMagazine.items.length}{' '}
+                          {latestMagazine.items.length === 1 ? 'story' : 'stories'}
+                        </span>
+                      </div>
+                      <div>
+                        <Button variant="secondary" size="lg">
+                          📖 Read Edition
+                        </Button>
+                      </div>
                     </div>
-                    <div style={{
-                      marginTop: '20px',
-                      padding: '12px 24px',
-                      background: 'rgba(255,255,255,0.2)',
-                      borderRadius: '6px',
-                      display: 'inline-block',
-                      fontWeight: '600'
-                    }}>
-                      📖 Read Edition →
+
+                    {/* Right Column - Visual Element */}
+                    <div className="hidden md:flex items-center justify-center">
+                      <div className="bg-white/20 rounded-xl p-8 backdrop-blur-sm">
+                        <BookOpen className="h-32 w-32 text-white" />
+                      </div>
                     </div>
                   </div>
-                </Link>
-              </div>
-            )}
+                </Card>
+              </Link>
+            </div>
+          )}
 
-            {/* Previous Editions */}
-            {olderMagazines.length > 0 && (
-              <div>
-                <h2 style={{
-                  fontSize: '20px',
-                  fontWeight: '700',
-                  marginBottom: '20px',
-                  color: 'var(--text-color)'
-                }}>
-                  📚 Previous Editions
-                </h2>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                  gap: '20px'
-                }}>
-                  {olderMagazines.map((magazine) => (
-                    <Link
-                      key={magazine.id}
-                      href={`/magazines/${magazine.id}`}
-                      style={{ textDecoration: 'none', color: 'inherit' }}
-                    >
-                      <div
-                        className="hover-lift-sm"
-                        style={{
-                          background: 'white',
-                          border: '2px solid #ddd',
-                          borderRadius: '8px',
-                          padding: '20px',
-                          cursor: 'pointer',
-                          height: '100%'
-                        }}
-                      >
-                        <h3 style={{
-                          fontSize: '18px',
-                          fontWeight: '600',
-                          marginBottom: '8px',
-                          color: 'var(--text-color)'
-                        }}>
+          {/* Previous Editions - 3 Column Grid */}
+          {olderMagazines.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold mb-4">Previous Editions</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {olderMagazines.map((magazine) => (
+                  <Link key={magazine.id} href={`/magazines/${magazine.id}`}>
+                    <Card hover={true} className="h-full flex flex-col">
+                      <div className="p-6 flex flex-col h-full">
+                        {/* Book Icon */}
+                        <div className="bg-primary/10 rounded-xl p-4 mb-4 inline-flex items-center justify-center self-start">
+                          <BookOpen className="h-8 w-8 text-primary" />
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="text-lg font-semibold mb-2 line-clamp-2">
                           {magazine.title}
                         </h3>
+
+                        {/* Description */}
                         {magazine.description && (
-                          <p style={{
-                            fontSize: '14px',
-                            color: '#666',
-                            marginBottom: '12px',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden'
-                          }}>
+                          <p className="text-dark-gray text-sm mb-4 line-clamp-2 flex-grow">
                             {magazine.description}
                           </p>
                         )}
-                        <div style={{
-                          fontSize: '13px',
-                          color: '#999',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          marginBottom: '8px'
-                        }}>
-                          <span style={{ fontSize: '12px' }}>📅</span>
-                          {magazine.publishedAt ? new Date(magazine.publishedAt).toLocaleDateString('en-US', {
-                            month: 'short',
-                            year: 'numeric'
-                          }) : 'Recently'}
-                        </div>
-                        <div style={{
-                          fontSize: '13px',
-                          color: '#666',
-                          fontWeight: '500'
-                        }}>
-                          {magazine.items.length} {magazine.items.length === 1 ? 'story' : 'stories'}
+
+                        {/* Metadata */}
+                        <div className="mt-auto space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-dark-gray">
+                            <Calendar className="h-4 w-4" />
+                            {magazine.publishedAt
+                              ? new Date(magazine.publishedAt).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  year: 'numeric',
+                                })
+                              : 'Recently'}
+                          </div>
+                          <div className="text-sm font-medium text-charcoal">
+                            {magazine.items.length}{' '}
+                            {magazine.items.length === 1 ? 'story' : 'stories'}
+                          </div>
                         </div>
                       </div>
-                    </Link>
-                  ))}
-                </div>
+                    </Card>
+                  </Link>
+                ))}
               </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+            </div>
+          )}
+        </>
+      )}
+    </Layout>
   );
 }

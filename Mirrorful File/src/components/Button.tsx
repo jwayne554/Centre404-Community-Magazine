@@ -1,0 +1,39 @@
+import React from 'react';
+interface ButtonProps {
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'outline' | 'icon';
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+  onClick?: () => void;
+  type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+  icon?: React.ReactNode;
+}
+const Button = ({
+  children,
+  variant = 'primary',
+  size = 'md',
+  className = '',
+  onClick,
+  type = 'button',
+  disabled = false,
+  icon
+}: ButtonProps) => {
+  const baseStyles = 'rounded-xl font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50';
+  const variantStyles = {
+    primary: 'bg-primary hover:bg-primary/90 text-white focus:ring-primary',
+    secondary: 'bg-accent hover:bg-accent/90 text-charcoal focus:ring-accent',
+    outline: 'bg-white border border-light-gray hover:bg-background text-charcoal focus:ring-primary',
+    icon: 'bg-transparent hover:bg-background text-charcoal focus:ring-primary p-2'
+  };
+  const sizeStyles = {
+    sm: variant === 'icon' ? 'p-1' : 'px-3 py-1.5 text-sm',
+    md: variant === 'icon' ? 'p-2' : 'px-4 py-2',
+    lg: variant === 'icon' ? 'p-3' : 'px-6 py-3 text-lg'
+  };
+  return <button type={type} className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`} onClick={onClick} disabled={disabled}>
+      {icon && <span className={children ? 'mr-2 inline-flex' : ''}>{icon}</span>}
+      {children}
+    </button>;
+};
+export default Button;
