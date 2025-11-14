@@ -8,6 +8,25 @@ import { useAuth } from '@/hooks/useAuth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { SubmissionSkeletonGrid } from '@/components/skeletons/submission-skeleton';
 import { getCategoryEmoji, getCategoryColor } from '@/utils/category-helpers';
+import Layout from '@/components/ui/Layout';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import {
+  LogOut,
+  Home,
+  BookOpen,
+  FileEdit,
+  BarChart3,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Eye,
+  Check,
+  X,
+  RefreshCw,
+  Trash2,
+  Globe,
+} from 'lucide-react';
 
 interface Submission {
   id: string;
@@ -48,7 +67,7 @@ export default function AdminDashboard() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Quick Win 5: Memoize filtered submissions to prevent recalculation on every render
+  // Memoize filtered submissions to prevent recalculation on every render
   const submissions = useMemo(() => {
     if (activeTab === 'ALL') return allSubmissions;
     return allSubmissions.filter(s => s.status === activeTab);
@@ -63,7 +82,7 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       const response = await fetch('/api/submissions', {
-        credentials: 'include', // Include cookies for authentication
+        credentials: 'include',
       });
       const data = await response.json();
       setAllSubmissions(data.submissions || []);
@@ -78,7 +97,7 @@ export default function AdminDashboard() {
     setMagazinesLoading(true);
     try {
       const response = await fetch('/api/magazines', {
-        credentials: 'include', // Include cookies for authentication
+        credentials: 'include',
       });
       const data = await response.json();
       const drafts = data.filter((m: Magazine) => m.status === 'DRAFT');
@@ -97,7 +116,7 @@ export default function AdminDashboard() {
     try {
       const response = await fetch(`/api/magazines/${id}`, {
         method: 'PATCH',
-        credentials: 'include', // Include cookies for authentication
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -122,7 +141,7 @@ export default function AdminDashboard() {
     try {
       const response = await fetch(`/api/magazines/${id}`, {
         method: 'DELETE',
-        credentials: 'include', // Include cookies for authentication
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -143,16 +162,13 @@ export default function AdminDashboard() {
   const updateSubmissionStatus = async (id: string, status: 'APPROVED' | 'REJECTED') => {
     setActionLoading(true);
 
-    // Optimistic Update: Save previous state for potential rollback
     const previousSubmissions = allSubmissions;
     const previousSelectedSubmission = selectedSubmission;
 
-    // Optimistically update UI immediately
     setAllSubmissions(prev =>
       prev.map(s => s.id === id ? { ...s, status } : s)
     );
 
-    // Also update selectedSubmission if it's the one being updated
     if (selectedSubmission?.id === id) {
       setSelectedSubmission({ ...selectedSubmission, status });
     }
@@ -163,17 +179,15 @@ export default function AdminDashboard() {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // Include cookies for authentication
+        credentials: 'include',
         body: JSON.stringify({ status }),
       });
 
       if (response.ok) {
-        // Success: Refetch to get server truth (includes reviewer info, etc.)
         await fetchAllSubmissions();
         setSelectedSubmission(null);
         setSelectedIds(new Set());
       } else {
-        // Rollback on error
         setAllSubmissions(previousSubmissions);
         setSelectedSubmission(previousSelectedSubmission);
 
@@ -182,7 +196,6 @@ export default function AdminDashboard() {
         alert(`Failed to update submission: ${errorData.error || response.statusText}`);
       }
     } catch (error) {
-      // Rollback on error
       setAllSubmissions(previousSubmissions);
       setSelectedSubmission(previousSelectedSubmission);
 
@@ -227,21 +240,19 @@ export default function AdminDashboard() {
     }
   };
 
-
-  const getStatusBadgeStyle = (status: string) => {
+  const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'PENDING':
-        return { background: '#fff3cd', color: '#856404', border: '2px solid #ffc107' };
+        return 'bg-accent/20 text-accent border-accent';
       case 'APPROVED':
-        return { background: '#d4edda', color: '#155724', border: '2px solid #27ae60' };
+        return 'bg-primary/20 text-primary border-primary';
       case 'REJECTED':
-        return { background: '#f8d7da', color: '#721c24', border: '2px solid #e74c3c' };
+        return 'bg-red-100 text-red-700 border-red-300';
       default:
-        return { background: '#f8f9fa', color: '#666', border: '2px solid #ddd' };
+        return 'bg-background text-dark-gray border-light-gray';
     }
   };
 
-  // Quick Win 5: Memoize stats calculation to prevent recalculation on every render
   const stats = useMemo(() => ({
     total: allSubmissions.length,
     pending: allSubmissions.filter(s => s.status === 'PENDING').length,
@@ -251,781 +262,450 @@ export default function AdminDashboard() {
 
   return (
     <ProtectedRoute requiredRole="ADMIN">
-      <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px' }}>
-          {/* Hero Header */}
-        <div style={{
-          background: 'linear-gradient(135deg, #27ae60, #2c5aa0)',
-          color: 'white',
-          padding: '40px 30px',
-          borderRadius: '12px',
-          marginBottom: '30px',
-          position: 'relative'
-        }}>
-          <div style={{ fontSize: '48px', marginBottom: '10px' }}>🔐</div>
-          <h1 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '10px', color: 'white' }}>
-            Admin Dashboard
-          </h1>
-          <p style={{ fontSize: '18px', opacity: 0.95, marginBottom: '25px' }}>
-            Review submissions, manage content, and compile magazine editions
-          </p>
+      <Layout>
+        {/* Hero Header */}
+        <Card className="bg-gradient-to-br from-primary to-primary/80 text-white border-primary mb-8">
+          <div className="p-8">
+            <div className="text-5xl mb-3">🔐</div>
+            <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+            <p className="text-white/95 mb-6">
+              Review submissions, manage content, and compile magazine editions
+            </p>
 
-          {/* User Info & Logout */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            background: 'rgba(255,255,255,0.15)',
-            padding: '15px 20px',
-            borderRadius: '8px',
-            marginBottom: '20px',
-            backdropFilter: 'blur(10px)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-              <span style={{ fontSize: '16px', fontWeight: '600' }}>
-                Welcome, {user?.name}
-              </span>
-              <span style={{
-                padding: '4px 12px',
-                background: 'rgba(255,255,255,0.25)',
-                borderRadius: '20px',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}>
-                {user?.role}
-              </span>
+            {/* User Info & Logout */}
+            <div className="bg-white/15 backdrop-blur-sm rounded-xl p-4 mb-6 flex justify-between items-center flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <span className="font-semibold">Welcome, {user?.name}</span>
+                <span className="bg-white/25 px-3 py-1 rounded-full text-sm font-medium">
+                  {user?.role}
+                </span>
+              </div>
+              <Button
+                variant="secondary"
+                onClick={async () => {
+                  if (confirm('Are you sure you want to logout?')) {
+                    await logout();
+                    router.push('/login');
+                  }
+                }}
+                icon={<LogOut className="h-4 w-4" />}
+                className="bg-red-500 hover:bg-red-600 text-white"
+              >
+                Logout
+              </Button>
             </div>
-            <button
-              onClick={async () => {
-                if (confirm('Are you sure you want to logout?')) {
-                  await logout();
-                  router.push('/login');
-                }
-              }}
-              style={{
-                padding: '10px 20px',
-                background: 'rgba(231, 76, 60, 0.9)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '15px',
-                fontWeight: '500',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#e74c3c';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(231, 76, 60, 0.9)';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              Logout
-            </button>
-          </div>
 
-          {/* Navigation Links */}
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <Link
-              href="/"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 20px',
-                background: 'rgba(255, 255, 255, 0.2)',
-                border: '2px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: '8px',
-                color: 'white',
-                textDecoration: 'none',
-                fontWeight: '600',
-                transition: 'all 0.3s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              🏠 Home
-            </Link>
-            <Link
-              href="/magazines"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 20px',
-                background: 'rgba(255, 255, 255, 0.2)',
-                border: '2px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: '8px',
-                color: 'white',
-                textDecoration: 'none',
-                fontWeight: '600',
-                transition: 'all 0.3s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              📚 Archive
-            </Link>
-            <Link
-              href="/admin/compile"
-              className="btn-large"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 20px',
-                background: '#f39c12',
-                border: '2px solid #f39c12',
-                borderRadius: '8px',
-                color: 'white',
-                textDecoration: 'none',
-                fontWeight: '600',
-                transition: 'all 0.3s',
-                minHeight: 'auto'
-              }}
-            >
-              📖 Compile Magazine →
-            </Link>
+            {/* Navigation Links */}
+            <div className="flex gap-3 flex-wrap">
+              <Link href="/">
+                <Button
+                  variant="outline"
+                  icon={<Home className="h-4 w-4" />}
+                  className="bg-white/20 hover:bg-white/30 border-white/30 text-white"
+                >
+                  Home
+                </Button>
+              </Link>
+              <Link href="/magazines">
+                <Button
+                  variant="outline"
+                  icon={<BookOpen className="h-4 w-4" />}
+                  className="bg-white/20 hover:bg-white/30 border-white/30 text-white"
+                >
+                  Archive
+                </Button>
+              </Link>
+              <Link href="/admin/compile">
+                <Button
+                  variant="secondary"
+                  icon={<FileEdit className="h-4 w-4" />}
+                >
+                  Compile Magazine →
+                </Button>
+              </Link>
+            </div>
           </div>
-        </div>
+        </Card>
 
         {/* Stats Cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '20px',
-          marginBottom: '30px'
-        }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Total Card */}
-          <div
+          <Card
             onClick={() => setActiveTab('ALL')}
-            style={{
-              background: 'white',
-              borderRadius: '12px',
-              padding: '25px',
-              boxShadow: 'var(--shadow)',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              border: activeTab === 'ALL' ? '3px solid #2c5aa0' : '3px solid transparent'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'var(--shadow)';
-            }}
+            active={activeTab === 'ALL'}
+            className="p-6 cursor-pointer transition-all hover:shadow-lg"
           >
-            <div style={{ fontSize: '14px', color: '#666', marginBottom: '10px', fontWeight: '600' }}>
-              📊 ALL SUBMISSIONS
+            <div className="flex items-center gap-4">
+              <div className="bg-primary/10 p-3 rounded-xl">
+                <BarChart3 className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-dark-gray mb-1">ALL SUBMISSIONS</div>
+                <div className="text-3xl font-bold text-primary">{stats.total}</div>
+              </div>
             </div>
-            <div style={{ fontSize: '42px', fontWeight: '700', color: '#2c5aa0' }}>
-              {stats.total}
-            </div>
-          </div>
+          </Card>
 
           {/* Pending Card */}
-          <div
+          <Card
             onClick={() => setActiveTab('PENDING')}
-            style={{
-              background: 'white',
-              borderRadius: '12px',
-              padding: '25px',
-              boxShadow: 'var(--shadow)',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              border: activeTab === 'PENDING' ? '3px solid #f39c12' : '3px solid transparent',
-              borderLeft: '6px solid #f39c12'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'var(--shadow)';
-            }}
+            active={activeTab === 'PENDING'}
+            className="p-6 cursor-pointer transition-all hover:shadow-lg border-l-4"
+            style={{ borderLeftColor: '#FFBB00' }}
           >
-            <div style={{ fontSize: '14px', color: '#666', marginBottom: '10px', fontWeight: '600' }}>
-              ⏳ PENDING REVIEW
+            <div className="flex items-center gap-4">
+              <div className="bg-accent/10 p-3 rounded-xl">
+                <Clock className="h-6 w-6 text-accent" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-dark-gray mb-1">PENDING REVIEW</div>
+                <div className="text-3xl font-bold text-accent">{stats.pending}</div>
+                <div className="text-xs text-dark-gray mt-1">Needs attention</div>
+              </div>
             </div>
-            <div style={{ fontSize: '42px', fontWeight: '700', color: '#f39c12' }}>
-              {stats.pending}
-            </div>
-            <div style={{ fontSize: '13px', color: '#999', marginTop: '5px' }}>
-              Needs attention
-            </div>
-          </div>
+          </Card>
 
           {/* Approved Card */}
-          <div
+          <Card
             onClick={() => setActiveTab('APPROVED')}
-            style={{
-              background: 'white',
-              borderRadius: '12px',
-              padding: '25px',
-              boxShadow: 'var(--shadow)',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              border: activeTab === 'APPROVED' ? '3px solid #27ae60' : '3px solid transparent',
-              borderLeft: '6px solid #27ae60'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'var(--shadow)';
-            }}
+            active={activeTab === 'APPROVED'}
+            className="p-6 cursor-pointer transition-all hover:shadow-lg border-l-4"
+            style={{ borderLeftColor: '#34A853' }}
           >
-            <div style={{ fontSize: '14px', color: '#666', marginBottom: '10px', fontWeight: '600' }}>
-              ✅ APPROVED
+            <div className="flex items-center gap-4">
+              <div className="bg-primary/10 p-3 rounded-xl">
+                <CheckCircle className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-dark-gray mb-1">APPROVED</div>
+                <div className="text-3xl font-bold text-primary">{stats.approved}</div>
+                <div className="text-xs text-dark-gray mt-1">Ready for magazine</div>
+              </div>
             </div>
-            <div style={{ fontSize: '42px', fontWeight: '700', color: '#27ae60' }}>
-              {stats.approved}
-            </div>
-            <div style={{ fontSize: '13px', color: '#999', marginTop: '5px' }}>
-              Ready for magazine
-            </div>
-          </div>
+          </Card>
 
           {/* Rejected Card */}
-          <div
+          <Card
             onClick={() => setActiveTab('REJECTED')}
-            style={{
-              background: 'white',
-              borderRadius: '12px',
-              padding: '25px',
-              boxShadow: 'var(--shadow)',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              border: activeTab === 'REJECTED' ? '3px solid #e74c3c' : '3px solid transparent',
-              borderLeft: '6px solid #e74c3c'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'var(--shadow)';
-            }}
+            active={activeTab === 'REJECTED'}
+            className="p-6 cursor-pointer transition-all hover:shadow-lg border-l-4 border-l-red-500"
           >
-            <div style={{ fontSize: '14px', color: '#666', marginBottom: '10px', fontWeight: '600' }}>
-              ❌ REJECTED
+            <div className="flex items-center gap-4">
+              <div className="bg-red-100 p-3 rounded-xl">
+                <XCircle className="h-6 w-6 text-red-500" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-dark-gray mb-1">REJECTED</div>
+                <div className="text-3xl font-bold text-red-500">{stats.rejected}</div>
+              </div>
             </div>
-            <div style={{ fontSize: '42px', fontWeight: '700', color: '#e74c3c' }}>
-              {stats.rejected}
-            </div>
-          </div>
+          </Card>
         </div>
 
         {/* Draft Magazines Section */}
         {draftMagazines.length > 0 && (
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '30px',
-            marginBottom: '30px',
-            boxShadow: 'var(--shadow)',
-            border: '3px solid #f39c12'
-          }}>
-            <div style={{ marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px' }}>
-                📝 Draft Magazines ({draftMagazines.length})
-              </h2>
-              <p style={{ color: '#666', fontSize: '15px' }}>
-                Magazines saved as drafts - publish them to make them visible to users
-              </p>
+          <Card className="mb-8 border-2 border-accent">
+            <div className="p-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold mb-2">
+                  📝 Draft Magazines ({draftMagazines.length})
+                </h2>
+                <p className="text-dark-gray">
+                  Magazines saved as drafts - publish them to make them visible to users
+                </p>
+              </div>
+
+              {magazinesLoading ? (
+                <div className="text-center py-12">
+                  <div className="text-5xl mb-3">⏳</div>
+                  <p className="text-dark-gray">Loading drafts...</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {draftMagazines.map((magazine) => (
+                    <Card key={magazine.id} className="bg-accent/5 border-accent/30">
+                      <div className="p-5 flex justify-between items-center gap-5 flex-wrap">
+                        <div className="flex-1 min-w-[200px]">
+                          <div className="text-lg font-bold mb-1">
+                            📖 {magazine.title}
+                          </div>
+                          {magazine.description && (
+                            <p className="text-dark-gray text-sm mb-2">
+                              {magazine.description}
+                            </p>
+                          )}
+                          <div className="text-xs text-dark-gray">
+                            {magazine.items.length} submission{magazine.items.length !== 1 ? 's' : ''} •{' '}
+                            Created {new Date(magazine.createdAt).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3 flex-wrap">
+                          <Button
+                            variant="primary"
+                            onClick={() => publishDraft(magazine.id)}
+                            disabled={actionLoading}
+                            icon={<Globe className="h-4 w-4" />}
+                            size="sm"
+                          >
+                            Publish Now
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => deleteDraft(magazine.id)}
+                            disabled={actionLoading}
+                            icon={<Trash2 className="h-4 w-4" />}
+                            size="sm"
+                            className="border-red-300 text-red-600 hover:bg-red-50"
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
-
-            {magazinesLoading ? (
-              <div style={{ textAlign: 'center', padding: '40px' }}>
-                <div style={{ fontSize: '40px', marginBottom: '10px' }}>⏳</div>
-                <p style={{ color: '#666' }}>Loading drafts...</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                {draftMagazines.map((magazine) => (
-                  <div
-                    key={magazine.id}
-                    style={{
-                      border: '2px solid #f39c12',
-                      borderRadius: '8px',
-                      padding: '20px',
-                      background: '#fffbf5',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: '20px',
-                      flexWrap: 'wrap'
-                    }}
-                  >
-                    <div style={{ flex: 1, minWidth: '200px' }}>
-                      <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '5px' }}>
-                        📖 {magazine.title}
-                      </div>
-                      {magazine.description && (
-                        <p style={{ color: '#666', fontSize: '14px', marginBottom: '8px' }}>
-                          {magazine.description}
-                        </p>
-                      )}
-                      <div style={{ fontSize: '13px', color: '#999' }}>
-                        {magazine.items.length} submission{magazine.items.length !== 1 ? 's' : ''} •{' '}
-                        Created {new Date(magazine.createdAt).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                      <button
-                        onClick={() => publishDraft(magazine.id)}
-                        disabled={actionLoading}
-                        style={{
-                          padding: '10px 20px',
-                          background: '#27ae60',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '6px',
-                          fontWeight: '600',
-                          fontSize: '14px',
-                          cursor: actionLoading ? 'not-allowed' : 'pointer',
-                          opacity: actionLoading ? 0.5 : 1,
-                          transition: 'all 0.3s',
-                          whiteSpace: 'nowrap'
-                        }}
-                        onMouseEnter={(e) => !actionLoading && (e.currentTarget.style.background = '#229954')}
-                        onMouseLeave={(e) => !actionLoading && (e.currentTarget.style.background = '#27ae60')}
-                      >
-                        🌐 Publish Now
-                      </button>
-                      <button
-                        onClick={() => deleteDraft(magazine.id)}
-                        disabled={actionLoading}
-                        style={{
-                          padding: '10px 20px',
-                          background: '#e74c3c',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '6px',
-                          fontWeight: '600',
-                          fontSize: '14px',
-                          cursor: actionLoading ? 'not-allowed' : 'pointer',
-                          opacity: actionLoading ? 0.5 : 1,
-                          transition: 'all 0.3s',
-                          whiteSpace: 'nowrap'
-                        }}
-                        onMouseEnter={(e) => !actionLoading && (e.currentTarget.style.background = '#c0392b')}
-                        onMouseLeave={(e) => !actionLoading && (e.currentTarget.style.background = '#e74c3c')}
-                      >
-                        🗑️ Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          </Card>
         )}
 
         {/* Action Bar */}
-        <div style={{
-          background: 'white',
-          borderRadius: '8px',
-          padding: '20px',
-          marginBottom: '20px',
-          boxShadow: 'var(--shadow)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '15px'
-        }}>
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-            {submissions.length > 0 && activeTab === 'PENDING' && (
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                cursor: 'pointer',
-                padding: '8px 15px',
-                background: '#f8f9fa',
-                borderRadius: '6px',
-                fontWeight: '600'
-              }}>
-                <input
-                  type="checkbox"
-                  checked={selectedIds.size === submissions.length && submissions.length > 0}
-                  onChange={selectAll}
-                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                />
-                {selectedIds.size > 0 ? `${selectedIds.size} selected` : 'Select all'}
-              </label>
-            )}
+        <Card className="mb-6">
+          <div className="p-5 flex justify-between items-center flex-wrap gap-4">
+            <div className="flex gap-3 flex-wrap items-center">
+              {submissions.length > 0 && activeTab === 'PENDING' && (
+                <label className="flex items-center gap-2 cursor-pointer px-4 py-2 bg-background rounded-xl font-semibold">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.size === submissions.length && submissions.length > 0}
+                    onChange={selectAll}
+                    className="w-4 h-4 cursor-pointer"
+                  />
+                  {selectedIds.size > 0 ? `${selectedIds.size} selected` : 'Select all'}
+                </label>
+              )}
 
-            {selectedIds.size > 0 && activeTab === 'PENDING' && (
-              <button
-                onClick={bulkApprove}
-                disabled={actionLoading}
-                className="btn-large"
-                style={{
-                  background: '#27ae60',
-                  color: 'white',
-                  padding: '8px 20px',
-                  minHeight: 'auto',
-                  opacity: actionLoading ? 0.5 : 1,
-                  cursor: actionLoading ? 'not-allowed' : 'pointer'
-                }}
-              >
-                ✅ Approve Selected ({selectedIds.size})
-              </button>
-            )}
-          </div>
-
-          <button
-            onClick={fetchAllSubmissions}
-            className="tool-button"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            🔄 Refresh
-          </button>
-        </div>
-
-        {/* Submissions List */}
-        <div style={{
-          background: 'white',
-          borderRadius: '12px',
-          padding: '30px',
-          boxShadow: 'var(--shadow)'
-        }}>
-          <div style={{ marginBottom: '25px' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px' }}>
-              {activeTab === 'ALL' && '📋 All Submissions'}
-              {activeTab === 'PENDING' && '⏳ Pending Review'}
-              {activeTab === 'APPROVED' && '✅ Approved Submissions'}
-              {activeTab === 'REJECTED' && '❌ Rejected Submissions'}
-            </h2>
-            <p style={{ color: '#666', fontSize: '15px' }}>
-              {activeTab === 'PENDING' && 'Review these submissions to approve or reject them'}
-              {activeTab === 'APPROVED' && 'These submissions are ready to be compiled into magazines'}
-              {activeTab === 'REJECTED' && 'These submissions were not approved'}
-              {activeTab === 'ALL' && 'View all submissions across all statuses'}
-            </p>
-          </div>
-
-          {loading ? (
-            <SubmissionSkeletonGrid count={5} />
-          ) : submissions.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: '60px 20px',
-              background: '#f8f9fa',
-              borderRadius: '8px'
-            }}>
-              <div style={{ fontSize: '64px', marginBottom: '15px' }}>📭</div>
-              <p style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>
-                No submissions found
-              </p>
-              {activeTab === 'PENDING' && (
-                <p style={{ color: '#666' }}>All caught up! No pending reviews.</p>
+              {selectedIds.size > 0 && activeTab === 'PENDING' && (
+                <Button
+                  variant="primary"
+                  onClick={bulkApprove}
+                  disabled={actionLoading}
+                  icon={<Check className="h-4 w-4" />}
+                  size="sm"
+                >
+                  Approve Selected ({selectedIds.size})
+                </Button>
               )}
             </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              {submissions.map((submission) => {
-                const categoryColor = getCategoryColor(submission.category);
-                const statusBadgeStyle = getStatusBadgeStyle(submission.status);
 
-                return (
-                  <div
-                    key={submission.id}
-                    style={{
-                      border: '2px solid #ddd',
-                      borderRadius: '8px',
-                      padding: '20px',
-                      transition: 'all 0.3s',
-                      borderLeft: `6px solid ${categoryColor}`
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#f8f9fa';
-                      e.currentTarget.style.transform = 'translateX(5px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'white';
-                      e.currentTarget.style.transform = 'translateX(0)';
-                    }}
-                  >
-                    <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-                      {/* Checkbox */}
-                      {activeTab === 'PENDING' && (
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(submission.id)}
-                          onChange={() => toggleSelection(submission.id)}
-                          style={{ width: '18px', height: '18px', cursor: 'pointer', marginTop: '5px' }}
-                        />
-                      )}
+            <Button
+              variant="outline"
+              onClick={fetchAllSubmissions}
+              icon={<RefreshCw className="h-4 w-4" />}
+              size="sm"
+            >
+              Refresh
+            </Button>
+          </div>
+        </Card>
 
-                      {/* Content */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        {/* Header */}
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          justifyContent: 'space-between',
-                          marginBottom: '12px',
-                          gap: '15px',
-                          flexWrap: 'wrap'
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <span style={{ fontSize: '32px' }}>
-                              {getCategoryEmoji(submission.category)}
-                            </span>
-                            <div>
-                              <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>
-                                {submission.category.replace(/_/g, ' ')}
+        {/* Submissions List */}
+        <Card>
+          <div className="p-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold mb-2">
+                {activeTab === 'ALL' && '📋 All Submissions'}
+                {activeTab === 'PENDING' && '⏳ Pending Review'}
+                {activeTab === 'APPROVED' && '✅ Approved Submissions'}
+                {activeTab === 'REJECTED' && '❌ Rejected Submissions'}
+              </h2>
+              <p className="text-dark-gray">
+                {activeTab === 'PENDING' && 'Review these submissions to approve or reject them'}
+                {activeTab === 'APPROVED' && 'These submissions are ready to be compiled into magazines'}
+                {activeTab === 'REJECTED' && 'These submissions were not approved'}
+                {activeTab === 'ALL' && 'View all submissions across all statuses'}
+              </p>
+            </div>
+
+            {loading ? (
+              <SubmissionSkeletonGrid count={5} />
+            ) : submissions.length === 0 ? (
+              <div className="text-center py-16 bg-background rounded-xl">
+                <div className="text-6xl mb-4">📭</div>
+                <p className="text-xl font-semibold mb-2">No submissions found</p>
+                {activeTab === 'PENDING' && (
+                  <p className="text-dark-gray">All caught up! No pending reviews.</p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {submissions.map((submission) => {
+                  const categoryColor = getCategoryColor(submission.category);
+                  const statusBadgeClass = getStatusBadgeClass(submission.status);
+
+                  return (
+                    <Card
+                      key={submission.id}
+                      className="hover:bg-background transition-colors"
+                      style={{ borderLeft: `6px solid ${categoryColor}` }}
+                    >
+                      <div className="p-5">
+                        <div className="flex gap-5 items-start">
+                          {/* Checkbox */}
+                          {activeTab === 'PENDING' && (
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.has(submission.id)}
+                              onChange={() => toggleSelection(submission.id)}
+                              className="w-5 h-5 cursor-pointer mt-1"
+                            />
+                          )}
+
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            {/* Header */}
+                            <div className="flex justify-between items-start gap-4 mb-3 flex-wrap">
+                              <div className="flex items-center gap-3">
+                                <span className="text-3xl">
+                                  {getCategoryEmoji(submission.category)}
+                                </span>
+                                <div>
+                                  <div className="text-lg font-bold mb-1">
+                                    {submission.category.replace(/_/g, ' ')}
+                                  </div>
+                                  <div className="text-sm text-dark-gray">
+                                    By {submission.user?.name || 'Anonymous'} •{' '}
+                                    {new Date(submission.submittedAt).toLocaleDateString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      year: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </div>
+                                </div>
                               </div>
-                              <div style={{ fontSize: '14px', color: '#666' }}>
-                                By {submission.user?.name || 'Anonymous'} •{' '}
-                                {new Date(submission.submittedAt).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
+
+                              <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 whitespace-nowrap ${statusBadgeClass}`}>
+                                {submission.status}
+                              </span>
+                            </div>
+
+                            {/* Text Preview */}
+                            {submission.textContent && (
+                              <p className="text-sm leading-relaxed text-dark-gray mb-3 line-clamp-2">
+                                {submission.textContent}
+                              </p>
+                            )}
+
+                            {/* Media Preview */}
+                            {(submission.mediaUrl || submission.drawingData) && (
+                              <div className="mb-3">
+                                {submission.contentType === 'AUDIO' || submission.mediaUrl?.match(/\.(mp3|wav|webm|ogg|m4a)$/i) ? (
+                                  <>
+                                    <audio
+                                      controls
+                                      src={submission.mediaUrl || ''}
+                                      className="w-full max-w-md rounded-xl shadow-sm"
+                                    />
+                                    <div className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-xs font-semibold mt-2">
+                                      🎵 Audio Recording
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Image
+                                      src={submission.mediaUrl || submission.drawingData || ''}
+                                      alt="Preview"
+                                      width={200}
+                                      height={150}
+                                      className="rounded-xl border-2 border-light-gray shadow-sm"
+                                      style={{ maxWidth: '200px', maxHeight: '150px', objectFit: 'cover' }}
+                                      unoptimized={(submission.mediaUrl || submission.drawingData || '').startsWith('data:')}
+                                    />
+                                    {submission.drawingData && (
+                                      <div className="inline-block bg-purple-100 text-purple-700 px-3 py-1 rounded-lg text-xs font-semibold mt-2">
+                                        🎨 Drawing
+                                      </div>
+                                    )}
+                                  </>
+                                )}
                               </div>
+                            )}
+
+                            {/* Actions */}
+                            <div className="flex gap-3 flex-wrap mt-4">
+                              <Button
+                                variant="outline"
+                                onClick={() => setSelectedSubmission(submission)}
+                                icon={<Eye className="h-4 w-4" />}
+                                size="sm"
+                              >
+                                View Full
+                              </Button>
+
+                              {submission.status === 'PENDING' && (
+                                <>
+                                  <Button
+                                    variant="primary"
+                                    onClick={() => updateSubmissionStatus(submission.id, 'APPROVED')}
+                                    disabled={actionLoading}
+                                    icon={<Check className="h-4 w-4" />}
+                                    size="sm"
+                                  >
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => updateSubmissionStatus(submission.id, 'REJECTED')}
+                                    disabled={actionLoading}
+                                    icon={<X className="h-4 w-4" />}
+                                    size="sm"
+                                    className="border-red-300 text-red-600 hover:bg-red-50"
+                                  >
+                                    Reject
+                                  </Button>
+                                </>
+                              )}
                             </div>
                           </div>
-
-                          <span style={{
-                            ...statusBadgeStyle,
-                            padding: '6px 14px',
-                            borderRadius: '20px',
-                            fontSize: '13px',
-                            fontWeight: '700',
-                            whiteSpace: 'nowrap'
-                          }}>
-                            {submission.status}
-                          </span>
-                        </div>
-
-                        {/* Text Preview */}
-                        {submission.textContent && (
-                          <p style={{
-                            fontSize: '15px',
-                            lineHeight: '1.6',
-                            color: '#555',
-                            marginBottom: '10px',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden'
-                          }}>
-                            {submission.textContent}
-                          </p>
-                        )}
-
-                        {/* Media Preview (Image/Drawing/Audio) */}
-                        {(submission.mediaUrl || submission.drawingData) && (
-                          <div style={{ marginTop: '10px', marginBottom: '10px' }}>
-                            {submission.contentType === 'AUDIO' || submission.mediaUrl?.match(/\.(mp3|wav|webm|ogg|m4a)$/i) ? (
-                              <>
-                                <audio
-                                  controls
-                                  src={submission.mediaUrl || ''}
-                                  style={{
-                                    width: '100%',
-                                    maxWidth: '400px',
-                                    borderRadius: '6px',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                  }}
-                                />
-                                <div style={{
-                                  display: 'inline-block',
-                                  background: '#e3f2fd',
-                                  color: '#1565c0',
-                                  padding: '4px 12px',
-                                  borderRadius: '4px',
-                                  fontSize: '12px',
-                                  fontWeight: '600',
-                                  marginTop: '8px'
-                                }}>
-                                  🎵 Audio Recording
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                <Image
-                                  src={submission.mediaUrl || submission.drawingData || ''}
-                                  alt="Preview"
-                                  width={200}
-                                  height={150}
-                                  style={{
-                                    maxWidth: '200px',
-                                    maxHeight: '150px',
-                                    borderRadius: '6px',
-                                    border: '2px solid #ddd',
-                                    objectFit: 'cover',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                  }}
-                                  unoptimized={(submission.mediaUrl || submission.drawingData || '').startsWith('data:')}
-                                />
-                                {submission.drawingData && (
-                                  <div style={{
-                                    display: 'inline-block',
-                                    background: '#f3e5f5',
-                                    color: '#7b1fa2',
-                                    padding: '4px 12px',
-                                    borderRadius: '4px',
-                                    fontSize: '12px',
-                                    fontWeight: '600',
-                                    marginTop: '8px'
-                                  }}>
-                                    🎨 Drawing
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Actions */}
-                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '15px' }}>
-                          <button
-                            onClick={() => setSelectedSubmission(submission)}
-                            className="tool-button"
-                            style={{ fontSize: '14px' }}
-                          >
-                            👁️ View Full
-                          </button>
-
-                          {submission.status === 'PENDING' && (
-                            <>
-                              <button
-                                onClick={() => updateSubmissionStatus(submission.id, 'APPROVED')}
-                                disabled={actionLoading}
-                                style={{
-                                  padding: '8px 16px',
-                                  background: '#27ae60',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '6px',
-                                  cursor: actionLoading ? 'not-allowed' : 'pointer',
-                                  fontWeight: '600',
-                                  fontSize: '14px',
-                                  opacity: actionLoading ? 0.5 : 1,
-                                  transition: 'all 0.3s'
-                                }}
-                                onMouseEnter={(e) => !actionLoading && (e.currentTarget.style.background = '#229954')}
-                                onMouseLeave={(e) => !actionLoading && (e.currentTarget.style.background = '#27ae60')}
-                              >
-                                ✅ Approve
-                              </button>
-                              <button
-                                onClick={() => updateSubmissionStatus(submission.id, 'REJECTED')}
-                                disabled={actionLoading}
-                                style={{
-                                  padding: '8px 16px',
-                                  background: '#e74c3c',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '6px',
-                                  cursor: actionLoading ? 'not-allowed' : 'pointer',
-                                  fontWeight: '600',
-                                  fontSize: '14px',
-                                  opacity: actionLoading ? 0.5 : 1,
-                                  transition: 'all 0.3s'
-                                }}
-                                onMouseEnter={(e) => !actionLoading && (e.currentTarget.style.background = '#c0392b')}
-                                onMouseLeave={(e) => !actionLoading && (e.currentTarget.style.background = '#e74c3c')}
-                              >
-                                ❌ Reject
-                              </button>
-                            </>
-                          )}
                         </div>
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </Card>
 
         {/* Review Modal */}
         {selectedSubmission && (
           <div
             onClick={() => setSelectedSubmission(null)}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0, 0, 0, 0.75)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1000,
-              padding: '20px',
-              cursor: 'pointer'
-            }}
+            className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-5 cursor-pointer"
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              style={{
-                background: 'white',
-                borderRadius: '12px',
-                maxWidth: '900px',
-                width: '100%',
-                maxHeight: '90vh',
-                overflow: 'auto',
-                boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
-                cursor: 'default'
-              }}
+              className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-auto shadow-2xl cursor-default"
             >
               {/* Modal Header */}
-              <div style={{
-                padding: '30px',
-                borderBottom: '2px solid #eee',
-                background: getCategoryColor(selectedSubmission.category),
-                color: 'white',
-                borderRadius: '12px 12px 0 0'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px' }}>
+              <div
+                className="p-8 rounded-t-xl text-white"
+                style={{ background: getCategoryColor(selectedSubmission.category) }}
+              >
+                <div className="flex justify-between items-start gap-5">
                   <div>
-                    <div style={{ fontSize: '48px', marginBottom: '10px' }}>
+                    <div className="text-5xl mb-3">
                       {getCategoryEmoji(selectedSubmission.category)}
                     </div>
-                    <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '8px', color: 'white' }}>
-                      Review Submission
-                    </h2>
-                    <p style={{ fontSize: '15px', opacity: 0.95 }}>
+                    <h2 className="text-3xl font-bold mb-2">Review Submission</h2>
+                    <p className="text-white/95">
                       Submitted by {selectedSubmission.user?.name || 'Anonymous'} on{' '}
                       {new Date(selectedSubmission.submittedAt).toLocaleString('en-US', {
                         month: 'long',
@@ -1037,70 +717,44 @@ export default function AdminDashboard() {
                     </p>
                   </div>
 
-                  <span style={{
-                    ...getStatusBadgeStyle(selectedSubmission.status),
-                    padding: '8px 16px',
-                    borderRadius: '20px',
-                    fontSize: '14px',
-                    fontWeight: '700',
-                    flexShrink: 0
-                  }}>
+                  <span className={`px-4 py-2 rounded-full text-sm font-bold border-2 ${getStatusBadgeClass(selectedSubmission.status)}`}>
                     {selectedSubmission.status}
                   </span>
                 </div>
               </div>
 
               {/* Modal Content */}
-              <div style={{ padding: '30px' }}>
-                <div style={{ marginBottom: '25px' }}>
-                  <h3 style={{ fontSize: '14px', color: '#999', fontWeight: '700', marginBottom: '8px', letterSpacing: '1px' }}>
-                    CATEGORY
-                  </h3>
-                  <p style={{ fontSize: '20px', fontWeight: '600', color: '#2c3e50' }}>
+              <div className="p-8">
+                <div className="mb-6">
+                  <h3 className="text-xs font-bold text-dark-gray mb-2 tracking-wider">CATEGORY</h3>
+                  <p className="text-xl font-semibold">
                     {selectedSubmission.category.replace(/_/g, ' ')}
                   </p>
                 </div>
 
                 {selectedSubmission.textContent && (
-                  <div style={{ marginBottom: '25px' }}>
-                    <h3 style={{ fontSize: '14px', color: '#999', fontWeight: '700', marginBottom: '12px', letterSpacing: '1px' }}>
-                      CONTENT
-                    </h3>
-                    <p style={{
-                      fontSize: '17px',
-                      lineHeight: '1.8',
-                      color: '#2c3e50',
-                      whiteSpace: 'pre-wrap',
-                      background: '#f8f9fa',
-                      padding: '20px',
-                      borderRadius: '8px',
-                      border: '2px solid #e0e0e0'
-                    }}>
+                  <div className="mb-6">
+                    <h3 className="text-xs font-bold text-dark-gray mb-3 tracking-wider">CONTENT</h3>
+                    <p className="text-base leading-relaxed whitespace-pre-wrap bg-background p-5 rounded-xl border-2 border-light-gray">
                       {selectedSubmission.textContent}
                     </p>
                   </div>
                 )}
 
                 {selectedSubmission.mediaUrl && (
-                  <div style={{ marginBottom: '25px' }}>
+                  <div className="mb-6">
                     {selectedSubmission.contentType === 'AUDIO' || selectedSubmission.mediaUrl?.match(/\.(mp3|wav|webm|ogg|m4a)$/i) ? (
                       <>
-                        <h3 style={{ fontSize: '14px', color: '#999', fontWeight: '700', marginBottom: '12px', letterSpacing: '1px' }}>
-                          🎵 AUDIO RECORDING
-                        </h3>
+                        <h3 className="text-xs font-bold text-dark-gray mb-3 tracking-wider">🎵 AUDIO RECORDING</h3>
                         <audio
                           controls
                           src={selectedSubmission.mediaUrl}
-                          style={{
-                            width: '100%',
-                            borderRadius: '8px',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                          }}
+                          className="w-full rounded-xl shadow-sm"
                         />
                       </>
                     ) : (
                       <>
-                        <h3 style={{ fontSize: '14px', color: '#999', fontWeight: '700', marginBottom: '12px', letterSpacing: '1px' }}>
+                        <h3 className="text-xs font-bold text-dark-gray mb-3 tracking-wider">
                           {selectedSubmission.drawingData ? '🎨 DRAWING' : '📷 IMAGE ATTACHMENT'}
                         </h3>
                         <Image
@@ -1108,13 +762,7 @@ export default function AdminDashboard() {
                           alt="Submission media"
                           width={800}
                           height={600}
-                          style={{
-                            width: '100%',
-                            height: 'auto',
-                            borderRadius: '8px',
-                            border: '2px solid #ddd',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                          }}
+                          className="w-full h-auto rounded-xl border-2 border-light-gray shadow-sm"
                           unoptimized={selectedSubmission.mediaUrl?.startsWith('data:')}
                         />
                       </>
@@ -1123,83 +771,53 @@ export default function AdminDashboard() {
                 )}
 
                 {selectedSubmission.drawingData && !selectedSubmission.mediaUrl && (
-                  <div style={{ marginBottom: '25px' }}>
-                    <h3 style={{ fontSize: '14px', color: '#999', fontWeight: '700', marginBottom: '12px', letterSpacing: '1px' }}>
-                      🎨 DRAWING
-                    </h3>
+                  <div className="mb-6">
+                    <h3 className="text-xs font-bold text-dark-gray mb-3 tracking-wider">🎨 DRAWING</h3>
                     <img
                       src={selectedSubmission.drawingData}
                       alt="User drawing"
-                      style={{
-                        maxWidth: '100%',
-                        borderRadius: '8px',
-                        border: '2px solid #ddd',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                        background: 'white'
-                      }}
+                      className="max-w-full rounded-xl border-2 border-light-gray shadow-sm bg-white"
                     />
                   </div>
                 )}
 
                 {/* Modal Actions */}
-                <div style={{
-                  display: 'flex',
-                  gap: '12px',
-                  paddingTop: '25px',
-                  borderTop: '2px solid #eee',
-                  flexWrap: 'wrap'
-                }}>
+                <div className="flex gap-3 pt-6 border-t-2 border-light-gray flex-wrap">
                   {selectedSubmission.status === 'PENDING' && (
                     <>
-                      <button
+                      <Button
+                        variant="primary"
                         onClick={() => updateSubmissionStatus(selectedSubmission.id, 'APPROVED')}
                         disabled={actionLoading}
-                        className="btn-large"
-                        style={{
-                          flex: 1,
-                          background: '#27ae60',
-                          color: 'white',
-                          opacity: actionLoading ? 0.5 : 1,
-                          cursor: actionLoading ? 'not-allowed' : 'pointer'
-                        }}
+                        icon={<Check className="h-4 w-4" />}
+                        className="flex-1"
                       >
-                        ✅ Approve Submission
-                      </button>
-                      <button
+                        Approve Submission
+                      </Button>
+                      <Button
+                        variant="outline"
                         onClick={() => updateSubmissionStatus(selectedSubmission.id, 'REJECTED')}
                         disabled={actionLoading}
-                        className="btn-large"
-                        style={{
-                          flex: 1,
-                          background: '#e74c3c',
-                          color: 'white',
-                          opacity: actionLoading ? 0.5 : 1,
-                          cursor: actionLoading ? 'not-allowed' : 'pointer'
-                        }}
+                        icon={<X className="h-4 w-4" />}
+                        className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
                       >
-                        ❌ Reject Submission
-                      </button>
+                        Reject Submission
+                      </Button>
                     </>
                   )}
-                  <button
+                  <Button
+                    variant="outline"
                     onClick={() => setSelectedSubmission(null)}
-                    className="btn-large"
-                    style={{
-                      flex: selectedSubmission.status === 'PENDING' ? 'none' : 1,
-                      background: '#f8f9fa',
-                      color: '#2c3e50',
-                      border: '2px solid #ddd'
-                    }}
+                    className={selectedSubmission.status === 'PENDING' ? '' : 'flex-1'}
                   >
                     Close
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </Layout>
     </ProtectedRoute>
   );
 }
