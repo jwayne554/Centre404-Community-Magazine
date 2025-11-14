@@ -1092,6 +1092,290 @@ Before proceeding, need decisions on:
 
 **Documentation**: Complete implementation plan saved at `docs/NEW_UI_IMPLEMENTATION_PLAN.md`
 
+### Phase 4: Magazine Archive Redesign ✅ COMPLETE (2/2 tasks - 2025-01-13)
+
+**File Modified**: `src/app/magazines/page.tsx`
+
+**Latest Edition Highlight** (Large 2-Column Card):
+- Green gradient Card: `bg-gradient-to-br from-primary to-primary/80 text-white border-primary`
+- Grid layout: `md:grid-cols-2` (content + visual)
+- Left column:
+  - Magazine title (text-3xl font-bold)
+  - Description (text-white/95 text-lg)
+  - Calendar icon + published date (lucide-react)
+  - Story count metadata
+  - Secondary Button: "📖 Read Edition" (variant="secondary" size="lg")
+- Right column (desktop only):
+  - Large BookOpen icon (h-32 w-32) with backdrop-blur background
+  - White/20 background for glass effect
+- Yellow "New" badge on section header (bg-accent text-charcoal)
+
+**Previous Editions Grid** (3 Columns):
+- Responsive grid: `grid-cols-1 md:grid-cols-2 lg:grid-cols-3`
+- Card component with hover effects
+- BookOpen icon in primary/10 background circle
+- Title with `line-clamp-2` truncation
+- Description with `line-clamp-2` truncation
+- Calendar icon + date (lucide-react)
+- Story count in footer
+- Proper flex layout with `mt-auto` for footer alignment
+
+**Empty State**:
+- Centered Card with large 📚 emoji
+- "Share Your Story" primary Button
+- Clean, welcoming design
+
+**General Updates**:
+- Wrapped in Layout component (header/nav/footer)
+- All inline styles replaced with Tailwind classes
+- Uses Button, Card components from Phase 1
+- lucide-react icons: BookOpen, Calendar
+- Fully responsive design
+
+**Code Impact**:
+- **Net change**: -91 lines (37% reduction!)
+- File: `src/app/magazines/page.tsx`
+- +66 insertions, -157 deletions
+
+**Commit**: `64c3d79` - "feat: Complete Phase 4 - Magazine Archive Redesign"
+
+### Phase 5: Magazine Viewer Redesign + Like Button Backend ✅ COMPLETE (4/4 tasks - 2025-01-13)
+
+**Files Modified**:
+1. `src/app/magazines/[id]/page.tsx` (+164 insertions, -257 deletions = -93 net)
+2. `prisma/schema.prisma` (+18 lines)
+3. `src/app/api/magazines/[id]/likes/route.ts` (new file, +157 lines)
+
+#### Task 15: Redesign Magazine Viewer with Card-Based Articles ✅
+
+**Magazine Header**:
+- Green gradient Card: `bg-gradient-to-br from-primary to-primary/80 text-white border-primary`
+- Centered layout with 📖 emoji (text-5xl)
+- Magazine title (text-3xl md:text-4xl)
+- Description (text-white/95 text-lg max-w-2xl mx-auto)
+- Calendar icon + published date (lucide-react)
+- Story count metadata
+
+**Article Cards**:
+- Card components with colored top border (`borderTop: 4px solid ${categoryColor}`)
+- Article header:
+  - Category emoji (text-3xl)
+  - Category name in category color (font-bold text-lg)
+  - Author name (text-sm text-dark-gray)
+  - Story number badge (bg-background rounded-full)
+- Article content:
+  - Text with `whitespace-pre-wrap` and `leading-relaxed`
+  - Truncation at 300 chars with "Read More/Show Less" button
+  - ChevronDown/ChevronUp icons (lucide-react)
+  - Custom border color matching category
+- Article media:
+  - Next.js Image component with proper sizing
+  - `rounded-xl border border-light-gray`
+- Article actions section (see Tasks 17-18 below)
+
+**Footer CTA**:
+- Gradient Card: `bg-gradient-to-br from-background to-white`
+- "Thank you for reading! 💚" message
+- Primary Button: "Share Your Story →"
+
+**Layout Updates**:
+- Wrapped in Layout component
+- All inline styles → Tailwind classes
+- `space-y-6` for article spacing
+- Responsive design
+
+**Code Impact**: -93 lines (26% reduction)
+
+#### Task 16: Implement Like Button Backend ✅
+
+**Database Schema** (`prisma/schema.prisma`):
+```prisma
+model Like {
+  id             String       @id @default(uuid())
+  magazineItemId String
+  magazineItem   MagazineItem @relation(fields: [magazineItemId], references: [id], onDelete: Cascade)
+
+  // Optional user tracking (null for anonymous likes)
+  userId         String?
+  sessionId      String?      // For anonymous user tracking
+  ipAddress      String?      // Additional anonymous tracking
+
+  createdAt      DateTime     @default(now())
+
+  // Ensure one like per user/session per item
+  @@unique([magazineItemId, userId])
+  @@unique([magazineItemId, sessionId])
+  @@index([magazineItemId])
+  @@index([userId])
+}
+```
+
+**Key Features**:
+- Supports both logged-in users (userId) and anonymous users (sessionId)
+- Session ID stored in localStorage: `magazine_session_id`
+- IP address tracking for analytics
+- Unique constraints prevent duplicate likes
+- Cascade delete when magazine item removed
+- Performance indexes on magazineItemId and userId
+
+**Applied to Database**: Used `npx prisma db push` (migration tracking had issues)
+
+**API Endpoint** (`src/app/api/magazines/[id]/likes/route.ts`):
+
+**GET /api/magazines/[id]/likes**:
+- Fetches all likes for magazine items
+- Groups likes by magazine item ID
+- Returns count per item
+- Response format:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "item-uuid-1": { "count": 5, "userLiked": false },
+      "item-uuid-2": { "count": 12, "userLiked": false }
+    }
+  }
+  ```
+
+**POST /api/magazines/[id]/likes**:
+- Toggles like for a specific magazine item
+- Creates like if not exists, deletes if exists
+- Request body: `{ magazineItemId: string, sessionId?: string }`
+- Validates magazine item belongs to magazine (404 if not)
+- Zod schema validation
+- Returns updated like state and count:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "liked": true,
+      "likeCount": 6,
+      "magazineItemId": "item-uuid"
+    }
+  }
+  ```
+
+**Frontend Integration** (`src/app/magazines/[id]/page.tsx`):
+
+**State Management**:
+- `sessionId`: Generated on mount, stored in localStorage
+- `likedItems`: Set<string> tracking user's likes (optimistic)
+- `likeCounts`: Record<string, number> from server
+
+**Session ID Generation**:
+```typescript
+const getSessionId = () => {
+  let sessionId = localStorage.getItem('magazine_session_id');
+  if (!sessionId) {
+    sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    localStorage.setItem('magazine_session_id', sessionId);
+  }
+  return sessionId;
+};
+```
+
+**Like Fetching**:
+- Automatically fetches likes when magazine loads
+- Uses `useEffect` with magazine + sessionId dependencies
+- Populates `likeCounts` state
+
+**Like Toggling**:
+- Optimistic UI updates (instant feedback)
+- Updates `likedItems` Set immediately
+- Updates `likeCounts` optimistically (+1 or -1)
+- Sends POST request to API
+- Updates with actual count from server
+- Reverts on API failure
+
+**Error Handling**:
+- Try/catch around API calls
+- Optimistic state revert on failure
+- Console error logging
+
+#### Task 17: Add Like Button UI to Magazine Articles ✅
+
+**Button Implementation**:
+- Button component from Phase 1
+- Variant: `primary` when liked, `outline` when not liked
+- Size: `sm` for compact layout
+- Heart icon from lucide-react:
+  - `fill-current` class when liked (filled heart)
+  - No fill when not liked (outline heart)
+- onClick handler: `toggleLike(item.id)`
+
+**Like Count Display**:
+```tsx
+<Button
+  variant={isLiked ? 'primary' : 'outline'}
+  size="sm"
+  onClick={() => toggleLike(item.id)}
+  icon={<Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />}
+>
+  {isLiked ? 'Liked' : 'Like'}
+  {likeCounts[item.id] > 0 && (
+    <span className="ml-1 font-semibold">({likeCounts[item.id]})</span>
+  )}
+</Button>
+```
+
+**Visual States**:
+- Not liked: Outline button, empty heart, "Like" text
+- Liked: Primary (green) button, filled heart, "Liked" text
+- Count shown in parentheses if > 0: "Like (5)"
+- Smooth transitions on state changes
+
+#### Task 18: Adapt TTS UI to Green Theme ✅
+
+**Button Implementation**:
+- Button component with `variant="outline"` (green border on hover)
+- Size: `sm` matching Like button
+- Volume2 icon from lucide-react (h-4 w-4)
+- onClick handler: `speakText(submission.textContent!)`
+- Conditional rendering: Only shown if `submission.textContent` exists
+
+**Code**:
+```tsx
+{submission.textContent && (
+  <Button
+    variant="outline"
+    size="sm"
+    onClick={() => speakText(submission.textContent!)}
+    icon={<Volume2 className="h-4 w-4" />}
+  >
+    Listen
+  </Button>
+)}
+```
+
+**Visual Appearance**:
+- Outline button (white background, light-gray border)
+- Green border on hover (border-primary/50)
+- Volume2 speaker icon
+- "Listen" text label
+- Accessible focus states
+
+**Integration**:
+- Uses existing `useTTSPlayback` hook
+- Unreal Speech API with browser fallback
+- No changes to TTS functionality, just UI styling
+
+**Overall Phase 5 Code Impact**:
+- **Total**: +339 insertions, -257 deletions (+82 net)
+- Magazine viewer: -93 lines (26% reduction)
+- Like model: +18 lines (Prisma schema)
+- Likes API: +157 lines (new endpoint)
+
+**Commit**: `da43f0a` - "feat: Complete Phase 5 - Magazine Viewer Redesign + Like Button Backend"
+
+**Phase 5 Complete: 18/25 tasks (72%)**
+
+**All user-facing pages now use green theme!** ✅
+- ✅ Submission Form (Phase 3)
+- ✅ Magazine Archive (Phase 4)
+- ✅ Magazine Viewer (Phase 5)
+
+**Remaining**: Admin Dashboard + Magazine Compiler (Phase 6), Testing/Polish (Phase 7)
+
 ---
 
 ## Codebase Cleanup (2025-01-13)
