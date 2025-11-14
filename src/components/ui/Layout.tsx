@@ -73,7 +73,7 @@ const Layout = ({ children }: LayoutProps) => {
       <footer className="bg-white border-t border-light-gray py-8 mt-12">
         <div className="max-w-5xl mx-auto px-4 text-center">
           <p className="text-dark-gray">
-            © {new Date().getFullYear()} Centre404 Community Magazine
+            Â© {new Date().getFullYear()} Centre404 Community Magazine
           </p>
         </div>
       </footer>
