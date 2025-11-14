@@ -1,50 +1,51 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Layout from '@/components/ui/Layout'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { BookOpen, Calendar, ArrowRight } from 'lucide-react'
 
-const MagazineArchive = () => {
-  // Mock data for magazine editions
-  const editions = [
-    {
-      id: 'latest',
-      title: 'Summer 2023',
-      date: 'June 2023',
-      isLatest: true,
-    },
-    {
-      id: '2',
-      title: 'Spring 2023',
-      date: 'March 2023',
-    },
-    {
-      id: '3',
-      title: 'Winter 2022',
-      date: 'December 2022',
-    },
-    {
-      id: '4',
-      title: 'Fall 2022',
-      date: 'September 2022',
-    },
-    {
-      id: '5',
-      title: 'Summer 2022',
-      date: 'June 2022',
-    },
-    {
-      id: '6',
-      title: 'Spring 2022',
-      date: 'March 2022',
-    },
-  ]
+interface Magazine {
+  id: string
+  title: string
+  description: string | null
+  publishedAt: string | null
+  createdAt: string
+  isPublic: boolean
+}
 
-  const latestEdition = editions.find((edition) => edition.isLatest)
-  const previousEditions = editions.filter((edition) => !edition.isLatest)
+const MagazineArchive = () => {
+  const [magazines, setMagazines] = useState<Magazine[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchMagazines = async () => {
+      try {
+        const response = await fetch('/api/magazines?public=true')
+        if (response.ok) {
+          const data = await response.json()
+          setMagazines(data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch magazines:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMagazines()
+  }, [])
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Date TBD'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  }
+
+  const latestEdition = magazines.length > 0 ? magazines[0] : null
+  const previousEditions = magazines.slice(1)
 
   return (
     <Layout>
@@ -55,7 +56,18 @@ const MagazineArchive = () => {
             Browse through all editions of our community magazine
           </p>
         </div>
-        {latestEdition && (
+        {loading && (
+          <div className="text-center py-12">
+            <p className="text-dark-gray">Loading magazines...</p>
+          </div>
+        )}
+        {!loading && magazines.length === 0 && (
+          <div className="text-center py-12">
+            <BookOpen className="h-16 w-16 text-dark-gray mx-auto mb-4" />
+            <p className="text-dark-gray">No magazines published yet. Check back soon!</p>
+          </div>
+        )}
+        {!loading && latestEdition && (
           <div className="mb-12">
             <h2 className="text-xl font-semibold mb-4">Latest Edition</h2>
             <Card className="overflow-hidden">
@@ -66,7 +78,7 @@ const MagazineArchive = () => {
                     <h3 className="text-xl font-bold">{latestEdition.title}</h3>
                     <p className="text-dark-gray flex items-center justify-center mt-1">
                       <Calendar className="h-4 w-4 mr-1" />
-                      {latestEdition.date}
+                      {formatDate(latestEdition.publishedAt || latestEdition.createdAt)}
                     </p>
                   </div>
                 </div>
@@ -77,12 +89,10 @@ const MagazineArchive = () => {
                     </div>
                   </div>
                   <h3 className="text-xl font-bold mt-3">
-                    Centre404 Community Magazine
+                    {latestEdition.title}
                   </h3>
                   <p className="mt-2 text-dark-gray">
-                    Our latest edition features stories from community members,
-                    local news, and special announcements. Dive in to discover
-                    what's happening in our community!
+                    {latestEdition.description || 'Our latest edition features stories from community members, local news, and special announcements. Dive in to discover what\'s happening in our community!'}
                   </p>
                   <div className="mt-6">
                     <Link href={`/magazines/${latestEdition.id}`}>
@@ -99,25 +109,27 @@ const MagazineArchive = () => {
             </Card>
           </div>
         )}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Previous Editions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {previousEditions.map((edition) => (
-              <Link href={`/magazines/${edition.id}`} key={edition.id}>
-                <Card className="h-full hover:shadow-lg transition-shadow p-6">
-                  <div className="text-center">
-                    <BookOpen className="h-12 w-12 text-primary mx-auto mb-3" />
-                    <h3 className="font-bold">{edition.title}</h3>
-                    <p className="text-dark-gray flex items-center justify-center mt-1">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      {edition.date}
-                    </p>
-                  </div>
-                </Card>
-              </Link>
-            ))}
+        {!loading && previousEditions.length > 0 && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Previous Editions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {previousEditions.map((edition) => (
+                <Link href={`/magazines/${edition.id}`} key={edition.id}>
+                  <Card className="h-full hover:shadow-lg transition-shadow p-6">
+                    <div className="text-center">
+                      <BookOpen className="h-12 w-12 text-primary mx-auto mb-3" />
+                      <h3 className="font-bold">{edition.title}</h3>
+                      <p className="text-dark-gray flex items-center justify-center mt-1 text-sm">
+                        <Calendar className="h-4 w-4 mr-1" />
+                        {formatDate(edition.publishedAt || edition.createdAt)}
+                      </p>
+                    </div>
+                  </Card>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </Layout>
   )

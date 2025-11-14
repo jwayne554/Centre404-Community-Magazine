@@ -22,17 +22,86 @@ const ContributionForm = () => {
   const [message, setMessage] = useState<string>('')
   const [symbolsOpen, setSymbolsOpen] = useState<boolean>(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+  const [submitSuccess, setSubmitSuccess] = useState<boolean>(false)
+  const [successMessage, setSuccessMessage] = useState<string>('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission
-    console.log({
-      category,
-      name,
-      message,
-      selectedFile,
-    })
-    alert('Form submitted successfully!')
+
+    if (!category || !message.trim()) {
+      alert('Please select a category and enter a message')
+      return
+    }
+
+    setIsSubmitting(true)
+    setSubmitSuccess(false)
+
+    try {
+      // Upload file if present
+      let mediaUrl = null
+      if (selectedFile) {
+        const formData = new FormData()
+        formData.append('file', selectedFile)
+
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        })
+
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload file')
+        }
+
+        const uploadData = await uploadResponse.json()
+        mediaUrl = uploadData.url
+      }
+
+      // Determine content type
+      const contentType = mediaUrl && message.trim() ? 'MIXED' : mediaUrl ? 'IMAGE' : 'TEXT'
+
+      // Submit to API
+      const response = await fetch('/api/submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category,
+          textContent: message,
+          contentType,
+          mediaUrl: mediaUrl || null,
+          userName: name || 'Community Member',
+        }),
+      })
+
+      if (response.ok) {
+        setSubmitSuccess(true)
+        setSuccessMessage('✓ Thank you! Your contribution is being reviewed by our team.')
+
+        // Clear form
+        setCategory('')
+        setName('')
+        setMessage('')
+        setSelectedFile(null)
+
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+
+        // Reset success state after delay
+        setTimeout(() => {
+          setSuccessMessage('')
+          setSubmitSuccess(false)
+        }, 8000)
+      } else {
+        const errorData = await response.text()
+        console.error('Submission failed:', response.status, errorData)
+        alert(`Submission failed: ${response.status}. Please try again.`)
+      }
+    } catch (error) {
+      console.error('Submission error:', error)
+      alert('Failed to submit. Please check your connection and try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleFileSelect = (file: File) => {
@@ -69,6 +138,11 @@ const ContributionForm = () => {
             or just saying hello!
           </p>
         </div>
+        {successMessage && (
+          <div className="mb-6 p-4 bg-primary/10 border border-primary rounded-xl">
+            <p className="text-primary font-medium">{successMessage}</p>
+          </div>
+        )}
         <Accordion title="How does this work?">
           <p className="mb-2">
             The Centre404 Community Magazine is a platform for our community
@@ -194,8 +268,9 @@ const ContributionForm = () => {
                   size="lg"
                   className="w-full"
                   icon={<ArrowRight className="h-5 w-5" />}
+                  disabled={isSubmitting}
                 >
-                  Submit My Contribution
+                  {isSubmitting ? 'Submitting...' : submitSuccess ? '✓ Submitted!' : 'Submit My Contribution'}
                 </Button>
               </div>
             </>
