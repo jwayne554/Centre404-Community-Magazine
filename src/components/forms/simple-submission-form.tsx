@@ -19,8 +19,12 @@ const categoryIcons = {
   MY_SAY: <MessageCircle className="h-6 w-6" />,
 };
 
-export function SimpleSubmissionForm() {
-  const [category, setCategory] = useState('');
+interface SimpleSubmissionFormProps {
+  preselectedCategory?: string;
+}
+
+export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFormProps = {}) {
+  const [category, setCategory] = useState(preselectedCategory || '');
   const [textContent, setTextContent] = useState('');
   const [authorName, setAuthorName] = useState('');
   const [showSymbols, setShowSymbols] = useState(false);
@@ -361,23 +365,25 @@ export function SimpleSubmissionForm() {
       )}
 
       <form onSubmit={handleSubmit}>
-        {/* Category Selection with CategoryCard */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-3">
-            Select a category for your contribution
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {categories.map((cat) => (
-              <CategoryCard
-                key={cat.value}
-                title={cat.label}
-                icon={categoryIcons[cat.value as keyof typeof categoryIcons]}
-                active={category === cat.value}
-                onClick={() => setCategory(cat.value)}
-              />
-            ))}
+        {/* Category Selection with CategoryCard - Only show if not preselected */}
+        {!preselectedCategory && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-3">
+              Select a category for your contribution
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {categories.map((cat) => (
+                <CategoryCard
+                  key={cat.value}
+                  title={cat.label}
+                  icon={categoryIcons[cat.value as keyof typeof categoryIcons]}
+                  active={category === cat.value}
+                  onClick={() => setCategory(cat.value)}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Author Name - Optional field */}
         {category && (

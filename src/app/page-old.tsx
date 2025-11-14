@@ -1,207 +1,97 @@
 'use client';
 
 import { useState } from 'react';
+import Layout from '@/components/ui/Layout';
+import CategoryCard from '@/components/ui/CategoryCard';
+import { Newspaper, Hand, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { SimpleSubmissionForm } from '@/components/forms/simple-submission-form';
-import Link from 'next/link';
 
 export default function Home() {
-  const [showInfo, setShowInfo] = useState(false);
+  const [accordionOpen, setAccordionOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>
-      <div className="container" style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-        {/* Header */}
-        <div className="main-header" style={{
-          background: 'var(--primary-color)',
-          color: 'white',
-          padding: '20px',
-          textAlign: 'center',
-          marginBottom: '30px',
-          borderRadius: '8px',
-          position: 'relative'
-        }}>
-          {/* Admin Link */}
-          <Link
-            href="/admin"
-            style={{
-              position: 'absolute',
-              top: '20px',
-              right: '20px',
-              padding: '8px 16px',
-              background: 'rgba(255,255,255,0.2)',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '6px',
-              fontSize: '14px',
-              fontWeight: '600',
-              border: '2px solid rgba(255,255,255,0.3)',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.3)';
-              e.currentTarget.style.borderColor = 'white';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
-            }}
-          >
-            🔐 Admin
-          </Link>
+    <Layout>
+      <div className="max-w-2xl mx-auto">
+        {/* Hero Section - Minimal */}
+        <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">
+          Share Your Story
+        </h1>
+        <p className="text-lg text-dark-gray leading-relaxed">
+          Contribute to our community magazine by sharing your news, thoughts, or just saying hello!
+        </p>
+      </div>
 
-          <h1 style={{ fontSize: '24px', marginBottom: '10px', color: 'white' }}>
-            Centre404 Community Magazine
-          </h1>
-          <p style={{ color: 'white' }}>Your Voice, Your Stories</p>
-        </div>
+      {/* Accordion - How does this work? */}
+      <div className="mb-6">
+        <button
+          onClick={() => setAccordionOpen(!accordionOpen)}
+          className="w-full px-4 py-3 flex justify-between items-center bg-white border border-light-gray rounded-xl hover:bg-background transition-colors"
+          aria-expanded={accordionOpen}
+        >
+          <span className="text-base font-medium text-charcoal">
+            How does this work?
+          </span>
+          {accordionOpen ? (
+            <ChevronUp className="h-5 w-5 text-dark-gray" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-dark-gray" />
+          )}
+        </button>
 
-        {/* Info Banner */}
-        <div style={{
-          background: '#e3f2fd',
-          border: '2px solid #2196f3',
-          borderRadius: '8px',
-          padding: '15px',
-          marginBottom: '30px',
-          textAlign: 'center'
-        }}>
-          <p style={{ marginBottom: '10px', fontWeight: '600' }}>
-            📖 Want to read our community magazines?
-          </p>
-          <Link
-            href="/magazines"
-            style={{
-              display: 'inline-block',
-              padding: '10px 20px',
-              background: 'var(--primary-color)',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '6px',
-              fontWeight: '600'
-            }}
-          >
-            View Magazine Archive →
-          </Link>
-        </div>
-
-        {/* Info Section */}
-        <div style={{
-          background: 'white',
-          border: '2px solid #ddd',
-          borderRadius: '8px',
-          padding: '20px',
-          marginBottom: '30px'
-        }}>
-          <button
-            onClick={() => setShowInfo(!showInfo)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              width: '100%',
-              justifyContent: 'space-between'
-            }}
-          >
-            <span>ℹ️ How does this work?</span>
-            <span>{showInfo ? '▲' : '▼'}</span>
-          </button>
-
-          {showInfo && (
-            <div style={{ marginTop: '15px', lineHeight: '1.8' }}>
-              <ol style={{ paddingLeft: '20px' }}>
-                <li><strong>You submit</strong> your stories, photos, and drawings below</li>
-                <li><strong>Our team reviews</strong> each contribution carefully</li>
-                <li><strong>We compile</strong> approved submissions into beautiful magazine editions</li>
-                <li><strong>You read</strong> the published magazines in our archive!</li>
-              </ol>
-              <p style={{ marginTop: '15px', fontStyle: 'italic', color: '#666' }}>
-                Every voice matters in our community. We can&apos;t wait to see what you share!
+        {accordionOpen && (
+          <div className="mt-1 overflow-hidden transition-all duration-300">
+            <div className="p-4 bg-background rounded-xl">
+              <p className="mb-2">
+                The Centre404 Community Magazine is a platform for our community members to share their stories, news, and thoughts.
+              </p>
+              <p className="mb-2">
+                Your contribution will be reviewed and may be featured in our next edition. You can include text, photos, or even record audio!
+              </p>
+              <p>
+                Select a category, fill out the form, and hit submit. It's that easy!
               </p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
 
-        {/* Contribution Form */}
+      {/* Category Selection */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium mb-3">
+          Select a category for your contribution
+        </label>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <CategoryCard
+            icon={<Newspaper className="h-6 w-6" />}
+            label="My News"
+            selected={selectedCategory === 'MY_NEWS'}
+            onClick={() => setSelectedCategory('MY_NEWS')}
+          />
+          <CategoryCard
+            icon={<Hand className="h-6 w-6" />}
+            label="Saying Hello"
+            selected={selectedCategory === 'SAYING_HELLO'}
+            onClick={() => setSelectedCategory('SAYING_HELLO')}
+          />
+          <CategoryCard
+            icon={<MessageSquare className="h-6 w-6" />}
+            label="My Say"
+            selected={selectedCategory === 'MY_SAY'}
+            onClick={() => setSelectedCategory('MY_SAY')}
+          />
+        </div>
+      </div>
+
+      {/* Submission Form - Only shows when category selected */}
+      {selectedCategory && (
         <div className="animate-in">
-          <SimpleSubmissionForm />
+          <SimpleSubmissionForm preselectedCategory={selectedCategory} />
         </div>
+      )}
       </div>
-
-      {/* Accessibility Controls - Fixed position like original */}
-      <div style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        display: 'flex',
-        gap: '10px',
-        zIndex: 100
-      }}>
-        <button
-          onClick={() => document.body.classList.toggle('high-contrast')}
-          style={{
-            width: '50px',
-            height: '50px',
-            borderRadius: '50%',
-            background: 'var(--bg-color)',
-            border: '2px solid #27ae60',
-            cursor: 'pointer',
-            fontSize: '20px',
-            boxShadow: 'var(--shadow)',
-            color: 'var(--text-color)'
-          }}
-          title="Toggle High Contrast"
-        >
-          ◐
-        </button>
-        <button
-          onClick={() => {
-            const root = document.documentElement;
-            const currentSize = parseInt(getComputedStyle(root).fontSize);
-            root.style.fontSize = `${currentSize + 2}px`;
-          }}
-          style={{
-            width: '50px',
-            height: '50px',
-            borderRadius: '50%',
-            background: 'var(--bg-color)',
-            border: '2px solid #27ae60',
-            cursor: 'pointer',
-            fontSize: '20px',
-            boxShadow: 'var(--shadow)',
-            color: 'var(--text-color)'
-          }}
-          title="Increase Font Size"
-        >
-          A+
-        </button>
-        <button
-          onClick={() => {
-            const root = document.documentElement;
-            const currentSize = parseInt(getComputedStyle(root).fontSize);
-            if (currentSize > 14) {
-              root.style.fontSize = `${currentSize - 2}px`;
-            }
-          }}
-          style={{
-            width: '50px',
-            height: '50px',
-            borderRadius: '50%',
-            background: 'var(--bg-color)',
-            border: '2px solid #27ae60',
-            cursor: 'pointer',
-            fontSize: '20px',
-            boxShadow: 'var(--shadow)',
-            color: 'var(--text-color)'
-          }}
-          title="Decrease Font Size"
-        >
-          A-
-        </button>
-      </div>
-    </div>
+    </Layout>
   );
 }

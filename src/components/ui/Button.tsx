@@ -4,7 +4,7 @@ import React from 'react';
 
 interface ButtonProps {
   children?: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'outline' | 'icon';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'icon';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   onClick?: () => void;
@@ -29,6 +29,7 @@ const Button = ({
     primary: 'bg-primary hover:bg-primary/90 text-white focus:ring-primary',
     secondary: 'bg-accent hover:bg-accent/90 text-charcoal focus:ring-accent',
     outline: 'bg-white border border-light-gray hover:bg-background text-charcoal focus:ring-primary',
+    ghost: 'bg-transparent hover:bg-gray-100 text-dark-gray focus:ring-primary',
     icon: 'bg-transparent hover:bg-background text-charcoal focus:ring-primary'
   };
 
