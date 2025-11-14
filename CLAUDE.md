@@ -10,7 +10,7 @@ This is a **full-stack Next.js application** for Centre404 Community Magazine - 
 - **Framework**: Next.js 16.0.2 (App Router, Turbopack) with React 19.2.0
 - **Language**: TypeScript 5
 - **Database**: PostgreSQL with Prisma ORM 6.15.0
-- **Styling**: Tailwind CSS 4 with custom green theme (#34A853)
+- **Styling**: Tailwind CSS 3.4.17 (stable) with custom green theme (#34A853)
 - **Icons**: lucide-react (professional icon library)
 - **State Management**: Zustand 5.0.8 (removed in Phase 2)
 - **Form Handling**: React Hook Form + Zod validation
@@ -18,6 +18,12 @@ This is a **full-stack Next.js application** for Centre404 Community Magazine - 
 - **Authentication**: JWT-based with bcrypt
 - **Text-to-Speech**: Unreal Speech API with browser fallback
 - **Node.js**: v22 Alpine (Docker)
+
+**IMPORTANT - Tailwind CSS Version**:
+- Must use Tailwind CSS **v3.4.17** (stable), NOT v4 (beta)
+- Prototype uses v3.4.17 and all pages are built with v3 syntax
+- Tailwind v4 has breaking PostCSS configuration changes that cause complete styling failure
+- See `docs/UI_MISMATCH_ROOT_CAUSE.md` for full analysis
 
 ## Key Features
 

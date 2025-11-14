@@ -59,13 +59,15 @@
     "@types/react-dom": "^19",
     "@typescript-eslint/eslint-plugin": "^8.46.4",
     "@typescript-eslint/parser": "^8.46.4",
+    "autoprefixer": "^10.4.22",
     "bcrypt": "^6.0.0",
     "eslint": "^9",
     "eslint-config-next": "^16.0.2",
     "eslint-config-prettier": "^10.1.8",
     "jsonwebtoken": "^9.0.2",
+    "postcss": "^8.5.6",
     "prettier": "^3.6.2",
-    "tailwindcss": "^4",
+    "tailwindcss": "^3.4.17",
     "tsx": "^4.20.5",
     "typescript": "^5"
   }
