@@ -5,7 +5,8 @@ import { prisma } from '@/lib/prisma';
 import Layout from '@/components/ui/Layout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Heart, Volume2, Plus, Calendar } from 'lucide-react';
+import LikeButton from '@/components/ui/LikeButton';
+import { Volume2, Plus, Calendar } from 'lucide-react';
 import { getCategoryEmoji } from '@/utils/category-helpers';
 
 interface PageProps {
@@ -146,14 +147,10 @@ export default async function MagazineEditionPage({ params }: PageProps) {
 
                     {/* Actions */}
                     <div className="flex items-center space-x-3 pt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        icon={<Heart className="h-4 w-4" />}
-                        className="text-sm"
-                      >
-                        Like
-                      </Button>
+                      <LikeButton
+                        magazineId={magazine.id}
+                        magazineItemId={item.id}
+                      />
                       {submission.contentType === 'AUDIO' && (
                         <Button
                           variant="outline"
