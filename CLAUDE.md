@@ -327,14 +327,31 @@ The application is configured for deployment to Railway with Docker:
 - **Design consistency**: Matches prototype color scheme (green #34A853, yellow accent, status colors)
 - **Result**: Clean, professional admin interface with complete backend integration
 
+**CI/CD Pipeline Fixes** (2025-11-14) ✅
+- **ESLint fixes**: Removed unused imports, added ignores for prototype files and old backups
+- **TypeScript fixes**: Fixed ProtectedRoute prop (`allowedRoles` → `requiredRole`), API route issues
+- **Removed unused components**: magazine-compiler.tsx, drawing-canvas.tsx, media-upload.tsx (-810 lines)
+- **Config updates**: Added excludes to tsconfig.json and eslint.config.mjs for Mirrorful File directories
+- **Railway deployment**: Removed redundant deploy step from GitHub Actions (Railway auto-deploys via GitHub integration)
+- **Result**: Clean CI pipeline - lint, type check, test, and build all pass
+
+**Magazine Viewer Fix** (2025-11-14) ✅
+- **Problem**: Magazine viewer showed hardcoded "Summer 2023 Edition" mock data
+- **Solution**: Converted to server component that fetches real data from database
+- **Features**: Real magazine title, publication date, actual submissions with content/images/drawings
+- **Navigation**: "Latest Edition" now correctly shows the most recent published magazine
+- **Result**: Full end-to-end magazine viewing experience with real data
+
 **Overall Impact**:
 - **Security**: A- grade (all critical vulnerabilities fixed)
 - **Performance**: 40-60% faster queries, 10-50x on indexed fields
 - **Bundle Size**: -542KB (lucide-react removal)
-- **Code Quality**: -1,420 lines removed, clear architecture
+- **Code Quality**: -2,230+ lines removed, clear architecture
 - **UX**: Professional, accessible, prototype-based design
-- **Integration**: ✅ New UI fully connected to backend and database
+- **Integration**: ✅ All pages connected to backend and database
 - **Navigation**: Unified header across all pages with Admin access
+- **CI/CD**: ✅ GitHub Actions pipeline passes (lint, type check, test, build)
+- **Deployment**: Railway auto-deploys on push to main
 
 ## Related Documentation
 
