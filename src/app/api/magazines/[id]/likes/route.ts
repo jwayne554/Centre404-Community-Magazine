@@ -58,10 +58,18 @@ export async function GET(
       return acc;
     }, {} as Record<string, { count: number; userLiked: boolean }>);
 
-    return NextResponse.json({
-      success: true,
-      data: likesByItem,
-    });
+    // Return with cache headers - short cache for freshness with stale-while-revalidate
+    return NextResponse.json(
+      {
+        success: true,
+        data: likesByItem,
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=30',
+        },
+      }
+    );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error fetching likes:', error);

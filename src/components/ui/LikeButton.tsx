@@ -52,16 +52,19 @@ interface LikeButtonProps {
   magazineId: string;
   magazineItemId: string;
   initialLikeCount?: number;
+  initialLiked?: boolean;
 }
 
 export default function LikeButton({
   magazineId,
   magazineItemId,
-  initialLikeCount = 0
+  initialLikeCount = 0,
+  initialLiked = false
 }: LikeButtonProps) {
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(initialLiked);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasCheckedSession, setHasCheckedSession] = useState(false);
 
   // Store sessionId in a ref to ensure consistency within component lifecycle
   const sessionIdRef = useRef<string | null>(null);
@@ -71,38 +74,42 @@ export default function LikeButton({
     sessionIdRef.current = getSessionId();
   }, []);
 
-  // Fetch initial like status
+  // Only fetch likes if we need to check session-specific like status
+  // Skip if initialLiked was provided (server already checked)
   useEffect(() => {
-    const fetchLikes = async () => {
+    // If we already have initial values and haven't checked session yet,
+    // we should verify the session's like status (in case sessionId differs)
+    if (hasCheckedSession) return;
+
+    const checkSessionLikes = async () => {
       try {
-        // Use the cached sessionId for consistency
         const sessionId = sessionIdRef.current || getSessionId();
-        const url = sessionId
-          ? `/api/magazines/${magazineId}/likes?sessionId=${encodeURIComponent(sessionId)}`
-          : `/api/magazines/${magazineId}/likes`;
+        if (!sessionId) return;
 
-        console.log('[LikeButton] Fetching likes with sessionId:', sessionId);
-
+        // Quick check for this session's like status
+        const url = `/api/magazines/${magazineId}/likes?sessionId=${encodeURIComponent(sessionId)}`;
         const response = await fetch(url);
+
         if (response.ok) {
           const data = await response.json();
-          console.log('[LikeButton] Fetch response:', data);
-
           if (data.success && data.data[magazineItemId]) {
-            setLikeCount(data.data[magazineItemId].count);
+            // Only update liked status based on session, keep server count
             setLiked(data.data[magazineItemId].userLiked);
-            console.log('[LikeButton] Set liked:', data.data[magazineItemId].userLiked, 'count:', data.data[magazineItemId].count);
+            // Update count too in case it changed
+            setLikeCount(data.data[magazineItemId].count);
           }
         }
       } catch (error) {
-        console.error('[LikeButton] Failed to fetch likes:', error);
+        // Silent fail - we already have initial values
+      } finally {
+        setHasCheckedSession(true);
       }
     };
 
     // Small delay to ensure sessionIdRef is initialized
-    const timer = setTimeout(fetchLikes, 50);
+    const timer = setTimeout(checkSessionLikes, 100);
     return () => clearTimeout(timer);
-  }, [magazineId, magazineItemId]);
+  }, [magazineId, magazineItemId, hasCheckedSession]);
 
   const handleLike = async () => {
     if (isLoading) return;
