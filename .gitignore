@@ -61,3 +61,7 @@ logs/
 !public/**/*.png
 Screenshot*.png
 current*.png
+
+# Prototype reference files (not part of actual application)
+Mirrorful File/
+Mirrorful File (1)/

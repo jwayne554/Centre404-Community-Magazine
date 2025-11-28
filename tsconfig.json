@@ -36,6 +36,10 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "Mirrorful File",
+    "Mirrorful File (1)",
+    "**/*-old.tsx",
+    "**/*-old.ts"
   ]
 }

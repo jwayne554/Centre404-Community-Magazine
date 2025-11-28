@@ -124,7 +124,7 @@ export async function POST(
         data: {
           magazineItemId,
           sessionId: sessionId || null,
-          ipAddress: request.ip || null,
+          ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] || null,
         },
       });
 
@@ -145,7 +145,7 @@ export async function POST(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Invalid request data', details: error.errors },
+        { success: false, error: 'Invalid request data', details: error.issues },
         { status: 400 }
       );
     }

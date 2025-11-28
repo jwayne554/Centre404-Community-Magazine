@@ -444,7 +444,7 @@ function AdminDashboardContent() {
 
 export default function AdminDashboard() {
   return (
-    <ProtectedRoute allowedRoles={['ADMIN', 'MODERATOR']}>
+    <ProtectedRoute requiredRole={['ADMIN', 'MODERATOR']}>
       <AdminDashboardContent />
     </ProtectedRoute>
   );
