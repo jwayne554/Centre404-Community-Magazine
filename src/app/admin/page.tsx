@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { getCategoryEmoji } from '@/utils/category-helpers';
+import { getCategoryEmoji, getCategoryLabel } from '@/utils/category-helpers';
 import StatusCard from '@/components/admin/StatusCard';
 import SubmissionItem from '@/components/admin/SubmissionItem';
 import Button from '@/components/ui/Button';
@@ -350,7 +350,7 @@ function AdminDashboardContent() {
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-4xl">{getCategoryEmoji(selectedSubmission.category)}</span>
-                    <h2 className="text-2xl font-bold">{selectedSubmission.category}</h2>
+                    <h2 className="text-2xl font-bold">{getCategoryLabel(selectedSubmission.category)}</h2>
                   </div>
                   <p className="text-dark-gray text-sm">
                     {selectedSubmission.user?.name || 'Anonymous'} •

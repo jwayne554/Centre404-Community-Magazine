@@ -1,7 +1,9 @@
 'use client';
 
+// Skip static generation for this error page
+export const dynamic = 'force-dynamic';
+
 export default function GlobalError({
-  error,
   reset,
 }: {
   error: Error & { digest?: string };
@@ -17,19 +19,21 @@ export default function GlobalError({
           justifyContent: 'center',
           minHeight: '100vh',
           padding: '20px',
-          textAlign: 'center'
+          textAlign: 'center',
+          fontFamily: 'system-ui, sans-serif'
         }}>
           <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>Something went wrong!</h1>
-          <p style={{ marginBottom: '30px' }}>{error.message}</p>
+          <p style={{ marginBottom: '30px', color: '#666' }}>An unexpected error occurred.</p>
           <button
-            onClick={reset}
+            onClick={() => reset()}
             style={{
               padding: '12px 24px',
-              background: '#27ae60',
+              background: '#34A853',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              fontSize: '16px'
             }}
           >
             Try again

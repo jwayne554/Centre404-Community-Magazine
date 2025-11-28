@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCategoryEmoji, getCategoryColor } from '@/utils/category-helpers';
+import { getCategoryEmoji, getCategoryColor, getCategoryLabel } from '@/utils/category-helpers';
 import Layout from '@/components/ui/Layout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -270,7 +270,7 @@ export default function MagazineCompiler() {
                         </span>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-bold mb-1">
-                            {submission.category.replace(/_/g, ' ')}
+                            {getCategoryLabel(submission.category)}
                           </div>
                           <div className="text-xs text-dark-gray">
                             By {submission.user?.name || submission.userName || 'Anonymous'}
@@ -363,7 +363,7 @@ export default function MagazineCompiler() {
                               #{index + 1}
                             </span>
                             <div className="text-sm font-bold">
-                              {submission.category.replace(/_/g, ' ')}
+                              {getCategoryLabel(submission.category)}
                             </div>
                           </div>
                           <div className="text-xs text-dark-gray mb-2">

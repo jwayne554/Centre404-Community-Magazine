@@ -4,7 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { getCategoryEmoji } from '@/utils/category-helpers';
+import { getCategoryEmoji, getCategoryLabel } from '@/utils/category-helpers';
 
 interface SubmissionItemProps {
   id: string;
@@ -74,7 +74,7 @@ const SubmissionItem = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="font-semibold text-lg text-charcoal">
-                {category}
+                {getCategoryLabel(category)}
               </h3>
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium uppercase ${config.bg} ${config.text}`}>
                 {config.label}
