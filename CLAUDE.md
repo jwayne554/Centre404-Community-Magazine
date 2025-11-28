@@ -61,6 +61,14 @@ This is a **full-stack Next.js application** for Centre404 Community Magazine - 
   - Audio playback for submitted recordings
   - TTS caching for performance
 
+- **Like System** (2025-11-28) - ✅ **Interactive Article Likes**:
+  - **LikeButton component**: Session-based anonymous like tracking
+  - **Optimistic updates**: Instant visual feedback with rollback on error
+  - **Persistence**: localStorage sessionId with in-memory fallback
+  - **API endpoint**: `/api/magazines/[id]/likes` (GET/POST)
+  - **Database**: Like table with unique constraints per session/user
+  - **Cross-user visibility**: Like counts aggregated across all users
+
 - **Accessibility-First**: WCAG 2.1 AA compliant
   - Full keyboard navigation, screen reader support
   - High contrast mode, adjustable font sizes
@@ -80,7 +88,7 @@ This is a **full-stack Next.js application** for Centre404 Community Magazine - 
 - **API Routes**: RESTful endpoints in `src/app/api/`
 - **Database**: PostgreSQL with Prisma ORM
   - Type-Safe Database Enums: UserRole, SubmissionCategory, SubmissionContentType, SubmissionStatus, MagazineStatus, MediaType
-  - 3 Tracked Migrations: baseline, media relations, database enums
+  - 4 Tracked Migrations: baseline, media relations, database enums, like table
 - **Authentication**: JWT tokens with HTTP-only cookies
 - **Services**: Layered architecture (Routes → Services → Repositories)
 
@@ -98,7 +106,7 @@ src/
 │   ├── auth/           # ProtectedRoute wrapper
 │   ├── forms/          # Submission forms
 │   ├── skeletons/      # Loading skeleton components
-│   └── ui/             # Reusable UI components (Button, Card, Input, Layout, Accordion)
+│   └── ui/             # Reusable UI components (Button, Card, Input, Layout, Accordion, LikeButton)
 ├── hooks/              # Custom React hooks (useAuth, useAsyncAction, useMagazineData, useTTSPlayback)
 ├── lib/                # Utilities (prisma, auth, API middleware, error handling, logging)
 ├── services/           # Business logic layer (TTS, repositories)
@@ -107,11 +115,11 @@ src/
 
 prisma/
 ├── schema.prisma       # Database schema
-├── migrations/         # Tracked migrations (3 total)
+├── migrations/         # Tracked migrations (4 total)
 └── seed.ts            # Sample data seeding
 
 scripts/
-├── migrate-deploy.js   # Smart migration deployment (P3005 auto-recovery)
+├── migrate-deploy.js   # Smart migration deployment (db push + P3005 auto-recovery)
 ├── fix-production-enums.ts  # One-time enum migration fix
 └── init-production.ts  # Production admin user creation
 ```
@@ -182,7 +190,7 @@ npm run media:cleanup    # Remove orphaned media files
 
 **Production Start Flow** (automatic on Railway):
 ```
-1. node scripts/migrate-deploy.js  → Apply/baseline migrations
+1. node scripts/migrate-deploy.js  → db push (sync schema) + Apply/baseline migrations
 2. npm run prod:fix-enums          → Ensure database enums exist
 3. npm run prod:init               → Create/verify admin user
 4. next start                      → Launch application
@@ -248,11 +256,12 @@ The application is configured for deployment to Railway with Docker:
 - `JWT_SECRET`, `JWT_REFRESH_SECRET`: Authentication secrets
 - `UNREAL_SPEECH_API_KEY`: TTS API key (optional, falls back to browser)
 
-**Production Status**: ✅ Fully operational (last deployment: 2025-01-13)
+**Production Status**: ✅ Fully operational (last deployment: 2025-11-28)
 - All Phase 1-4 optimizations deployed
 - Authentication system working
 - Database enums migrated
 - Admin login functional
+- Like system operational
 
 ## Completed Optimizations
 
@@ -341,6 +350,28 @@ The application is configured for deployment to Railway with Docker:
 - **Features**: Real magazine title, publication date, actual submissions with content/images/drawings
 - **Navigation**: "Latest Edition" now correctly shows the most recent published magazine
 - **Result**: Full end-to-end magazine viewing experience with real data
+
+**Like System Implementation** (2025-11-28) ✅
+- **New component**: `src/components/ui/LikeButton.tsx`
+  - Session-based anonymous like tracking (localStorage + in-memory fallback)
+  - Optimistic UI updates with automatic rollback on error
+  - Visual feedback: filled red heart when liked, like count display
+  - Robust sessionId handling with try-catch for localStorage failures
+- **New API endpoint**: `src/app/api/magazines/[id]/likes/route.ts`
+  - GET: Fetch all likes for a magazine, returns per-item counts and user's like status
+  - POST: Toggle like for a specific magazine item
+  - Debug logging for troubleshooting
+- **New database table**: `Like` model with migrations
+  - Fields: id, magazineItemId, userId, sessionId, ipAddress, createdAt
+  - Unique constraints: (magazineItemId, userId), (magazineItemId, sessionId)
+  - Foreign key to MagazineItem with CASCADE delete
+- **Category label fix**: Magazine viewer now displays human-readable category names
+  - Changed from `MY_NEWS` → `My News`, `SAYING_HELLO` → `Saying Hello`
+  - Uses `getCategoryLabel()` helper from `src/utils/category-helpers.ts`
+- **Migration script fix**: Added `db push` step to `scripts/migrate-deploy.js`
+  - Fixes issue where migrations were marked as applied but SQL didn't run
+  - Ensures missing tables are created from schema before migrate deploy
+- **Result**: Fully functional like system with cross-user like counts
 
 **Overall Impact**:
 - **Security**: A- grade (all critical vulnerabilities fixed)
