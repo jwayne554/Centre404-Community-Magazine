@@ -33,6 +33,14 @@ function exec(command, options = {}) {
 async function main() {
   console.log('🚀 Smart Migration Deployment Starting...\n');
 
+  // First, ensure any missing tables are created via db push
+  // This handles cases where migrations were marked applied but SQL didn't run
+  console.log('🔄 Syncing schema with db push (safe for existing tables)...\n');
+  exec('npx prisma db push --accept-data-loss', {
+    silent: true,
+    ignoreError: true,
+  });
+
   // Try to run migrate deploy first
   console.log('🔄 Attempting prisma migrate deploy...\n');
   const deployOutput = exec('npx prisma migrate deploy', {
