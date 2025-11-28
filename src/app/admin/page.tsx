@@ -21,11 +21,8 @@ import {
   XCircle,
   RefreshCw,
   BookOpen,
-  Eye,
   Check,
   X,
-  Trash2,
-  Globe,
 } from 'lucide-react';
 
 interface Submission {
@@ -43,25 +40,12 @@ interface Submission {
   } | null;
 }
 
-interface Magazine {
-  id: string;
-  title: string;
-  description: string | null;
-  status: string;
-  createdAt: string;
-  items: {
-    id: string;
-  }[];
-}
-
 function AdminDashboardContent() {
   const router = useRouter();
   const { user, logout } = useAuth();
 
   const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
-  const [draftMagazines, setDraftMagazines] = useState<Magazine[]>([]);
   const [loading, setLoading] = useState(true);
-  const [magazinesLoading, setMagazinesLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<'APPROVED' | 'PENDING' | 'REJECTED'>('PENDING');
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -81,7 +65,6 @@ function AdminDashboardContent() {
 
   useEffect(() => {
     fetchAllSubmissions();
-    fetchDraftMagazines();
   }, []);
 
   const fetchAllSubmissions = async () => {
@@ -96,22 +79,6 @@ function AdminDashboardContent() {
       console.error('Failed to fetch submissions:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchDraftMagazines = async () => {
-    setMagazinesLoading(true);
-    try {
-      const response = await fetch('/api/magazines', {
-        credentials: 'include',
-      });
-      const data = await response.json();
-      const drafts = data.filter((m: Magazine) => m.status === 'DRAFT');
-      setDraftMagazines(drafts);
-    } catch (error) {
-      console.error('Failed to fetch draft magazines:', error);
-    } finally {
-      setMagazinesLoading(false);
     }
   };
 

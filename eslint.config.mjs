@@ -14,6 +14,12 @@ export default [
       "**/*.config.mjs",
       "scripts/**/*.js",
       "prisma/**/*.js",
+      // Prototype reference files (not part of actual application)
+      "Mirrorful File/**",
+      "Mirrorful File (1)/**",
+      // Old/backup files
+      "**/*-old.tsx",
+      "**/*-old.ts",
     ],
   },
   {

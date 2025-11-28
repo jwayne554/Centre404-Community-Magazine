@@ -6,7 +6,7 @@ import { getCategoryEmoji, getCategoryColor } from '@/utils/category-helpers';
 import Layout from '@/components/ui/Layout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { ArrowLeft, Plus, Trash2, Save, Globe, ArrowUp, ArrowDown, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Globe, ArrowUp, ArrowDown, X, Loader2 } from 'lucide-react';
 
 interface Submission {
   id: string;
