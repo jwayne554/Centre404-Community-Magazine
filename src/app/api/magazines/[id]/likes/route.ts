@@ -25,6 +25,8 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('sessionId');
 
+    console.log('[Likes API] GET - magazineId:', magazineId, 'sessionId:', sessionId);
+
     // Fetch all likes for this magazine's items
     const likes = await prisma.like.findMany({
       where: {
@@ -36,6 +38,8 @@ export async function GET(
         magazineItem: true,
       },
     });
+
+    console.log('[Likes API] Found', likes.length, 'likes for magazine');
 
     // Group likes by magazine item ID and count them
     // Also check if current session has liked each item
@@ -99,6 +103,8 @@ export async function POST(
       );
     }
 
+    console.log('[Likes API] POST - magazineItemId:', magazineItemId, 'sessionId:', sessionId);
+
     // Check if like already exists for this session
     const existingLike = await prisma.like.findFirst({
       where: {
@@ -106,6 +112,8 @@ export async function POST(
         sessionId: sessionId || null,
       },
     });
+
+    console.log('[Likes API] Existing like found:', existingLike ? existingLike.id : 'none');
 
     if (existingLike) {
       // Unlike: Delete existing like
@@ -120,6 +128,8 @@ export async function POST(
         where: { magazineItemId },
       });
 
+      console.log('[Likes API] Unlike successful - new count:', likeCount);
+
       return NextResponse.json({
         success: true,
         data: {
@@ -130,7 +140,7 @@ export async function POST(
       });
     } else {
       // Like: Create new like
-      await prisma.like.create({
+      const newLike = await prisma.like.create({
         data: {
           magazineItemId,
           sessionId: sessionId || null,
@@ -142,6 +152,8 @@ export async function POST(
       const likeCount = await prisma.like.count({
         where: { magazineItemId },
       });
+
+      console.log('[Likes API] Like created - id:', newLike.id, 'new count:', likeCount);
 
       return NextResponse.json({
         success: true,
