@@ -35,11 +35,17 @@ export default function LikeButton({
   useEffect(() => {
     const fetchLikes = async () => {
       try {
-        const response = await fetch(`/api/magazines/${magazineId}/likes`);
+        const sessionId = getSessionId();
+        const url = sessionId
+          ? `/api/magazines/${magazineId}/likes?sessionId=${sessionId}`
+          : `/api/magazines/${magazineId}/likes`;
+
+        const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.data[magazineItemId]) {
             setLikeCount(data.data[magazineItemId].count);
+            setLiked(data.data[magazineItemId].userLiked);
           }
         }
       } catch (error) {

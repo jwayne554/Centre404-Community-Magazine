@@ -11,6 +11,7 @@ const toggleLikeSchema = z.object({
 /**
  * GET /api/magazines/[id]/likes
  * Fetch all likes for magazine items in a specific magazine
+ * Query params: sessionId (optional) - to check if current session liked items
  */
 export async function GET(
   request: NextRequest,
@@ -19,6 +20,10 @@ export async function GET(
   try {
     const resolvedParams = await params;
     const magazineId = resolvedParams.id;
+
+    // Get sessionId from query params to check user's likes
+    const { searchParams } = new URL(request.url);
+    const sessionId = searchParams.get('sessionId');
 
     // Fetch all likes for this magazine's items
     const likes = await prisma.like.findMany({
@@ -33,6 +38,7 @@ export async function GET(
     });
 
     // Group likes by magazine item ID and count them
+    // Also check if current session has liked each item
     const likesByItem = likes.reduce((acc, like) => {
       if (!acc[like.magazineItemId]) {
         acc[like.magazineItemId] = {
@@ -41,6 +47,10 @@ export async function GET(
         };
       }
       acc[like.magazineItemId].count++;
+      // Check if this like belongs to the current session
+      if (sessionId && like.sessionId === sessionId) {
+        acc[like.magazineItemId].userLiked = true;
+      }
       return acc;
     }, {} as Record<string, { count: number; userLiked: boolean }>);
 
