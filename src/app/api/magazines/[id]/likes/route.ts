@@ -63,9 +63,10 @@ export async function GET(
       data: likesByItem,
     });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error fetching likes:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch likes' },
+      { success: false, error: 'Failed to fetch likes', details: errorMessage },
       { status: 500 }
     );
   }
@@ -172,9 +173,10 @@ export async function POST(
       );
     }
 
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error toggling like:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to toggle like' },
+      { success: false, error: 'Failed to toggle like', details: errorMessage },
       { status: 500 }
     );
   }

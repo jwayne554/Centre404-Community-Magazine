@@ -138,7 +138,7 @@ export default function LikeButton({
         console.log('[LikeButton] Like updated - liked:', data.data.liked, 'count:', data.data.likeCount);
       } else {
         // Rollback on error
-        console.error('[LikeButton] POST failed:', data.error || response.statusText);
+        console.error('[LikeButton] POST failed:', data.error, 'Details:', data.details || 'none');
         setLiked(wasLiked);
         setLikeCount(prev => wasLiked ? prev + 1 : prev - 1);
       }
