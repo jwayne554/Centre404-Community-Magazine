@@ -7,7 +7,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import LikeButton from '@/components/ui/LikeButton';
 import { Volume2, Plus, Calendar } from 'lucide-react';
-import { getCategoryEmoji } from '@/utils/category-helpers';
+import { getCategoryEmoji, getCategoryLabel } from '@/utils/category-helpers';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -107,7 +107,7 @@ export default async function MagazineEditionPage({ params }: PageProps) {
                     <div className="flex items-center mb-4">
                       <span className="text-2xl mr-2">{categoryEmoji}</span>
                       <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium mr-3">
-                        {submission.category}
+                        {getCategoryLabel(submission.category)}
                       </span>
                       <span className="text-dark-gray text-sm">
                         By {author}
