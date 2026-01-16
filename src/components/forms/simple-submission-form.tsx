@@ -30,7 +30,8 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
   const [showSymbols, setShowSymbols] = useState(false);
   const [showDrawing, setShowDrawing] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const [imagePreview, setImagePreview] = useState('');
+  const [imagePreview, setImagePreview] = useState('');  // For preview display only
+  const [imageFile, setImageFile] = useState<File | null>(null);  // Actual file for upload
   const [audioRecording, setAudioRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -56,7 +57,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!category || (!textContent && !imagePreview && !drawingData && !audioBlob)) {
+    if (!category || (!textContent && !imageFile && !drawingData && !audioBlob)) {
       alert('Please choose a category and add some content (text, image, audio, or drawing)');
       return;
     }
@@ -85,12 +86,32 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
         audioMediaUrl = uploadData.url;
       }
 
+      // Upload image if present (using file upload instead of base64)
+      let imageMediaUrl = null;
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append('file', imageFile);
+
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload image');
+        }
+
+        const uploadData = await uploadResponse.json();
+        imageMediaUrl = uploadData.url;
+      }
+
       // Determine content type based on what's provided
       let contentType = 'TEXT';
       if (audioMediaUrl && textContent) contentType = 'MIXED';
       else if (audioMediaUrl) contentType = 'AUDIO';
-      else if (imagePreview && textContent) contentType = 'MIXED';
-      else if (imagePreview) contentType = 'IMAGE';
+      else if (imageMediaUrl && textContent) contentType = 'MIXED';
+      else if (imageMediaUrl) contentType = 'IMAGE';
+      else if (drawingData && textContent) contentType = 'MIXED';
       else if (drawingData) contentType = 'DRAWING';
 
       const response = await fetch('/api/submissions', {
@@ -100,7 +121,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
           category,
           textContent: textContent || '',
           contentType,
-          mediaUrl: audioMediaUrl || imagePreview || drawingData || null,
+          mediaUrl: audioMediaUrl || imageMediaUrl || null,
           drawingData: drawingData || null,
           userName: authorName || 'Community Member',
         }),
@@ -122,6 +143,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
         setTextContent('');
         setAuthorName('');
         setImagePreview('');
+        setImageFile(null);
         setDrawingData('');
         setAudioBlob(null);
         setAudioUrl(null);
@@ -205,6 +227,17 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file size (5MB limit)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert('Image file is too large. Please select an image under 5MB.');
+        return;
+      }
+
+      // Store the actual file for upload
+      setImageFile(file);
+
+      // Create preview URL for display only
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);

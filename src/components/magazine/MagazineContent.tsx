@@ -4,6 +4,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import LikeButton from '@/components/ui/LikeButton';
 import { Volume2, Plus, Calendar } from 'lucide-react';
+// Note: Button and Plus are used in footer CTA, Volume2 in audio player
 import { getCategoryEmoji, getCategoryLabel } from '@/utils/category-helpers';
 
 interface MagazineItem {
@@ -88,8 +89,10 @@ export default function MagazineContent({ magazine, likeCounts }: MagazineConten
                     <p className="mb-4 whitespace-pre-wrap">{submission.textContent}</p>
                   )}
 
-                  {/* Image */}
-                  {submission.mediaUrl && (
+                  {/* Image - only show if NOT audio content */}
+                  {submission.mediaUrl &&
+                   submission.contentType !== 'AUDIO' &&
+                   !submission.mediaUrl.endsWith('.webm') && (
                     <div className="mb-4 -mx-6">
                       <Image
                         src={submission.mediaUrl}
@@ -101,16 +104,35 @@ export default function MagazineContent({ magazine, likeCounts }: MagazineConten
                     </div>
                   )}
 
-                  {/* Drawing */}
+                  {/* Drawing - use img tag for data URIs */}
                   {submission.drawingData && (
                     <div className="mb-4">
-                      <Image
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
                         src={submission.drawingData}
-                        alt="Drawing"
-                        width={400}
-                        height={300}
+                        alt="Drawing submission"
                         className="max-w-full h-auto rounded-lg border border-light-gray"
                       />
+                    </div>
+                  )}
+
+                  {/* Audio player - for audio submissions */}
+                  {submission.mediaUrl &&
+                   (submission.contentType === 'AUDIO' ||
+                    submission.contentType === 'MIXED' ||
+                    submission.mediaUrl.endsWith('.webm')) && (
+                    <div className="mb-4 bg-background p-4 rounded-lg border border-light-gray">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Volume2 className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium text-dark-gray">Audio Recording</span>
+                      </div>
+                      <audio
+                        controls
+                        src={submission.mediaUrl}
+                        className="w-full"
+                      >
+                        Your browser does not support audio playback.
+                      </audio>
                     </div>
                   )}
 
@@ -121,16 +143,6 @@ export default function MagazineContent({ magazine, likeCounts }: MagazineConten
                       magazineItemId={item.id}
                       initialLikeCount={likeCounts[item.id] || 0}
                     />
-                    {submission.contentType === 'AUDIO' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        icon={<Volume2 className="h-4 w-4" />}
-                        className="text-sm"
-                      >
-                        Listen
-                      </Button>
-                    )}
                   </div>
                 </div>
               </Card>

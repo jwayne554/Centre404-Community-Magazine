@@ -197,6 +197,15 @@ function AdminDashboardContent() {
               Archive
             </Button>
           </Link>
+          <Link href="/admin/magazines">
+            <Button
+              variant="outline"
+              icon={<BookOpen className="h-4 w-4" />}
+              className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40"
+            >
+              Manage Magazines
+            </Button>
+          </Link>
           <Button
             variant="secondary"
             icon={<BookOpen className="h-4 w-4" />}
@@ -376,7 +385,10 @@ function AdminDashboardContent() {
                 </div>
               )}
 
-              {selectedSubmission.mediaUrl && (
+              {/* Image preview - only show if NOT audio content */}
+              {selectedSubmission.mediaUrl &&
+               selectedSubmission.contentType !== 'AUDIO' &&
+               !selectedSubmission.mediaUrl.endsWith('.webm') && (
                 <div className="mb-6">
                   <h3 className="font-semibold mb-2">Image</h3>
                   <Image
@@ -410,6 +422,25 @@ function AdminDashboardContent() {
                       }}
                       className="max-w-full h-auto"
                     />
+                  </div>
+                </div>
+              )}
+
+              {/* Audio preview - for audio submissions */}
+              {selectedSubmission.mediaUrl &&
+               (selectedSubmission.contentType === 'AUDIO' ||
+                selectedSubmission.contentType === 'MIXED' ||
+                selectedSubmission.mediaUrl.endsWith('.webm')) && (
+                <div className="mb-6">
+                  <h3 className="font-semibold mb-2">Audio Recording</h3>
+                  <div className="bg-background p-4 rounded-lg border border-light-gray">
+                    <audio
+                      controls
+                      src={selectedSubmission.mediaUrl}
+                      className="w-full"
+                    >
+                      Your browser does not support audio playback.
+                    </audio>
                   </div>
                 </div>
               )}

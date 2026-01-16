@@ -373,6 +373,33 @@ The application is configured for deployment to Railway with Docker:
   - Ensures missing tables are created from schema before migrate deploy
 - **Result**: Fully functional like system with cross-user like counts
 
+**QA Workflow Fixes** (2026-01-16) ✅
+- **Audio playback in admin**: Added `<audio controls>` element to admin submission detail modal
+  - Admins can now listen to audio submissions before approving
+  - Detects audio by contentType or .webm file extension
+- **Audio playback in magazine**: Replaced non-functional "Listen" button with actual audio player
+  - Full `<audio controls>` element renders for audio submissions
+  - Works for AUDIO and MIXED content types
+- **Drawing display fix**: Changed Next.js `Image` component to `<img>` tag in magazine viewer
+  - Data URIs now render correctly (Next.js Image doesn't support data URIs)
+  - Added eslint-disable comment for the img element
+- **Image upload pipeline**: Modified form to upload images via `/api/upload` endpoint
+  - Images now stored as files in `/uploads/` directory, not base64 in database
+  - Added 5MB file size validation on frontend
+  - Stores File object separately from preview URL
+- **Magazine management admin page**: Created `/admin/magazines` for draft management
+  - New API endpoint: `/api/magazines/drafts` (GET with auth)
+  - Lists all draft magazines with publish/delete actions
+  - Shows magazine statistics (total, draft, published, archived)
+  - Added "Manage Magazines" button to main admin dashboard
+- **Files modified**:
+  - `src/app/admin/page.tsx` - Audio preview, link to magazines page
+  - `src/components/magazine/MagazineContent.tsx` - Audio player, drawing fix
+  - `src/components/forms/simple-submission-form.tsx` - Image upload via API
+  - `src/app/api/magazines/drafts/route.ts` (NEW) - Draft magazines API
+  - `src/app/admin/magazines/page.tsx` (NEW) - Magazine management page
+- **Result**: All submission types (text, audio, drawing, image) now work end-to-end
+
 **Overall Impact**:
 - **Security**: A- grade (all critical vulnerabilities fixed)
 - **Performance**: 40-60% faster queries, 10-50x on indexed fields
@@ -393,5 +420,6 @@ The application is configured for deployment to Railway with Docker:
 - `docs/UI_MISMATCH_ROOT_CAUSE.md` - **Tailwind CSS version mismatch analysis (CRITICAL)**
 - `docs/NEW_UI_IMPLEMENTATION_PLAN.md` - UI redesign analysis (47 pages)
 - `docs/CLAUDE_ARCHIVE_2025-01-14.md` - **Full historical context (1,550 lines)**
+- `docs/QA_FIX_PLAN.md` - **QA investigation results and fix plan (2026-01-16)**
 
 For detailed implementation history of Phases 1-4, admin authentication, codebase cleanup, and UI redesign, see `docs/CLAUDE_ARCHIVE_2025-01-14.md`.
