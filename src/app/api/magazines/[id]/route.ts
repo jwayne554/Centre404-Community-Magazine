@@ -8,7 +8,7 @@ import { MagazineService } from '@/services/magazine.service';
 // Schema for updating a magazine
 const updateMagazineSchema = z.object({
   title: z.string().min(1).max(255).optional(),
-  description: z.string().max(500).nullable().optional(),
+  description: z.string().max(500).optional(),
   submissionIds: z.array(z.string()).min(1).optional(),
 });
 

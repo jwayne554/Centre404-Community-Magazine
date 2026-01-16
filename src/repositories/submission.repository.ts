@@ -43,6 +43,7 @@ export interface CreateSubmissionData {
   drawingData?: string | null;
   userName?: string | null;
   userId?: string | null;
+  sessionId?: string | null;
   status?: SubmissionStatus;
 }
 
@@ -140,6 +141,7 @@ export class SubmissionRepository {
         drawingData: data.drawingData,
         userName: data.userName,
         userId: data.userId,
+        sessionId: data.sessionId,
         status: data.status || 'PENDING',
       },
       include: {

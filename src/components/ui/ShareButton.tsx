@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Button from '@/components/ui/Button';
-import { Share2, Check, Copy } from 'lucide-react';
+import { Share2, Check } from 'lucide-react';
 
 interface ShareButtonProps {
   title: string;

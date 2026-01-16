@@ -1146,7 +1146,6 @@ function AdminDashboardContent() {
                   {/* Drawing */}
                   {selectedSubmission.drawingData && (
                     <div className="mb-4">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={selectedSubmission.drawingData}
                         alt={`Drawing by ${selectedSubmission.user?.name || 'Anonymous'}`}

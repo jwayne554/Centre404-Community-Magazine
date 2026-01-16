@@ -37,8 +37,8 @@ export default [
       },
     },
     rules: {
-      // Next.js specific rules
-      "@next/next/no-html-link-for-pages": "off",
+      // Note: Next.js ESLint plugin not installed - these rules are placeholders
+      // "@next/next/no-html-link-for-pages": "off",
       // React rules
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",

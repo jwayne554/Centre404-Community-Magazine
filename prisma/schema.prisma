@@ -87,6 +87,7 @@ model Submission {
   drawingData       String?         // Canvas drawing data
   accessibilityText String?         // Alt text or transcription
   userName          String?         // Optional display name for anonymous users
+  sessionId         String?         // For anonymous submission tracking
 
   // Timestamps
   submittedAt       DateTime        @default(now())
@@ -112,6 +113,7 @@ model Submission {
   @@index([category, status])                // Magazine viewer filtering
   @@index([reviewedById, reviewedAt])        // Reviewer productivity queries
   @@index([reviewedAt])                      // Time-based analytics
+  @@index([sessionId])                       // My Submissions lookup
 }
 
 // Magazine model for published collections

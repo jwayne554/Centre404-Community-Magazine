@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { getAllCategories, SYMBOL_BOARD, getCategoryLabel } from '@/utils/category-helpers';
+import { getAllCategories, SYMBOL_BOARD, getCategoryLabel, getCategoryEmoji } from '@/utils/category-helpers';
 import Button from '@/components/ui/Button';
 import Card, { CategoryCard } from '@/components/ui/Card';
 import { Input, TextArea } from '@/components/ui/Input';
 import Accordion from '@/components/ui/Accordion';
 import { useToast } from '@/components/ui/Toast';
-import { Newspaper, Hand, MessageCircle, Mic, Smile, Trash2, Palette, Undo2 } from 'lucide-react';
+import { Newspaper, Hand, MessageCircle, Mic, Smile, Trash2, Palette, Undo2, Eye, X, Edit3 } from 'lucide-react';
 
 // Task 2.5: Use shared constants (eliminates duplication across forms)
 const categories = getAllCategories();
@@ -44,6 +44,9 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  // Preview modal state (P2-3)
+  const [showPreview, setShowPreview] = useState(false);
+
   // Drawing state
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
@@ -60,8 +63,26 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
   const formTopRef = useRef<HTMLDivElement>(null);
 
   // Draft state
-  const [hasSavedDraft, setHasSavedDraft] = useState(false);
+  const [_hasSavedDraft, setHasSavedDraft] = useState(false);
   const [showDraftPrompt, setShowDraftPrompt] = useState(false);
+
+  // Session ID for tracking submissions
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  // Generate or retrieve sessionId on mount
+  useEffect(() => {
+    try {
+      let id = localStorage.getItem('sessionId');
+      if (!id) {
+        id = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+        localStorage.setItem('sessionId', id);
+      }
+      setSessionId(id);
+    } catch {
+      // localStorage not available, generate in-memory sessionId
+      setSessionId(`session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`);
+    }
+  }, []);
 
   // Validation state
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -160,7 +181,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
         if (draft.accessibilityText) setAccessibilityText(draft.accessibilityText);
         toast.success('Draft restored!');
       }
-    } catch (e) {
+    } catch {
       toast.error('Could not restore draft');
     }
     setShowDraftPrompt(false);
@@ -170,7 +191,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
   const discardDraft = () => {
     try {
       localStorage.removeItem('submissionDraft');
-    } catch (e) {
+    } catch {
       // Ignore errors
     }
     setHasSavedDraft(false);
@@ -181,7 +202,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
   const clearDraft = () => {
     try {
       localStorage.removeItem('submissionDraft');
-    } catch (e) {
+    } catch {
       // Ignore errors
     }
     setHasSavedDraft(false);
@@ -258,6 +279,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
           drawingData: drawingData || null,
           accessibilityText: accessibilityText || null,
           userName: authorName || 'Community Member',
+          sessionId: sessionId || null,
         }),
       });
 
@@ -654,10 +676,9 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
               {categories.map((cat) => (
                 <CategoryCard
                   key={cat.value}
-                  label={cat.label}
-                  description={cat.description}
+                  title={cat.label}
                   icon={categoryIcons[cat.value as keyof typeof categoryIcons]}
-                  selected={category === cat.value}
+                  active={category === cat.value}
                   onClick={() => setCategory(cat.value)}
                 />
               ))}
@@ -939,7 +960,19 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
 
         {/* Enhanced Submit Button with Loading/Success States */}
         {category && (
-          <div className="mt-8">
+          <div className="mt-8 space-y-3">
+            {/* P2-3: Preview Button */}
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              onClick={() => setShowPreview(true)}
+              disabled={isSubmitting || (!textContent && !imageFile && !drawingData && !audioBlob)}
+              icon={<Eye className="h-5 w-5" />}
+              className="w-full"
+            >
+              Preview Before Submitting
+            </Button>
             <Button
               type="submit"
               variant="primary"
@@ -964,6 +997,127 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
           </div>
         )}
       </form>
+
+      {/* P2-3: Preview Modal */}
+      {showPreview && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="preview-title"
+          onClick={(e) => e.target === e.currentTarget && setShowPreview(false)}
+        >
+          <div className="bg-white rounded-xl shadow-modal max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="p-4 sm:p-6 border-b border-light-gray flex items-center justify-between sticky top-0 bg-white z-10">
+              <h2 id="preview-title" className="text-xl font-bold flex items-center gap-2">
+                <Eye className="h-5 w-5 text-primary" />
+                Preview Your Submission
+              </h2>
+              <button
+                onClick={() => setShowPreview(false)}
+                className="text-dark-gray hover:text-charcoal p-2 rounded-lg"
+                aria-label="Close preview"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Preview Content - Magazine Style */}
+            <div className="p-4 sm:p-6">
+              <div className="border border-light-gray rounded-xl overflow-hidden">
+                <div className="p-6">
+                  {/* Category and Author */}
+                  <div className="flex items-center mb-4">
+                    <span className="text-2xl mr-2">{getCategoryEmoji(category)}</span>
+                    <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium mr-3">
+                      {getCategoryLabel(category)}
+                    </span>
+                    <span className="text-dark-gray text-sm">
+                      By {authorName || 'Community Member'}
+                    </span>
+                  </div>
+
+                  {/* Text Content */}
+                  {textContent && (
+                    <p className="mb-4 whitespace-pre-wrap">{textContent}</p>
+                  )}
+
+                  {/* Image Preview */}
+                  {imagePreview && !drawingData && (
+                    <div className="mb-4">
+                      <img
+                        src={imagePreview}
+                        alt={accessibilityText || 'Your uploaded image'}
+                        className="w-full h-auto rounded-lg border border-light-gray max-h-96 object-cover"
+                      />
+                    </div>
+                  )}
+
+                  {/* Drawing Preview */}
+                  {drawingData && (
+                    <div className="mb-4">
+                      <img
+                        src={drawingData}
+                        alt={accessibilityText || 'Your drawing'}
+                        className="max-w-full h-auto rounded-lg border border-light-gray"
+                      />
+                    </div>
+                  )}
+
+                  {/* Audio Preview */}
+                  {audioUrl && (
+                    <div className="mb-4 bg-background p-4 rounded-lg border border-light-gray">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Mic className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium text-dark-gray">Audio Recording</span>
+                      </div>
+                      <audio controls src={audioUrl} className="w-full" />
+                    </div>
+                  )}
+
+                  {/* Placeholder Like Button */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-light-gray mt-4">
+                    <span className="text-dark-gray text-sm flex items-center gap-1">
+                      <span>❤️</span> 0 likes
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-sm text-dark-gray text-center mt-4">
+                This is how your submission will appear in the magazine once approved.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="p-4 sm:p-6 border-t border-light-gray bg-background flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowPreview(false)}
+                icon={<Edit3 className="h-4 w-4" />}
+                className="flex-1"
+              >
+                Edit
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setShowPreview(false);
+                  // Trigger form submission
+                  const form = document.querySelector('form');
+                  if (form) {
+                    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                  }
+                }}
+                className="flex-1"
+              >
+                Submit Now
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

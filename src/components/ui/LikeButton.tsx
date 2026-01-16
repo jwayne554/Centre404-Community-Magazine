@@ -99,7 +99,7 @@ export default function LikeButton({
             setLikeCount(data.data[magazineItemId].count);
           }
         }
-      } catch (error) {
+      } catch {
         // Silent fail - we already have initial values
       } finally {
         setHasCheckedSession(true);

@@ -109,7 +109,6 @@ export default function MagazineContent({ magazine, likeCounts }: MagazineConten
                   {/* Drawing - use img tag for data URIs */}
                   {submission.drawingData && (
                     <div className="mb-4">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={submission.drawingData}
                         alt={submission.accessibilityText || `Drawing by ${author} for ${getCategoryLabel(submission.category)}. No description provided.`}

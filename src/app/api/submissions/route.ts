@@ -29,6 +29,7 @@ const createSubmissionSchema = z.object({
     .nullable()
     .optional(),
   userName: z.string().nullable().optional(), // Optional display name for anonymous users
+  sessionId: z.string().nullable().optional(), // For anonymous submission tracking
 });
 
 // GET /api/submissions - Get all submissions (with filters) - ADMIN/MODERATOR only

@@ -42,7 +42,7 @@ function MagazineEditContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const toast = useToast();
-  const [magazine, setMagazine] = useState<Magazine | null>(null);
+  const [_magazine, setMagazine] = useState<Magazine | null>(null);
   const [approvedSubmissions, setApprovedSubmissions] = useState<Submission[]>([]);
   const [selectedSubmissions, setSelectedSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);

@@ -49,6 +49,9 @@ const Layout = ({ children }: LayoutProps) => {
             <NavLink href="/" current={pathname === '/'}>
               Share Your Story
             </NavLink>
+            <NavLink href="/my-submissions" current={pathname === '/my-submissions'}>
+              My Submissions
+            </NavLink>
             <NavLink href="/magazines" current={pathname === '/magazines'}>
               Archive
             </NavLink>
@@ -67,6 +70,9 @@ const Layout = ({ children }: LayoutProps) => {
             <div className="max-w-5xl mx-auto px-4 py-2 flex flex-col">
               <NavLink href="/" current={pathname === '/'}>
                 Share Your Story
+              </NavLink>
+              <NavLink href="/my-submissions" current={pathname === '/my-submissions'}>
+                My Submissions
               </NavLink>
               <NavLink href="/magazines" current={pathname === '/magazines'}>
                 Archive
