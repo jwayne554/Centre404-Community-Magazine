@@ -795,13 +795,16 @@ className="bg-white dark:bg-gray-900 text-charcoal dark:text-white"
 - [x] Input error states (already implemented in P2)
 - [x] Consistent spacing scale (xs, sm, md, lg, xl documented in Tailwind config)
 
-### Phase 6: Inclusive Features (2-3 weeks)
-- [ ] TTS integration
-- [ ] Font size controls
-- [ ] High contrast mode
-- [ ] PDF export
-- [ ] Dark mode
-- [ ] Reduced motion support
+### Phase 6: Feature Enhancements ✅ COMPLETED (January 16, 2026)
+- [x] TTS integration (TTSButton component on each article)
+- [x] Font size controls (AccessibilityToolbar with 12-24px range)
+- [x] High contrast mode (toggle with CSS overrides)
+- [x] PDF export (PrintButton with print-optimized styles)
+- [x] Social sharing (ShareButton with Web Share API + clipboard fallback)
+- [x] Reading progress indicator (ReadingProgress bar at top)
+- [x] Dark mode (toggle with persisted preference)
+- [x] Reduced motion support (CSS media query)
+- [ ] My Submissions page (deferred - requires new API endpoint)
 
 ---
 

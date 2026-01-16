@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import LikeButton from '@/components/ui/LikeButton';
+import TTSButton from '@/components/ui/TTSButton';
 import { Volume2, Plus, Calendar } from 'lucide-react';
 // Note: Button and Plus are used in footer CTA, Volume2 in audio player
 import { getCategoryEmoji, getCategoryLabel } from '@/utils/category-helpers';
@@ -139,12 +140,16 @@ export default function MagazineContent({ magazine, likeCounts }: MagazineConten
                   )}
 
                   {/* Actions */}
-                  <div className="flex items-center space-x-3 pt-2">
+                  <div className="flex items-center flex-wrap gap-2 pt-2 border-t border-light-gray mt-4">
                     <LikeButton
                       magazineId={magazine.id}
                       magazineItemId={item.id}
                       initialLikeCount={likeCounts[item.id] || 0}
                     />
+                    {/* P5-1: TTS Button */}
+                    {submission.textContent && (
+                      <TTSButton text={submission.textContent} />
+                    )}
                   </div>
                 </div>
               </Card>

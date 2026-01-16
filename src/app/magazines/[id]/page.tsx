@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import Layout from '@/components/ui/Layout';
 import MagazineContent from '@/components/magazine/MagazineContent';
+import MagazineViewer from '@/components/magazine/MagazineViewer';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -60,7 +61,9 @@ export default async function MagazineEditionPage({ params }: PageProps) {
 
   return (
     <Layout>
-      <MagazineContent magazine={magazine} likeCounts={likeCounts} />
+      <MagazineViewer title={magazine.title}>
+        <MagazineContent magazine={magazine} likeCounts={likeCounts} />
+      </MagazineViewer>
     </Layout>
   );
 }

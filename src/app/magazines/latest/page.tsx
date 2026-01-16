@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import Layout from '@/components/ui/Layout';
 import MagazineContent from '@/components/magazine/MagazineContent';
+import MagazineViewer from '@/components/magazine/MagazineViewer';
 
 export default async function LatestMagazinePage() {
   // Fetch the latest public magazine with its items
@@ -59,7 +60,9 @@ export default async function LatestMagazinePage() {
 
   return (
     <Layout>
-      <MagazineContent magazine={magazine} likeCounts={likeCounts} />
+      <MagazineViewer title={magazine.title}>
+        <MagazineContent magazine={magazine} likeCounts={likeCounts} />
+      </MagazineViewer>
     </Layout>
   );
 }

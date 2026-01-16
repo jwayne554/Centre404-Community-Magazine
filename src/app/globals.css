@@ -37,3 +37,142 @@ html {
 .animate-slide-in {
   animation: slide-in 0.3s ease-out forwards;
 }
+
+/* P5-3: High Contrast Mode */
+.high-contrast {
+  --primary: #000000;
+  --background: #FFFFFF;
+  --charcoal: #000000;
+  --dark-gray: #000000;
+  --light-gray: #000000;
+}
+
+.high-contrast body {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+.high-contrast .bg-primary {
+  background-color: #000000 !important;
+}
+
+.high-contrast .text-primary {
+  color: #000000 !important;
+}
+
+.high-contrast .border-light-gray {
+  border-color: #000000 !important;
+}
+
+.high-contrast .text-dark-gray {
+  color: #000000 !important;
+}
+
+.high-contrast .bg-background {
+  background-color: #FFFFFF !important;
+}
+
+/* P5-8: Dark Mode */
+.dark body {
+  background-color: #1a1a2e !important;
+  color: #e5e5e5 !important;
+}
+
+.dark .bg-white {
+  background-color: #16213e !important;
+}
+
+.dark .bg-background {
+  background-color: #1a1a2e !important;
+}
+
+.dark .text-charcoal {
+  color: #e5e5e5 !important;
+}
+
+.dark .text-dark-gray {
+  color: #a0a0a0 !important;
+}
+
+.dark .border-light-gray {
+  border-color: #2a2a4a !important;
+}
+
+.dark .shadow-card {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* P5-9: Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* P5-4: Print Styles */
+@media print {
+  /* Hide non-essential elements */
+  .no-print,
+  header,
+  footer,
+  nav,
+  .accessibility-toolbar,
+  button:not(.print-include),
+  .like-button,
+  .share-button {
+    display: none !important;
+  }
+
+  /* Optimize for print */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Show URLs for links */
+  a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  /* Avoid page breaks inside cards */
+  .card,
+  article {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Ensure images fit */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Show print-only content */
+  .print-only {
+    display: block !important;
+  }
+}
+
+/* P5-6: Reading Progress Bar */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background-color: #34A853;
+  z-index: 9999;
+  transition: width 0.1s ease-out;
+}
+
+.dark .reading-progress {
+  background-color: #4ade80;
+}
