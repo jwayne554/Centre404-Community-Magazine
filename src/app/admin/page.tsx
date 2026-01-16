@@ -10,6 +10,7 @@ import { getCategoryEmoji, getCategoryLabel } from '@/utils/category-helpers';
 import StatusCard from '@/components/admin/StatusCard';
 import SubmissionItem from '@/components/admin/SubmissionItem';
 import Button from '@/components/ui/Button';
+import Modal, { ModalHeader, ModalBody, ModalFooter } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import {
   LockKeyhole,
@@ -792,46 +793,30 @@ function AdminDashboardContent() {
       </div>
 
       {/* Submission Detail Modal */}
-      {selectedSubmission && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-title"
-          onClick={(e) => e.target === e.currentTarget && closeModal()}
-        >
-          <div
-            ref={modalRef}
-            className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] flex flex-col"
-          >
-            {/* Header - sticky on mobile */}
-            <div className="p-4 sm:p-6 border-b border-light-gray flex-shrink-0">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                    <span className="text-2xl sm:text-4xl" aria-hidden="true">{getCategoryEmoji(selectedSubmission.category)}</span>
-                    <h2 id="modal-title" className="text-lg sm:text-2xl font-bold truncate">
-                      Review: {getCategoryLabel(selectedSubmission.category)}
-                    </h2>
-                  </div>
-                  <p className="text-dark-gray text-sm">
-                    {selectedSubmission.user?.name || 'Anonymous'} •
-                    {new Date(selectedSubmission.submittedAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <button
-                  ref={closeButtonRef}
-                  onClick={closeModal}
-                  className="text-dark-gray hover:text-charcoal p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary flex-shrink-0 -mr-2 -mt-2"
-                  aria-label="Close modal"
-                >
-                  <X className="h-6 w-6" aria-hidden="true" />
-                </button>
+      <Modal
+        isOpen={!!selectedSubmission}
+        onClose={closeModal}
+        size="xl"
+        variant="bottomSheet"
+        manageFocus={false}
+        titleId="modal-title"
+      >
+        {selectedSubmission && (
+          <>
+            <ModalHeader onClose={closeModal}>
+              <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                <span className="text-2xl sm:text-4xl" aria-hidden="true">{getCategoryEmoji(selectedSubmission.category)}</span>
+                <h2 id="modal-title" className="text-lg sm:text-2xl font-bold truncate">
+                  Review: {getCategoryLabel(selectedSubmission.category)}
+                </h2>
               </div>
-            </div>
+              <p className="text-dark-gray text-sm">
+                {selectedSubmission.user?.name || 'Anonymous'} •
+                {new Date(selectedSubmission.submittedAt).toLocaleDateString()}
+              </p>
+            </ModalHeader>
 
-            {/* Scrollable content area */}
-            <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+            <ModalBody>
               {selectedSubmission.textContent && (
                 <div className="mb-6">
                   <h3 className="font-semibold mb-2">Content</h3>
@@ -915,11 +900,9 @@ function AdminDashboardContent() {
                   </div>
                 </div>
               )}
+            </ModalBody>
 
-            </div>
-
-            {/* Sticky action buttons */}
-            <div className="p-4 sm:p-6 border-t border-light-gray bg-white flex-shrink-0">
+            <ModalFooter>
               {/* P3-5: Preview and P3-8: History links */}
               <div className="flex gap-2 mb-3">
                 <Button
@@ -965,21 +948,24 @@ function AdminDashboardContent() {
               <p className="text-xs text-dark-gray text-center mt-2">
                 Press <kbd className="px-1 py-0.5 bg-background rounded text-xs">⌘A</kbd> to approve or <kbd className="px-1 py-0.5 bg-background rounded text-xs">⌘R</kbd> to reject
               </p>
-            </div>
-          </div>
-        </div>
-      )}
+            </ModalFooter>
+          </>
+        )}
+      </Modal>
 
       {/* P3-3 & P3-4: Confirmation Dialog */}
-      {confirmDialog?.isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4"
-          role="alertdialog"
-          aria-modal="true"
-          aria-labelledby="confirm-title"
-          aria-describedby="confirm-desc"
-        >
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+      <Modal
+        isOpen={!!confirmDialog?.isOpen}
+        onClose={() => { setConfirmDialog(null); setRejectReason(''); }}
+        size="md"
+        variant="alertdialog"
+        zIndex={60}
+        titleId="confirm-title"
+        descriptionId="confirm-desc"
+        closeOnBackdropClick={false}
+      >
+        {confirmDialog && (
+          <div className="p-6">
             <div className="flex items-start gap-4 mb-4">
               <div className={`p-2 rounded-full ${confirmDialog.action.includes('reject') ? 'bg-red-50' : 'bg-primary/10'}`}>
                 <AlertTriangle className={`h-6 w-6 ${confirmDialog.action.includes('reject') ? 'text-red-700' : 'text-primary'}`} />
@@ -1030,89 +1016,72 @@ function AdminDashboardContent() {
               </Button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
 
       {/* P3-6: Keyboard Shortcuts Modal */}
-      {showShortcuts && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="shortcuts-title"
-          onClick={(e) => e.target === e.currentTarget && setShowShortcuts(false)}
-        >
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 id="shortcuts-title" className="text-lg font-bold flex items-center gap-2">
-                <Keyboard className="h-5 w-5 text-primary" />
-                Keyboard Shortcuts
-              </h3>
-              <button
-                onClick={() => setShowShortcuts(false)}
-                className="text-dark-gray hover:text-charcoal p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                aria-label="Close"
-              >
-                <X className="h-5 w-5" />
-              </button>
+      <Modal
+        isOpen={showShortcuts}
+        onClose={() => setShowShortcuts(false)}
+        title="Keyboard Shortcuts"
+        titleId="shortcuts-title"
+        size="md"
+        zIndex={60}
+      >
+        <ModalHeader onClose={() => setShowShortcuts(false)}>
+          <h3 id="shortcuts-title" className="text-lg font-bold flex items-center gap-2">
+            <Keyboard className="h-5 w-5 text-primary" />
+            Keyboard Shortcuts
+          </h3>
+        </ModalHeader>
+        <ModalBody scrollable={false}>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between py-2 border-b border-light-gray">
+              <span className="text-dark-gray">Approve submission</span>
+              <kbd className="px-2 py-1 bg-background rounded text-sm font-mono">⌘ + A</kbd>
             </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between py-2 border-b border-light-gray">
-                <span className="text-dark-gray">Approve submission</span>
-                <kbd className="px-2 py-1 bg-background rounded text-sm font-mono">⌘ + A</kbd>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-light-gray">
-                <span className="text-dark-gray">Reject submission</span>
-                <kbd className="px-2 py-1 bg-background rounded text-sm font-mono">⌘ + R</kbd>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-light-gray">
-                <span className="text-dark-gray">Refresh submissions</span>
-                <kbd className="px-2 py-1 bg-background rounded text-sm font-mono">⌘ + ⇧ + R</kbd>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-light-gray">
-                <span className="text-dark-gray">Close modal / dialog</span>
-                <kbd className="px-2 py-1 bg-background rounded text-sm font-mono">Esc</kbd>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="text-dark-gray">Show this help</span>
-                <kbd className="px-2 py-1 bg-background rounded text-sm font-mono">?</kbd>
-              </div>
+            <div className="flex items-center justify-between py-2 border-b border-light-gray">
+              <span className="text-dark-gray">Reject submission</span>
+              <kbd className="px-2 py-1 bg-background rounded text-sm font-mono">⌘ + R</kbd>
             </div>
-
-            <p className="text-xs text-dark-gray mt-4 text-center">
-              Shortcuts work when reviewing a submission or with items selected
-            </p>
+            <div className="flex items-center justify-between py-2 border-b border-light-gray">
+              <span className="text-dark-gray">Refresh submissions</span>
+              <kbd className="px-2 py-1 bg-background rounded text-sm font-mono">⌘ + ⇧ + R</kbd>
+            </div>
+            <div className="flex items-center justify-between py-2 border-b border-light-gray">
+              <span className="text-dark-gray">Close modal / dialog</span>
+              <kbd className="px-2 py-1 bg-background rounded text-sm font-mono">Esc</kbd>
+            </div>
+            <div className="flex items-center justify-between py-2">
+              <span className="text-dark-gray">Show this help</span>
+              <kbd className="px-2 py-1 bg-background rounded text-sm font-mono">?</kbd>
+            </div>
           </div>
-        </div>
-      )}
+          <p className="text-xs text-dark-gray mt-4 text-center">
+            Shortcuts work when reviewing a submission or with items selected
+          </p>
+        </ModalBody>
+      </Modal>
 
       {/* P3-5: Magazine Preview Modal */}
-      {showMagazinePreview && selectedSubmission && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="preview-title"
-          onClick={(e) => e.target === e.currentTarget && setShowMagazinePreview(false)}
-        >
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-light-gray flex items-center justify-between sticky top-0 bg-white">
-              <h3 id="preview-title" className="text-lg font-bold flex items-center gap-2">
-                <Eye className="h-5 w-5 text-primary" />
-                Magazine Preview
-              </h3>
-              <button
-                onClick={() => setShowMagazinePreview(false)}
-                className="text-dark-gray hover:text-charcoal p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                aria-label="Close preview"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Simulated magazine article */}
-            <div className="p-6">
+      <Modal
+        isOpen={showMagazinePreview && !!selectedSubmission}
+        onClose={() => setShowMagazinePreview(false)}
+        title="Magazine Preview"
+        titleId="preview-title"
+        size="xl"
+        zIndex={60}
+      >
+        <ModalHeader onClose={() => setShowMagazinePreview(false)}>
+          <h3 id="preview-title" className="text-lg font-bold flex items-center gap-2">
+            <Eye className="h-5 w-5 text-primary" />
+            Magazine Preview
+          </h3>
+        </ModalHeader>
+        <ModalBody>
+          {selectedSubmission && (
+            <>
+              {/* Simulated magazine article */}
               <div className="border border-light-gray rounded-xl overflow-hidden">
                 <div className="p-6">
                   {/* Category and Author */}
@@ -1169,10 +1138,10 @@ function AdminDashboardContent() {
               <p className="text-xs text-dark-gray text-center mt-4">
                 This is how the submission will appear in the published magazine
               </p>
-            </div>
-          </div>
-        </div>
-      )}
+            </>
+          )}
+        </ModalBody>
+      </Modal>
     </div>
   );
 }
