@@ -9,6 +9,7 @@ import {
   CreateMagazineData,
   MagazineFilters,
   MagazineWithRelations,
+  UpdateMagazineData,
 } from '@/repositories/magazine.repository';
 import { createAuditLogInTransaction, AuditActions, EntityTypes } from '@/lib/audit-logger';
 import { NotFoundError, ValidationError } from '@/lib/api-errors';
@@ -21,6 +22,15 @@ export interface CreateMagazineInput {
   description?: string;
   submissionIds: string[];
   isPublic: boolean;
+}
+
+/**
+ * Input for updating a magazine
+ */
+export interface UpdateMagazineInput {
+  title?: string;
+  description?: string;
+  submissionIds?: string[];
 }
 
 /**
@@ -104,6 +114,59 @@ export class MagazineService {
           title: magazine.title,
           itemCount: input.submissionIds.length,
           isPublic: input.isPublic,
+        },
+      });
+
+      return magazine;
+    });
+  }
+
+  /**
+   * Update an existing magazine (draft only)
+   * Includes audit logging in transaction
+   */
+  static async updateMagazine(
+    id: string,
+    input: UpdateMagazineInput,
+    userId: string
+  ): Promise<MagazineWithRelations> {
+    return prisma.$transaction(async (tx) => {
+      // Get current magazine
+      const currentMagazine = await MagazineRepository.findById(id, tx);
+
+      if (!currentMagazine) {
+        throw new NotFoundError('Magazine not found');
+      }
+
+      // Only allow editing draft magazines
+      if (currentMagazine.status !== 'DRAFT') {
+        throw new ValidationError('Only draft magazines can be edited');
+      }
+
+      // Validate submissionIds if provided
+      if (input.submissionIds && input.submissionIds.length === 0) {
+        throw new ValidationError('At least one submission is required');
+      }
+
+      // Prepare update data
+      const updateData: UpdateMagazineData = {};
+      if (input.title) updateData.title = input.title;
+      if (input.description !== undefined) updateData.description = input.description;
+      if (input.submissionIds) updateData.submissionIds = input.submissionIds;
+
+      // Update magazine
+      const magazine = await MagazineRepository.update(id, updateData, tx);
+
+      // Log the update
+      await createAuditLogInTransaction(tx, {
+        userId,
+        action: AuditActions.UPDATE_MAGAZINE,
+        entityType: EntityTypes.MAGAZINE,
+        entityId: id,
+        details: {
+          title: magazine.title,
+          itemCount: magazine.items.length,
+          changes: Object.keys(updateData),
         },
       });
 

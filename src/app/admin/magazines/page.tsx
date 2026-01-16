@@ -19,6 +19,7 @@ import {
   Send,
   Eye,
   Calendar,
+  Pencil,
 } from 'lucide-react';
 
 interface Magazine {
@@ -259,6 +260,14 @@ function AdminMagazinesContent() {
                       </div>
 
                       <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          icon={<Pencil className="h-4 w-4" />}
+                          onClick={() => router.push(`/admin/magazines/${magazine.id}/edit`)}
+                        >
+                          Edit
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"

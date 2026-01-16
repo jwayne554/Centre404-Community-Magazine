@@ -68,6 +68,15 @@ export interface UpdateMagazineStatusData {
 }
 
 /**
+ * Data for updating magazine content
+ */
+export interface UpdateMagazineData {
+  title?: string;
+  description?: string;
+  submissionIds?: string[];
+}
+
+/**
  * Magazine Repository Class
  * Encapsulates all database operations for magazines
  */
@@ -284,6 +293,68 @@ export class MagazineRepository {
                 },
               },
             },
+          },
+        },
+        publishedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+  }
+
+  /**
+   * Update magazine content (title, description, items)
+   */
+  static async update(
+    id: string,
+    data: UpdateMagazineData,
+    tx?: Prisma.TransactionClient
+  ): Promise<MagazineWithRelations> {
+    const client = tx || prisma;
+
+    // If submissionIds provided, we need to replace all items
+    if (data.submissionIds) {
+      // Delete existing items
+      await client.magazineItem.deleteMany({
+        where: { magazineId: id },
+      });
+
+      // Create new items with proper order
+      await client.magazineItem.createMany({
+        data: data.submissionIds.map((submissionId, index) => ({
+          magazineId: id,
+          submissionId,
+          displayOrder: index,
+        })),
+      });
+    }
+
+    // Update magazine metadata
+    return client.magazine.update({
+      where: { id },
+      data: {
+        ...(data.title && { title: data.title }),
+        ...(data.description !== undefined && { description: data.description }),
+      },
+      include: {
+        items: {
+          include: {
+            submission: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            displayOrder: 'asc',
           },
         },
         publishedBy: {
