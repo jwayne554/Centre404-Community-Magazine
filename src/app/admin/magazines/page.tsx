@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import Button from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 import Card from '@/components/ui/Card';
 import StatusCard from '@/components/admin/StatusCard';
 import {
@@ -46,6 +47,7 @@ interface MagazineStats {
 
 function AdminMagazinesContent() {
   const router = useRouter();
+  const toast = useToast();
   const [magazines, setMagazines] = useState<Magazine[]>([]);
   const [stats, setStats] = useState<MagazineStats>({ draft: 0, published: 0, archived: 0, total: 0 });
   const [loading, setLoading] = useState(true);
@@ -85,14 +87,14 @@ function AdminMagazinesContent() {
 
       if (response.ok) {
         await fetchDraftMagazines();
-        alert('Magazine published successfully!');
+        toast.success('Magazine published successfully!');
       } else {
         const errorData = await response.json();
-        alert(`Failed to publish: ${errorData.error || 'Unknown error'}`);
+        toast.error(`Failed to publish: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Failed to publish magazine:', error);
-      alert('Failed to publish magazine. Please try again.');
+      toast.error('Failed to publish magazine. Please try again.');
     } finally {
       setActionLoading(null);
     }
@@ -112,14 +114,14 @@ function AdminMagazinesContent() {
 
       if (response.ok) {
         await fetchDraftMagazines();
-        alert('Magazine deleted successfully!');
+        toast.success('Magazine deleted successfully!');
       } else {
         const errorData = await response.json();
-        alert(`Failed to delete: ${errorData.error || 'Unknown error'}`);
+        toast.error(`Failed to delete: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Failed to delete magazine:', error);
-      alert('Failed to delete magazine. Please try again.');
+      toast.error('Failed to delete magazine. Please try again.');
     } finally {
       setActionLoading(null);
     }

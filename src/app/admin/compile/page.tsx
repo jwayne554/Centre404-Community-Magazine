@@ -6,6 +6,7 @@ import { getCategoryEmoji, getCategoryColor, getCategoryLabel } from '@/utils/ca
 import Layout from '@/components/ui/Layout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 import { ArrowLeft, Plus, Save, Globe, ArrowUp, ArrowDown, X, Loader2 } from 'lucide-react';
 
 interface Submission {
@@ -25,6 +26,7 @@ interface Submission {
 
 export default function MagazineCompiler() {
   const router = useRouter();
+  const toast = useToast();
   const [approvedSubmissions, setApprovedSubmissions] = useState<Submission[]>([]);
   const [selectedSubmissions, setSelectedSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,12 +84,12 @@ export default function MagazineCompiler() {
 
   const saveMagazine = async () => {
     if (!title.trim()) {
-      alert('Please add a magazine title');
+      toast.error('Please add a magazine title');
       return;
     }
 
     if (selectedSubmissions.length === 0) {
-      alert('Please add at least one submission to the magazine');
+      toast.error('Please add at least one submission to the magazine');
       return;
     }
 
@@ -108,7 +110,7 @@ export default function MagazineCompiler() {
       });
 
       if (response.ok) {
-        alert(`Magazine ${publishNow ? 'published' : 'saved as draft'} successfully!`);
+        toast.success(`Magazine ${publishNow ? 'published' : 'saved as draft'} successfully!`);
         router.push(publishNow ? '/magazines' : '/admin');
       } else {
         const error = await response.json();
@@ -116,7 +118,7 @@ export default function MagazineCompiler() {
       }
     } catch (error) {
       console.error('Failed to create magazine:', error);
-      alert(`Failed to create magazine: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Failed to create magazine: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSaving(false);
     }

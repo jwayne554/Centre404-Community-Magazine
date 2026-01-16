@@ -8,13 +8,26 @@ import { SubmissionService } from '@/services/submission.service';
 import { SubmissionFilters } from '@/repositories/submission.repository';
 import { RequestLogger } from '@/lib/api-logger';
 
+// Max drawing size: 2MB base64 string (~1.5MB actual image)
+const MAX_DRAWING_SIZE = 2 * 1024 * 1024;
+
 const createSubmissionSchema = z.object({
   category: z.enum(['MY_NEWS', 'SAYING_HELLO', 'MY_SAY']),
   contentType: z.enum(['TEXT', 'IMAGE', 'AUDIO', 'DRAWING', 'MIXED']),
   textContent: z.string().max(5000).nullable().optional(),
-  mediaUrl: z.string().nullable().optional(), // Allow both URLs and base64 data URIs, and null
+  mediaUrl: z.string().nullable().optional(), // File URLs from /api/upload
   accessibilityText: z.string().nullable().optional(),
-  drawingData: z.any().nullable().optional(),
+  drawingData: z.string()
+    .refine(
+      (val) => val.startsWith('data:image/png;base64,'),
+      'Drawing must be a PNG data URI'
+    )
+    .refine(
+      (val) => val.length <= MAX_DRAWING_SIZE,
+      `Drawing too large (max ${MAX_DRAWING_SIZE / 1024 / 1024}MB)`
+    )
+    .nullable()
+    .optional(),
   userName: z.string().nullable().optional(), // Optional display name for anonymous users
 });
 

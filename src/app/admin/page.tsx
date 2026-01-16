@@ -10,6 +10,7 @@ import { getCategoryEmoji, getCategoryLabel } from '@/utils/category-helpers';
 import StatusCard from '@/components/admin/StatusCard';
 import SubmissionItem from '@/components/admin/SubmissionItem';
 import Button from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 import {
   LockKeyhole,
   LogOut,
@@ -43,6 +44,7 @@ interface Submission {
 function AdminDashboardContent() {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const toast = useToast();
 
   const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,13 +112,14 @@ function AdminDashboardContent() {
       if (response.ok) {
         await fetchAllSubmissions();
         setSelectedSubmission(null);
+        toast.success(`Submission ${status.toLowerCase()} successfully!`);
       } else {
         // Rollback on error
         setAllSubmissions(previousSubmissions);
         setSelectedSubmission(previousSelectedSubmission);
 
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        alert(`Failed to update submission: ${errorData.error || response.statusText}`);
+        toast.error(`Failed to update submission: ${errorData.error || response.statusText}`);
       }
     } catch (error) {
       // Rollback on error
@@ -124,7 +127,7 @@ function AdminDashboardContent() {
       setSelectedSubmission(previousSelectedSubmission);
 
       console.error('Failed to update submission:', error);
-      alert('Failed to update submission. Please try again.');
+      toast.error('Failed to update submission. Please try again.');
     } finally {
       setActionLoading(false);
     }
@@ -415,6 +418,20 @@ function AdminDashboardContent() {
                             const ctx = canvas.getContext('2d');
                             if (ctx) {
                               ctx.drawImage(img, 0, 0);
+                            }
+                          };
+                          img.onerror = () => {
+                            // Show error state on canvas
+                            canvas.width = 300;
+                            canvas.height = 100;
+                            const ctx = canvas.getContext('2d');
+                            if (ctx) {
+                              ctx.fillStyle = '#fef2f2';
+                              ctx.fillRect(0, 0, 300, 100);
+                              ctx.fillStyle = '#dc2626';
+                              ctx.font = '14px Inter, sans-serif';
+                              ctx.textAlign = 'center';
+                              ctx.fillText('Failed to load drawing', 150, 55);
                             }
                           };
                           img.src = selectedSubmission.drawingData;

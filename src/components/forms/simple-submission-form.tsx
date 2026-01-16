@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import Card, { CategoryCard } from '@/components/ui/Card';
 import { Input, TextArea } from '@/components/ui/Input';
 import Accordion from '@/components/ui/Accordion';
+import { useToast } from '@/components/ui/Toast';
 import { Newspaper, Hand, MessageCircle, Mic, Smile, Trash2, Palette } from 'lucide-react';
 
 // Task 2.5: Use shared constants (eliminates duplication across forms)
@@ -24,6 +25,7 @@ interface SimpleSubmissionFormProps {
 }
 
 export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFormProps = {}) {
+  const toast = useToast();
   const [category, setCategory] = useState(preselectedCategory || '');
   const [textContent, setTextContent] = useState('');
   const [authorName, setAuthorName] = useState('');
@@ -39,7 +41,6 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [showToast, setShowToast] = useState(false);
 
   // Drawing state
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -58,7 +59,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
     e.preventDefault();
 
     if (!category || (!textContent && !imageFile && !drawingData && !audioBlob)) {
-      alert('Please choose a category and add some content (text, image, audio, or drawing)');
+      toast.error('Please choose a category and add some content (text, image, audio, or drawing)');
       return;
     }
 
@@ -132,8 +133,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
         setSubmitSuccess(true);
 
         // Step 3: Show toast notification
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 6000);
+        toast.success('Your contribution has been submitted for review.');
 
         // Step 4: Set success message for banner
         setSuccessMessage('✓ Thank you! Your contribution is being reviewed by our team. You\'ll see it in the next magazine edition once approved!');
@@ -167,11 +167,11 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
       } else {
         const errorData = await response.text();
         console.error('Submission failed:', response.status, errorData);
-        alert(`Submission failed: ${response.status}. Please try again.`);
+        toast.error(`Submission failed: ${response.status}. Please try again.`);
       }
     } catch (error) {
       console.error('Submission error:', error);
-      alert('Failed to submit. Please check your connection and try again.');
+      toast.error('Failed to submit. Please check your connection and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -181,7 +181,6 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
   const handleSubmitAnother = () => {
     setSuccessMessage('');
     setSubmitSuccess(false);
-    setShowToast(false);
   };
 
   const startAudioRecording = async () => {
@@ -219,7 +218,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
       console.log('Audio recording started');
     } catch (error) {
       console.error('Failed to start audio recording:', error);
-      alert('Failed to start audio recording. Please allow microphone access.');
+      toast.error('Failed to start audio recording. Please allow microphone access.');
       setAudioRecording(false);
     }
   };
@@ -230,7 +229,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
       // Validate file size (5MB limit)
       const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
-        alert('Image file is too large. Please select an image under 5MB.');
+        toast.error('Image file is too large. Please select an image under 5MB.');
         return;
       }
 
@@ -343,7 +342,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
     const dataUrl = canvasRef.current.toDataURL();
     setDrawingData(dataUrl);
     setImagePreview(dataUrl);
-    alert('Drawing saved! It will be included with your submission.');
+    toast.success('Drawing saved! It will be included with your submission.');
   };
 
   return (
@@ -657,122 +656,6 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
           </div>
         )}
       </form>
-
-      {/* Toast Notification - Fixed at bottom-right */}
-      {showToast && (
-        <div
-          role="alert"
-          aria-live="polite"
-          style={{
-            position: 'fixed',
-            bottom: '24px',
-            right: '24px',
-            background: 'linear-gradient(135deg, #27ae60 0%, #229954 100%)',
-            color: 'white',
-            padding: '16px 20px',
-            borderRadius: '12px',
-            boxShadow: '0 8px 24px rgba(39, 174, 96, 0.4)',
-            zIndex: 9999,
-            maxWidth: '400px',
-            animation: 'slideInRight 0.4s ease-out',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            border: '2px solid rgba(255,255,255,0.3)'
-          }}
-        >
-          <div style={{
-            fontSize: '28px',
-            animation: 'scaleIn 0.5s ease-out'
-          }}>
-            ✓
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{
-              fontSize: '16px',
-              fontWeight: '700',
-              marginBottom: '4px'
-            }}>
-              Success!
-            </div>
-            <div style={{
-              fontSize: '14px',
-              opacity: 0.95
-            }}>
-              Your contribution has been submitted for review.
-            </div>
-          </div>
-          <button
-            onClick={() => setShowToast(false)}
-            style={{
-              background: 'rgba(255,255,255,0.2)',
-              border: 'none',
-              color: 'white',
-              width: '28px',
-              height: '28px',
-              borderRadius: '50%',
-              cursor: 'pointer',
-              fontSize: '18px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'background 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-            aria-label="Close notification"
-          >
-            ×
-          </button>
-        </div>
-      )}
-
-      {/* CSS Animations */}
-      <style jsx>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-
-        @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slideInRight {
-          from {
-            opacity: 0;
-            transform: translateX(100%);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes scaleIn {
-          from {
-            transform: scale(0);
-          }
-          to {
-            transform: scale(1);
-          }
-        }
-
-        @media (max-width: 640px) {
-          [role="alert"] {
-            bottom: 16px;
-            right: 16px;
-            left: 16px;
-            max-width: none;
-          }
-        }
-      `}</style>
     </div>
   );
 }
