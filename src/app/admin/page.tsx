@@ -6,7 +6,15 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { getCategoryEmoji, getCategoryLabel } from '@/utils/category-helpers';
+import { getCategoryLabel, getCategoryColor } from '@/utils/category-helpers';
+import { Newspaper, Hand, MessageCircle } from 'lucide-react';
+
+// Category icons mapping (matches submission form)
+const categoryIcons: Record<string, React.ReactNode> = {
+  MY_NEWS: <Newspaper className="h-6 w-6" />,
+  SAYING_HELLO: <Hand className="h-6 w-6" />,
+  MY_SAY: <MessageCircle className="h-6 w-6" />,
+};
 import StatusCard from '@/components/admin/StatusCard';
 import SubmissionItem from '@/components/admin/SubmissionItem';
 import Button from '@/components/ui/Button';
@@ -430,49 +438,54 @@ function AdminDashboardContent() {
 
   return (
     <div className="pb-8">
-      {/* Header Section - Green Gradient */}
-      <div className="bg-gradient-to-br from-primary via-primary to-primary/90 rounded-xl p-8 mb-8 text-white shadow-lg">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 bg-white/20 rounded-lg">
-            <LockKeyhole className="h-7 w-7" />
+      {/* Header Section - Light Gray with Green Accents */}
+      <div className="bg-white border border-light-gray rounded-xl p-6 sm:p-8 mb-8 shadow-sm">
+        {/* Title Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-primary/10 rounded-xl">
+              <LockKeyhole className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-charcoal">Admin Dashboard</h1>
+              <p className="text-dark-gray text-sm mt-0.5">
+                Review submissions, manage content, and compile magazines
+              </p>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         </div>
-        <p className="text-white/90 mb-8 text-lg">
-          Review submissions, manage content, and compile magazine editions
-        </p>
 
         {/* Admin Info Bar */}
-        <div className="bg-white/15 backdrop-blur-sm rounded-xl p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="bg-background rounded-xl p-4 sm:p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-light-gray">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-lg font-semibold">
+            <div className="w-10 h-10 bg-primary/15 text-primary rounded-full flex items-center justify-center text-lg font-semibold">
               {user?.name ? user.name.substring(0, 2).toUpperCase() : 'AD'}
             </div>
             <div>
-              <p className="text-lg font-medium">{user?.name || 'Admin User'}</p>
-              <span className="bg-white/25 px-2.5 py-0.5 rounded-full text-xs font-medium uppercase">
+              <p className="text-base font-medium text-charcoal">{user?.name || 'Admin User'}</p>
+              <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-xs font-medium">
                 {user?.role || 'Administrator'}
               </span>
             </div>
           </div>
           <Button
-            variant="secondary"
+            variant="outline"
             size="sm"
             icon={<LogOut className="h-4 w-4" />}
             onClick={handleLogout}
-            className="bg-white/90 hover:bg-white text-red-600 border-0 shadow-sm"
+            className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
           >
             Logout
           </Button>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           <Link href="/">
             <Button
               variant="outline"
+              size="sm"
               icon={<Home className="h-4 w-4" />}
-              className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40"
             >
               Home
             </Button>
@@ -480,8 +493,8 @@ function AdminDashboardContent() {
           <Link href="/magazines">
             <Button
               variant="outline"
+              size="sm"
               icon={<Archive className="h-4 w-4" />}
-              className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40"
             >
               Archive
             </Button>
@@ -489,25 +502,25 @@ function AdminDashboardContent() {
           <Link href="/admin/magazines">
             <Button
               variant="outline"
+              size="sm"
               icon={<BookOpen className="h-4 w-4" />}
-              className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40"
             >
               Manage Magazines
             </Button>
           </Link>
           <Button
-            variant="secondary"
+            variant="primary"
+            size="sm"
             icon={<BookOpen className="h-4 w-4" />}
             onClick={handleCompileMagazine}
-            className="bg-accent hover:bg-accent/90 text-charcoal font-semibold shadow-sm"
           >
             Compile Magazine
           </Button>
           <Button
             variant="outline"
+            size="sm"
             icon={<Keyboard className="h-4 w-4" />}
             onClick={() => setShowShortcuts(true)}
-            className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40"
             aria-label="Keyboard shortcuts"
           >
             <span className="hidden sm:inline">Shortcuts</span>
@@ -805,7 +818,13 @@ function AdminDashboardContent() {
           <>
             <ModalHeader onClose={closeModal}>
               <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <span className="text-2xl sm:text-4xl" aria-hidden="true">{getCategoryEmoji(selectedSubmission.category)}</span>
+                <div
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: `${getCategoryColor(selectedSubmission.category)}15`, color: getCategoryColor(selectedSubmission.category) }}
+                  aria-hidden="true"
+                >
+                  {categoryIcons[selectedSubmission.category] || <Newspaper className="h-5 w-5 sm:h-6 sm:w-6" />}
+                </div>
                 <h2 id="modal-title" className="text-lg sm:text-2xl font-bold truncate">
                   Review: {getCategoryLabel(selectedSubmission.category)}
                 </h2>
@@ -1086,7 +1105,12 @@ function AdminDashboardContent() {
                 <div className="p-6">
                   {/* Category and Author */}
                   <div className="flex items-center mb-4">
-                    <span className="text-2xl mr-2">{getCategoryEmoji(selectedSubmission.category)}</span>
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center mr-2"
+                      style={{ backgroundColor: `${getCategoryColor(selectedSubmission.category)}15`, color: getCategoryColor(selectedSubmission.category) }}
+                    >
+                      {categoryIcons[selectedSubmission.category] || <Newspaper className="h-4 w-4" />}
+                    </div>
                     <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium mr-3">
                       {getCategoryLabel(selectedSubmission.category)}
                     </span>

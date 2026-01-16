@@ -4,8 +4,15 @@ import React from 'react';
 import Image from 'next/image';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { getCategoryEmoji, getCategoryLabel } from '@/utils/category-helpers';
-import { CheckCircle, Clock, XCircle, Eye, Palette } from 'lucide-react';
+import { getCategoryLabel, getCategoryColor } from '@/utils/category-helpers';
+import { CheckCircle, Clock, XCircle, Eye, Palette, Newspaper, Hand, MessageCircle } from 'lucide-react';
+
+// Category icons mapping (matches submission form)
+const categoryIcons: Record<string, React.ReactNode> = {
+  MY_NEWS: <Newspaper className="h-6 w-6" />,
+  SAYING_HELLO: <Hand className="h-6 w-6" />,
+  MY_SAY: <MessageCircle className="h-6 w-6" />,
+};
 
 interface SubmissionItemProps {
   id: string;
@@ -61,7 +68,8 @@ const SubmissionItem = ({
   };
 
   const config = statusConfig[status];
-  const categoryEmoji = getCategoryEmoji(category);
+  const categoryIcon = categoryIcons[category] || <Newspaper className="h-6 w-6" />;
+  const categoryColor = getCategoryColor(category);
 
   // Format date to match prototype style
   const formatDate = (dateString: string) => {
@@ -104,8 +112,11 @@ const SubmissionItem = ({
               </div>
             </label>
           )}
-          <div className="text-4xl flex-shrink-0">
-            {categoryEmoji}
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: `${categoryColor}15`, color: categoryColor }}
+          >
+            {categoryIcon}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
