@@ -13,7 +13,7 @@ This is a **full-stack Next.js application** for Centre404 Community Magazine - 
 - **Styling**: Tailwind CSS 3.4.17 (stable) with prototype-based green theme (#34A853)
 - **Icons**: lucide-react (professional icon library)
 - **Form Handling**: React Hook Form + Zod validation
-- **Media Storage**: Cloudinary (configured but optional)
+- **Media Storage**: Local file system (/public/uploads/)
 - **Authentication**: JWT-based with bcrypt, HTTP-only cookies
 - **Text-to-Speech**: Unreal Speech API with browser fallback
 - **Node.js**: v22 Alpine (Docker)
