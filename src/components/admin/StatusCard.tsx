@@ -33,7 +33,7 @@ const StatusCard = ({
   };
 
   return (
-    <Card className={`p-6 ${borderColors[variant]} border-2 hover:shadow-lg transition-all`}>
+    <Card className={`p-4 sm:p-6 ${borderColors[variant]} border-2 hover:shadow-lg transition-all`}>
       <div className="flex items-start justify-between mb-4">
         <div>
           <p className="text-xs text-dark-gray uppercase tracking-wider font-medium mb-2">

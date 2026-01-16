@@ -21,6 +21,7 @@ import {
   CheckCircle,
   XCircle,
   RefreshCw,
+  Loader2,
   BookOpen,
   Check,
   X,
@@ -31,6 +32,8 @@ import {
   History,
   Eye,
   Keyboard,
+  Inbox,
+  Heart,
 } from 'lucide-react';
 
 interface Submission {
@@ -748,7 +751,7 @@ function AdminDashboardContent() {
 
           {loading ? (
             <div className="text-center py-16">
-              <RefreshCw className="h-8 w-8 text-primary animate-spin mx-auto mb-4" />
+              <Loader2 className="h-8 w-8 text-primary animate-spin mx-auto mb-4" />
               <p className="text-dark-gray">Loading submissions...</p>
             </div>
           ) : submissions.length > 0 ? (
@@ -774,7 +777,7 @@ function AdminDashboardContent() {
             </div>
           ) : (
             <div className="text-center py-16 bg-background rounded-xl border-2 border-dashed border-light-gray">
-              <div className="text-5xl mb-4">📭</div>
+              <Inbox className="h-12 w-12 text-dark-gray mx-auto mb-4" />
               <p className="text-dark-gray text-lg font-medium mb-1">
                 No {selectedTab.toLowerCase()} submissions
               </p>
@@ -978,8 +981,8 @@ function AdminDashboardContent() {
         >
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
             <div className="flex items-start gap-4 mb-4">
-              <div className={`p-2 rounded-full ${confirmDialog.action.includes('reject') ? 'bg-red-100' : 'bg-primary/10'}`}>
-                <AlertTriangle className={`h-6 w-6 ${confirmDialog.action.includes('reject') ? 'text-red-600' : 'text-primary'}`} />
+              <div className={`p-2 rounded-full ${confirmDialog.action.includes('reject') ? 'bg-red-50' : 'bg-primary/10'}`}>
+                <AlertTriangle className={`h-6 w-6 ${confirmDialog.action.includes('reject') ? 'text-red-700' : 'text-primary'}`} />
               </div>
               <div>
                 <h3 id="confirm-title" className="text-lg font-bold">
@@ -1047,7 +1050,7 @@ function AdminDashboardContent() {
               </h3>
               <button
                 onClick={() => setShowShortcuts(false)}
-                className="text-dark-gray hover:text-charcoal p-1 rounded-lg"
+                className="text-dark-gray hover:text-charcoal p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
@@ -1101,7 +1104,7 @@ function AdminDashboardContent() {
               </h3>
               <button
                 onClick={() => setShowMagazinePreview(false)}
-                className="text-dark-gray hover:text-charcoal p-1 rounded-lg"
+                className="text-dark-gray hover:text-charcoal p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 aria-label="Close preview"
               >
                 <X className="h-5 w-5" />
@@ -1157,7 +1160,7 @@ function AdminDashboardContent() {
                   {/* Like button placeholder */}
                   <div className="flex items-center space-x-3 pt-2 border-t border-light-gray">
                     <button className="flex items-center gap-1 text-dark-gray" disabled>
-                      <span>❤️</span>
+                      <Heart className="h-4 w-4" />
                       <span className="text-sm">0 likes</span>
                     </button>
                   </div>

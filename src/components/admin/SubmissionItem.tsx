@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { getCategoryEmoji, getCategoryLabel } from '@/utils/category-helpers';
-import { CheckCircle, Clock, XCircle } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, Eye, Palette } from 'lucide-react';
 
 interface SubmissionItemProps {
   id: string;
@@ -77,7 +77,7 @@ const SubmissionItem = ({
   };
 
   return (
-    <Card className={`p-5 mb-4 hover:shadow-lg transition-shadow ${selected ? 'ring-2 ring-primary bg-primary/5' : ''}`}>
+    <Card className={`p-6 mb-4 hover:shadow-lg transition-shadow ${selected ? 'ring-2 ring-primary bg-primary/5' : ''}`}>
       <div className="flex items-start justify-between gap-4 mb-4">
         <div className="flex items-start gap-4 flex-1">
           {/* Checkbox for bulk selection */}
@@ -109,7 +109,7 @@ const SubmissionItem = ({
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-lg text-charcoal">
+              <h3 className="font-bold text-lg text-charcoal">
                 {getCategoryLabel(category)}
               </h3>
               <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
@@ -145,7 +145,7 @@ const SubmissionItem = ({
       {hasDrawing && (
         <div className="mb-4">
           <div className="bg-background p-3 rounded-lg border border-light-gray inline-flex items-center gap-2">
-            <span className="text-2xl" aria-hidden="true">🎨</span>
+            <Palette className="h-5 w-5 text-primary" aria-hidden="true" />
             <span className="text-sm text-dark-gray">Contains drawing by {author}</span>
           </div>
         </div>
@@ -155,8 +155,9 @@ const SubmissionItem = ({
         variant="outline"
         size="sm"
         onClick={onViewFull}
+        icon={<Eye className="h-4 w-4" />}
       >
-        👁️ View Full Submission
+        View Full Submission
       </Button>
     </Card>
   );
