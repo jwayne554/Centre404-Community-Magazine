@@ -7,7 +7,7 @@ import Card, { CategoryCard } from '@/components/ui/Card';
 import { Input, TextArea } from '@/components/ui/Input';
 import Accordion from '@/components/ui/Accordion';
 import { useToast } from '@/components/ui/Toast';
-import { Newspaper, Hand, MessageCircle, Mic, Smile, Trash2, Palette } from 'lucide-react';
+import { Newspaper, Hand, MessageCircle, Mic, Smile, Trash2, Palette, Undo2 } from 'lucide-react';
 
 // Task 2.5: Use shared constants (eliminates duplication across forms)
 const categories = getAllCategories();
@@ -35,6 +35,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
   const [imagePreview, setImagePreview] = useState('');  // For preview display only
   const [imageFile, setImageFile] = useState<File | null>(null);  // Actual file for upload
   const [accessibilityText, setAccessibilityText] = useState('');  // Alt text for images/drawings
+  const [isDragging, setIsDragging] = useState(false);  // Drag state for image upload
   const [audioRecording, setAudioRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -49,6 +50,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentColor, setCurrentColor] = useState('#000000');
   const [drawingData, setDrawingData] = useState('');
+  const [undoStack, setUndoStack] = useState<ImageData[]>([]);
 
   // Audio recording refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -56,6 +58,134 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
 
   // Top of form ref for scrolling
   const formTopRef = useRef<HTMLDivElement>(null);
+
+  // Draft state
+  const [hasSavedDraft, setHasSavedDraft] = useState(false);
+  const [showDraftPrompt, setShowDraftPrompt] = useState(false);
+
+  // Validation state
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Field validation function
+  const validateField = (name: string, value: string) => {
+    let error = '';
+
+    switch (name) {
+      case 'textContent':
+        if (value.length > 5000) {
+          error = `Maximum 5000 characters (currently ${value.length})`;
+        }
+        break;
+      case 'authorName':
+        if (value.length > 100) {
+          error = 'Maximum 100 characters';
+        }
+        break;
+      case 'accessibilityText':
+        if (value.length > 500) {
+          error = 'Maximum 500 characters';
+        }
+        break;
+    }
+
+    setErrors(prev => {
+      if (error) {
+        return { ...prev, [name]: error };
+      }
+      // Remove error if valid
+      const { [name]: _, ...rest } = prev;
+      return rest;
+    });
+
+    return !error;
+  };
+
+  // Clear error when field changes
+  const clearError = (name: string) => {
+    setErrors(prev => {
+      const { [name]: _, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  // Auto-save form drafts to localStorage
+  useEffect(() => {
+    // Skip saving if form is empty or just submitted
+    if (!category && !textContent && !authorName) return;
+    if (successMessage) return;
+
+    const draft = {
+      category,
+      textContent,
+      authorName,
+      accessibilityText,
+      savedAt: new Date().toISOString(),
+    };
+
+    try {
+      localStorage.setItem('submissionDraft', JSON.stringify(draft));
+    } catch (e) {
+      // localStorage might be unavailable
+      console.warn('Could not save draft:', e);
+    }
+  }, [category, textContent, authorName, accessibilityText, successMessage]);
+
+  // Check for saved draft on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('submissionDraft');
+      if (saved) {
+        const draft = JSON.parse(saved);
+        // Only show prompt if draft has meaningful content
+        if (draft.textContent || draft.authorName) {
+          setHasSavedDraft(true);
+          setShowDraftPrompt(true);
+        }
+      }
+    } catch (e) {
+      // localStorage might be unavailable
+      console.warn('Could not load draft:', e);
+    }
+  }, []);
+
+  // Restore draft function
+  const restoreDraft = () => {
+    try {
+      const saved = localStorage.getItem('submissionDraft');
+      if (saved) {
+        const draft = JSON.parse(saved);
+        if (draft.category) setCategory(draft.category);
+        if (draft.textContent) setTextContent(draft.textContent);
+        if (draft.authorName) setAuthorName(draft.authorName);
+        if (draft.accessibilityText) setAccessibilityText(draft.accessibilityText);
+        toast.success('Draft restored!');
+      }
+    } catch (e) {
+      toast.error('Could not restore draft');
+    }
+    setShowDraftPrompt(false);
+  };
+
+  // Discard draft function
+  const discardDraft = () => {
+    try {
+      localStorage.removeItem('submissionDraft');
+    } catch (e) {
+      // Ignore errors
+    }
+    setHasSavedDraft(false);
+    setShowDraftPrompt(false);
+  };
+
+  // Clear draft after successful submission
+  const clearDraft = () => {
+    try {
+      localStorage.removeItem('submissionDraft');
+    } catch (e) {
+      // Ignore errors
+    }
+    setHasSavedDraft(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,7 +271,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
         // Step 4: Set success message for banner
         setSuccessMessage('✓ Thank you! Your contribution is being reviewed by our team. You\'ll see it in the next magazine edition once approved!');
 
-        // Step 5: Clear form
+        // Step 5: Clear form and draft
         setCategory('');
         setTextContent('');
         setAuthorName('');
@@ -151,6 +281,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
         setDrawingData('');
         setAudioBlob(null);
         setAudioUrl(null);
+        clearDraft();
 
         // Clear canvas if it exists
         if (canvasRef.current) {
@@ -227,25 +358,60 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
     }
   };
 
+  // Process image file (used by both click and drag)
+  const processImageFile = (file: File) => {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file (JPG, PNG, or GIF)');
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error('Image file is too large. Please select an image under 5MB.');
+      return;
+    }
+
+    // Store the actual file for upload
+    setImageFile(file);
+
+    // Create preview URL for display only
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer?.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file size (5MB limit)
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        toast.error('Image file is too large. Please select an image under 5MB.');
-        return;
-      }
-
-      // Store the actual file for upload
-      setImageFile(file);
-
-      // Create preview URL for display only
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      processImageFile(file);
     }
   };
 
@@ -290,8 +456,33 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
     };
   }, [audioUrl, imagePreview, drawingData]);
 
+  // Save canvas state for undo
+  const saveToUndo = () => {
+    if (!canvasRef.current) return;
+    const ctx = canvasRef.current.getContext('2d');
+    if (ctx) {
+      const imageData = ctx.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height);
+      setUndoStack(prev => [...prev.slice(-10), imageData]); // Keep last 10 states
+    }
+  };
+
+  // Undo last drawing action
+  const undoDrawing = () => {
+    if (undoStack.length === 0 || !canvasRef.current) return;
+
+    const ctx = canvasRef.current.getContext('2d');
+    if (ctx && undoStack.length > 0) {
+      const lastState = undoStack[undoStack.length - 1];
+      ctx.putImageData(lastState, 0, 0);
+      setUndoStack(prev => prev.slice(0, -1));
+    }
+  };
+
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!canvasRef.current) return;
+
+    // Save current state for undo before drawing
+    saveToUndo();
 
     setIsDrawing(true);
     const canvas = canvasRef.current;
@@ -396,8 +587,11 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
                 <h3 className="text-xl font-bold mb-2">
                   Contribution Submitted Successfully!
                 </h3>
-                <p className="mb-4 opacity-95">
-                  Thank you! Your contribution is being reviewed by our team. You&apos;ll see it in the next magazine edition once approved.
+                <p className="mb-2 opacity-95">
+                  Thank you! Your contribution is being reviewed by our team.
+                </p>
+                <p className="mb-4 text-sm opacity-90">
+                  ⏱️ Submissions are typically reviewed within 24-48 hours. You&apos;ll see yours in the next magazine edition once approved!
                 </p>
                 <Button
                   variant="secondary"
@@ -406,6 +600,43 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
                 >
                   ✏️ Submit Another Contribution
                 </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Draft Restore Prompt */}
+      {showDraftPrompt && !successMessage && (
+        <Card className="mb-6 border-primary/30 bg-primary/5">
+          <div className="p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">📝</span>
+              <div className="flex-1">
+                <h3 className="font-semibold text-charcoal mb-1">
+                  Resume your draft?
+                </h3>
+                <p className="text-sm text-dark-gray mb-3">
+                  You have an unsaved draft from your last visit.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={restoreDraft}
+                  >
+                    Restore Draft
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={discardDraft}
+                  >
+                    Start Fresh
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -423,9 +654,10 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
               {categories.map((cat) => (
                 <CategoryCard
                   key={cat.value}
-                  title={cat.label}
+                  label={cat.label}
+                  description={cat.description}
                   icon={categoryIcons[cat.value as keyof typeof categoryIcons]}
-                  active={category === cat.value}
+                  selected={category === cat.value}
                   onClick={() => setCategory(cat.value)}
                 />
               ))}
@@ -440,8 +672,13 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
               label="Your name"
               id="authorName"
               value={authorName}
-              onChange={(e) => setAuthorName(e.target.value)}
+              onChange={(e) => {
+                setAuthorName(e.target.value);
+                if (errors.authorName) clearError('authorName');
+              }}
+              onBlur={() => validateField('authorName', authorName)}
               placeholder="Enter your name (optional)"
+              error={errors.authorName}
             />
             <p className="text-sm text-dark-gray -mt-3 mb-4">
               If left blank, your post will show as &quot;Community Member&quot;
@@ -456,13 +693,18 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
               label="Write your message"
               id="message"
               value={textContent}
-              onChange={(e) => setTextContent(e.target.value)}
+              onChange={(e) => {
+                setTextContent(e.target.value);
+                if (errors.textContent) clearError('textContent');
+              }}
+              onBlur={() => validateField('textContent', textContent)}
               placeholder="Share your story, news, or just say hello..."
               rows={6}
+              error={errors.textContent}
             />
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-dark-gray">
-                {textContent.length} / 500 characters
+              <span className={`text-sm ${textContent.length > 5000 ? 'text-red-500 font-medium' : 'text-dark-gray'}`}>
+                {textContent.length} / 5000 characters
               </span>
             </div>
 
@@ -555,14 +797,28 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
         {/* Image Upload - Note: Using custom implementation to maintain existing functionality */}
         {category && (
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Add a photo (optional)</label>
+            <label className="block text-sm font-medium mb-1">
+              Add a photo (optional)
+              <span className="ml-2 text-xs font-normal text-dark-gray bg-background px-2 py-0.5 rounded-full">
+                Max 5MB
+              </span>
+            </label>
             <div
               onClick={() => document.getElementById('imageInput')?.click()}
-              className="border-2 border-dashed border-light-gray rounded-xl p-6 text-center cursor-pointer bg-background hover:border-primary hover:bg-primary/5 transition-colors"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${
+                isDragging
+                  ? 'border-primary bg-primary/10 scale-[1.02]'
+                  : 'border-light-gray bg-background hover:border-primary hover:bg-primary/5'
+              }`}
             >
-              <p className="text-dark-gray mb-2">📷 Click to add a photo</p>
+              <p className="text-dark-gray mb-2">
+                {isDragging ? '📥 Drop your image here!' : '📷 Click to add a photo'}
+              </p>
               <p className="text-sm text-dark-gray/70">or drag and drop here</p>
-              <p className="text-sm text-dark-gray/70 mt-1">JPG, PNG or GIF (max. 5MB)</p>
+              <p className="text-sm text-dark-gray/70 mt-1">JPG, PNG or GIF</p>
               <input
                 type="file"
                 id="imageInput"
@@ -649,6 +905,16 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
                       aria-label={`Select ${color} color`}
                     />
                   ))}
+                  <Button
+                    type="button"
+                    variant="icon"
+                    onClick={undoDrawing}
+                    disabled={undoStack.length === 0}
+                    icon={<Undo2 className="h-4 w-4" />}
+                    aria-label="Undo last stroke"
+                  >
+                    Undo
+                  </Button>
                   <Button
                     type="button"
                     variant="icon"

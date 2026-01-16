@@ -9,6 +9,7 @@ interface InputProps {
   placeholder?: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   error?: string;
   required?: boolean;
   className?: string;
@@ -21,6 +22,7 @@ export const Input = ({
   placeholder,
   value,
   onChange,
+  onBlur,
   error,
   required = false,
   className = ''
@@ -36,10 +38,21 @@ export const Input = ({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        onBlur={onBlur}
         required={required}
-        className="w-full px-4 py-2 rounded-xl border border-light-gray focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors"
+        className={`w-full px-4 py-2 rounded-xl border focus:ring-2 focus:outline-none transition-colors ${
+          error
+            ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+            : 'border-light-gray focus:border-primary focus:ring-primary/20'
+        }`}
+        aria-invalid={!!error}
+        aria-describedby={error ? `${id}-error` : undefined}
       />
-      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+      {error && (
+        <p id={`${id}-error`} className="mt-1 text-sm text-red-500" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 };
@@ -50,6 +63,7 @@ interface TextAreaProps {
   placeholder?: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLTextAreaElement>) => void;
   error?: string;
   required?: boolean;
   rows?: number;
@@ -62,6 +76,7 @@ export const TextArea = ({
   placeholder,
   value,
   onChange,
+  onBlur,
   error,
   required = false,
   rows = 4,
@@ -77,11 +92,22 @@ export const TextArea = ({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        onBlur={onBlur}
         required={required}
         rows={rows}
-        className="w-full px-4 py-2 rounded-xl border border-light-gray focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-colors"
+        className={`w-full px-4 py-2 rounded-xl border focus:ring-2 focus:outline-none transition-colors resize-none ${
+          error
+            ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+            : 'border-light-gray focus:border-primary focus:ring-primary/20'
+        }`}
+        aria-invalid={!!error}
+        aria-describedby={error ? `${id}-error` : undefined}
       />
-      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+      {error && (
+        <p id={`${id}-error`} className="mt-1 text-sm text-red-500" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 };
