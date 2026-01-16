@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { getAllCategories, SYMBOL_BOARD, getCategoryLabel, getCategoryEmoji } from '@/utils/category-helpers';
+import { getAllCategories, SYMBOL_BOARD, getCategoryLabel, getCategoryColor } from '@/utils/category-helpers';
 import Button from '@/components/ui/Button';
 import Card, { CategoryCard } from '@/components/ui/Card';
 import { Input, TextArea } from '@/components/ui/Input';
@@ -1029,7 +1029,12 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
                 <div className="p-6">
                   {/* Category and Author */}
                   <div className="flex items-center mb-4">
-                    <span className="text-2xl mr-2">{getCategoryEmoji(category)}</span>
+                    <div
+                      className="w-9 h-9 rounded-lg flex items-center justify-center mr-3"
+                      style={{ backgroundColor: `${getCategoryColor(category)}15`, color: getCategoryColor(category) }}
+                    >
+                      {categoryIcons[category as keyof typeof categoryIcons] || <Newspaper className="h-5 w-5" />}
+                    </div>
                     <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium mr-3">
                       {getCategoryLabel(category)}
                     </span>

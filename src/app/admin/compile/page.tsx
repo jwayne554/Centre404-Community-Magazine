@@ -2,12 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCategoryEmoji, getCategoryColor, getCategoryLabel } from '@/utils/category-helpers';
+import { getCategoryColor, getCategoryLabel } from '@/utils/category-helpers';
 import Layout from '@/components/ui/Layout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
-import { ArrowLeft, Plus, Save, Globe, ArrowUp, ArrowDown, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Globe, ArrowUp, ArrowDown, X, Loader2, Newspaper, Hand, MessageCircle } from 'lucide-react';
+
+// Category icons mapping
+const categoryIcons: Record<string, React.ReactNode> = {
+  MY_NEWS: <Newspaper className="h-5 w-5" />,
+  SAYING_HELLO: <Hand className="h-5 w-5" />,
+  MY_SAY: <MessageCircle className="h-5 w-5" />,
+};
 
 interface Submission {
   id: string;
@@ -267,9 +274,12 @@ export default function MagazineCompiler() {
                       style={{ borderLeft: `5px solid ${categoryColor}` }}
                     >
                       <div className="flex items-start gap-3 mb-3">
-                        <span className="text-3xl">
-                          {getCategoryEmoji(submission.category)}
-                        </span>
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: `${categoryColor}15`, color: categoryColor }}
+                        >
+                          {categoryIcons[submission.category] || <Newspaper className="h-5 w-5" />}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-bold mb-1">
                             {getCategoryLabel(submission.category)}
@@ -355,9 +365,12 @@ export default function MagazineCompiler() {
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <span className="text-2xl">
-                              {getCategoryEmoji(submission.category)}
-                            </span>
+                            <div
+                              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                              style={{ backgroundColor: `${categoryColor}15`, color: categoryColor }}
+                            >
+                              {categoryIcons[submission.category] || <Newspaper className="h-4 w-4" />}
+                            </div>
                             <span
                               className="text-white px-2 py-0.5 rounded-full text-xs font-bold"
                               style={{ backgroundColor: categoryColor }}

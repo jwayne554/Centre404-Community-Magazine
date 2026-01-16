@@ -4,9 +4,16 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import LikeButton from '@/components/ui/LikeButton';
 import TTSButton from '@/components/ui/TTSButton';
-import { Volume2, Plus, Calendar } from 'lucide-react';
+import { Volume2, Plus, Calendar, Newspaper, Hand, MessageCircle } from 'lucide-react';
 // Note: Button and Plus are used in footer CTA, Volume2 in audio player
-import { getCategoryEmoji, getCategoryLabel } from '@/utils/category-helpers';
+import { getCategoryLabel, getCategoryColor } from '@/utils/category-helpers';
+
+// Category icons mapping (matches submission form)
+const categoryIcons: Record<string, React.ReactNode> = {
+  MY_NEWS: <Newspaper className="h-5 w-5" />,
+  SAYING_HELLO: <Hand className="h-5 w-5" />,
+  MY_SAY: <MessageCircle className="h-5 w-5" />,
+};
 
 interface MagazineItem {
   id: string;
@@ -70,14 +77,20 @@ export default function MagazineContent({ magazine, likeCounts }: MagazineConten
           {magazine.items.map((item) => {
             const submission = item.submission;
             const author = submission.user?.name || 'Anonymous';
-            const categoryEmoji = getCategoryEmoji(submission.category);
+            const categoryIcon = categoryIcons[submission.category] || <Newspaper className="h-5 w-5" />;
+            const categoryColor = getCategoryColor(submission.category);
 
             return (
               <Card key={item.id} className="overflow-hidden">
                 <div className="p-6">
                   {/* Category and Author */}
                   <div className="flex items-center mb-4">
-                    <span className="text-2xl mr-2">{categoryEmoji}</span>
+                    <div
+                      className="w-9 h-9 rounded-lg flex items-center justify-center mr-3"
+                      style={{ backgroundColor: `${categoryColor}15`, color: categoryColor }}
+                    >
+                      {categoryIcon}
+                    </div>
                     <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium mr-3">
                       {getCategoryLabel(submission.category)}
                     </span>
