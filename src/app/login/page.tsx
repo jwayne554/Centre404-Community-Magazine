@@ -2,7 +2,11 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
+import Button from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { LockKeyhole, ArrowLeft, AlertCircle, Info } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,42 +20,22 @@ export default function LoginPage() {
 
     const success = await login(email, password, rememberMe);
     if (success) {
-      // Redirect to admin dashboard on successful login
       router.push('/admin');
     }
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '20px'
-    }}>
-      <div style={{
-        background: 'white',
-        borderRadius: '12px',
-        boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-        padding: '40px',
-        maxWidth: '400px',
-        width: '100%'
-      }}>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary to-primary/80 p-4 sm:p-6">
+      <div className="bg-white rounded-xl shadow-modal p-6 sm:p-10 max-w-md w-full">
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <h1 style={{
-            fontSize: '28px',
-            fontWeight: 'bold',
-            color: '#2c3e50',
-            marginBottom: '10px'
-          }}>
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-4">
+            <LockKeyhole className="h-8 w-8 text-primary" />
+          </div>
+          <h1 className="text-display text-2xl sm:text-3xl font-bold text-charcoal mb-2">
             Admin Login
           </h1>
-          <p style={{
-            fontSize: '14px',
-            color: '#7f8c8d'
-          }}>
+          <p className="text-small text-dark-gray">
             Centre404 Community Magazine
           </p>
         </div>
@@ -61,228 +45,92 @@ export default function LoginPage() {
           <div
             role="alert"
             aria-live="polite"
-            style={{
-              background: '#fee',
-              border: '1px solid #fcc',
-              borderRadius: '6px',
-              padding: '12px',
-              marginBottom: '20px',
-              color: '#c33'
-            }}
+            className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4 mb-6"
           >
-            <strong>Error:</strong> {error}
+            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-red-800">Login Failed</p>
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
           </div>
         )}
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Email Field */}
-          <div style={{ marginBottom: '20px' }}>
-            <label
-              htmlFor="email"
-              style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: '600',
-                color: '#2c3e50',
-                fontSize: '14px'
-              }}
-            >
-              Email Address
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              disabled={isLoading}
-              placeholder="admin@test.com"
-              style={{
-                width: '100%',
-                padding: '12px',
-                fontSize: '16px',
-                border: '2px solid #ddd',
-                borderRadius: '6px',
-                outline: 'none',
-                transition: 'border-color 0.2s',
-                opacity: isLoading ? 0.6 : 1
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#667eea';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#ddd';
-              }}
-            />
-          </div>
+          <Input
+            id="email"
+            label="Email Address"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="admin@test.com"
+            required
+            className="mb-0"
+          />
 
           {/* Password Field */}
-          <div style={{ marginBottom: '24px' }}>
-            <label
-              htmlFor="password"
-              style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: '600',
-                color: '#2c3e50',
-                fontSize: '14px'
-              }}
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              disabled={isLoading}
-              placeholder="Enter your password"
-              style={{
-                width: '100%',
-                padding: '12px',
-                fontSize: '16px',
-                border: '2px solid #ddd',
-                borderRadius: '6px',
-                outline: 'none',
-                transition: 'border-color 0.2s',
-                opacity: isLoading ? 0.6 : 1
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#667eea';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#ddd';
-              }}
-            />
-          </div>
+          <Input
+            id="password"
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+            required
+            className="mb-0"
+          />
 
           {/* Remember Me Checkbox */}
-          <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <label className="flex items-center gap-3 cursor-pointer select-none">
             <input
-              id="rememberMe"
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
               disabled={isLoading}
-              style={{
-                width: '18px',
-                height: '18px',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                opacity: isLoading ? 0.6 : 1
-              }}
+              className="w-5 h-5 rounded border-light-gray text-primary focus:ring-primary focus:ring-2 cursor-pointer disabled:opacity-50"
             />
-            <label
-              htmlFor="rememberMe"
-              style={{
-                fontSize: '14px',
-                color: '#2c3e50',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                userSelect: 'none',
-                opacity: isLoading ? 0.6 : 1
-              }}
-            >
-              Remember me for 30 days (instead of 7 days)
-            </label>
-          </div>
+            <span className="text-sm text-charcoal">
+              Remember me for 30 days
+            </span>
+          </label>
 
           {/* Submit Button */}
-          <button
+          <Button
             type="submit"
-            disabled={isLoading}
-            style={{
-              width: '100%',
-              padding: '14px',
-              fontSize: '16px',
-              fontWeight: '600',
-              color: 'white',
-              background: isLoading ? '#95a5a6' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              transition: 'transform 0.1s, opacity 0.2s',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px'
-            }}
-            onMouseEnter={(e) => {
-              if (!isLoading) {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
+            variant="primary"
+            size="lg"
+            loading={isLoading}
+            loadingText="Logging in..."
+            className="w-full"
           >
-            {isLoading ? (
-              <>
-                <span style={{
-                  display: 'inline-block',
-                  width: '16px',
-                  height: '16px',
-                  border: '2px solid white',
-                  borderTopColor: 'transparent',
-                  borderRadius: '50%',
-                  animation: 'spin 0.6s linear infinite'
-                }} />
-                Logging in...
-              </>
-            ) : (
-              'Login'
-            )}
-          </button>
+            Login
+          </Button>
         </form>
 
         {/* Test Account Info */}
-        <div style={{
-          marginTop: '24px',
-          padding: '16px',
-          background: '#f8f9fa',
-          borderRadius: '6px',
-          fontSize: '13px',
-          color: '#6c757d'
-        }}>
-          <strong style={{ display: 'block', marginBottom: '8px', color: '#495057' }}>
-            Test Account:
-          </strong>
-          <div>Email: admin@test.com</div>
-          <div>Password: password123</div>
+        <div className="mt-6 p-4 bg-background rounded-xl border border-light-gray">
+          <div className="flex items-start gap-2">
+            <Info className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-charcoal mb-1">Test Account</p>
+              <p className="text-xs text-dark-gray">Email: admin@test.com</p>
+              <p className="text-xs text-dark-gray">Password: password123</p>
+            </div>
+          </div>
         </div>
 
         {/* Home Link */}
-        <div style={{ marginTop: '20px', textAlign: 'center' }}>
-          <a
+        <div className="mt-6 text-center">
+          <Link
             href="/"
-            style={{
-              color: '#667eea',
-              textDecoration: 'none',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.textDecoration = 'underline';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.textDecoration = 'none';
-            }}
+            className="inline-flex items-center gap-2 text-primary hover:text-primary/80 text-sm font-medium transition-colors"
           >
-            ← Back to Home
-          </a>
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
+          </Link>
         </div>
       </div>
-
-      {/* Spinner Animation */}
-      <style jsx>{`
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
     </div>
   );
 }

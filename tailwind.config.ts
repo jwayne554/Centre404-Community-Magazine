@@ -32,11 +32,31 @@ const config: Config = {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
+      // P4-2: Type Scale Definition
+      fontSize: {
+        'display': ['3rem', { lineHeight: '1.1', fontWeight: '700' }],
+        'heading': ['1.5rem', { lineHeight: '1.25', fontWeight: '600' }],
+        'body': ['1rem', { lineHeight: '1.5', fontWeight: '400' }],
+        'small': ['0.875rem', { lineHeight: '1.4', fontWeight: '400' }],
+      },
       borderRadius: {
         xl: '12px',
       },
+      // P4-3: Consistent Shadow Scale
       boxShadow: {
-        card: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+        'sm': '0 1px 2px rgba(0, 0, 0, 0.05)',
+        'card': '0 4px 6px rgba(0, 0, 0, 0.07)',
+        'lg': '0 10px 15px rgba(0, 0, 0, 0.1)',
+        'modal': '0 25px 50px rgba(0, 0, 0, 0.25)',
+      },
+      // P4-6: Consistent Spacing Scale (documentation)
+      // xs: 4px (p-1), sm: 8px (p-2), md: 16px (p-4), lg: 24px (p-6), xl: 32px (p-8)
+      spacing: {
+        'xs': '4px',   // p-1 equivalent
+        'sm': '8px',   // p-2 equivalent
+        'md': '16px',  // p-4 equivalent
+        'lg': '24px',  // p-6 equivalent
+        'xl': '32px',  // p-8 equivalent
       },
     },
   },

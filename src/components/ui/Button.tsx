@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 
 interface ButtonProps {
   children?: React.ReactNode;
@@ -11,6 +12,9 @@ interface ButtonProps {
   type?: 'button' | 'submit' | 'reset';
   disabled?: boolean;
   icon?: React.ReactNode;
+  // P4-4: Loading state
+  loading?: boolean;
+  loadingText?: string;
   // Accessibility props
   'aria-label'?: string;
   'aria-pressed'?: boolean;
@@ -26,10 +30,13 @@ const Button = ({
   type = 'button',
   disabled = false,
   icon,
+  loading = false,
+  loadingText,
   'aria-label': ariaLabel,
   'aria-pressed': ariaPressed,
   'aria-describedby': ariaDescribedby,
 }: ButtonProps) => {
+  const isDisabled = disabled || loading;
   // WCAG 2.1 AA requires 44x44px minimum touch targets
   const baseStyles = 'rounded-xl font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] inline-flex items-center justify-center';
 
@@ -52,13 +59,23 @@ const Button = ({
       type={type}
       className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
       onClick={onClick}
-      disabled={disabled}
+      disabled={isDisabled}
       aria-label={ariaLabel}
       aria-pressed={ariaPressed}
       aria-describedby={ariaDescribedby}
+      aria-busy={loading}
     >
-      {icon && <span className={children ? 'mr-2 inline-flex items-center' : 'inline-flex items-center'}>{icon}</span>}
-      {children}
+      {loading ? (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin mr-2" aria-hidden="true" />
+          {loadingText || children}
+        </>
+      ) : (
+        <>
+          {icon && <span className={children ? 'mr-2 inline-flex items-center' : 'inline-flex items-center'}>{icon}</span>}
+          {children}
+        </>
+      )}
     </button>
   );
 };
