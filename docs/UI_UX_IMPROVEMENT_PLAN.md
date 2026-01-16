@@ -766,13 +766,16 @@ className="bg-white dark:bg-gray-900 text-charcoal dark:text-white"
 - [x] Category cards grid responsive
 - [x] Magazine images aspect ratio
 
-### Phase 3: Form UX (1-2 weeks)
-- [ ] Auto-save drafts
-- [ ] Real-time validation
-- [ ] File size indication
-- [ ] Category descriptions
-- [ ] Preview before submit
-- [ ] Drag & drop upload
+### Phase 3: Form UX ✅ COMPLETED (January 16, 2026)
+- [x] Auto-save drafts with restore prompt
+- [x] Real-time validation on blur
+- [x] File size indication (prominent badge)
+- [x] Category descriptions in cards
+- [x] Drag & drop image upload
+- [x] Drawing tool undo (10 levels)
+- [x] Estimated review time (24-48 hours)
+- [ ] Preview before submit (deferred)
+- [ ] My Submissions page (deferred)
 
 ### Phase 4: Admin Efficiency (2 weeks)
 - [ ] Bulk actions
