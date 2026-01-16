@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { rateLimit } from '@/lib/rate-limit';
+import { requireModerator } from '@/lib/api-auth';
 import { SubmissionStatus, SubmissionCategory } from '@prisma/client';
 import { handleApiError } from '@/lib/api-errors';
 import { SubmissionService } from '@/services/submission.service';
@@ -17,11 +18,17 @@ const createSubmissionSchema = z.object({
   userName: z.string().nullable().optional(), // Optional display name for anonymous users
 });
 
-// GET /api/submissions - Get all submissions (with filters)
+// GET /api/submissions - Get all submissions (with filters) - ADMIN/MODERATOR only
 export async function GET(request: NextRequest) {
   const logger = new RequestLogger(request);
 
   try {
+    // Require ADMIN or MODERATOR role to view submissions
+    const authResult = await requireModerator(request);
+    if ('error' in authResult) {
+      return authResult.error;
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status'); // Don't default - let admin see all
     const category = searchParams.get('category');

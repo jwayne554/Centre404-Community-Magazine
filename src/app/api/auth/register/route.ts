@@ -8,7 +8,8 @@ const registerSchema = z.object({
   email: z.string().email().optional(),
   name: z.string().min(2).max(100),
   password: z.string().min(6).max(100).optional(),
-  role: z.enum(['CONTRIBUTOR', 'ADMIN', 'MODERATOR']).default('CONTRIBUTOR'),
+  // Note: role is NOT accepted from user input - always defaults to CONTRIBUTOR
+  // Admin/Moderator roles must be assigned manually in database or by existing admin
 });
 
 export async function POST(request: NextRequest) {
@@ -42,13 +43,13 @@ export async function POST(request: NextRequest) {
       hashedPassword = await AuthService.hashPassword(validatedData.password);
     }
 
-    // Create user
+    // Create user - always as CONTRIBUTOR (security: prevent role escalation)
     const user = await prisma.user.create({
       data: {
         email: validatedData.email || null,
         name: validatedData.name,
         password: hashedPassword,
-        role: validatedData.role,
+        role: 'CONTRIBUTOR',  // Hardcoded - users cannot self-assign elevated roles
       },
       select: {
         id: true,
