@@ -782,6 +782,8 @@ function AdminDashboardContent() {
                   hasImage={!!submission.mediaUrl}
                   imageUrl={submission.mediaUrl}
                   hasDrawing={!!submission.drawingData}
+                  drawingData={submission.drawingData}
+                  contentType={submission.contentType}
                   onViewFull={() => setSelectedSubmission(submission)}
                   selectable={true}
                   selected={selectedIds.has(submission.id)}

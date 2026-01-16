@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { getCategoryLabel, getCategoryColor } from '@/utils/category-helpers';
-import { CheckCircle, Clock, XCircle, Newspaper, Hand, MessageCircle, ImageIcon, Palette } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, Newspaper, Hand, MessageCircle, Mic } from 'lucide-react';
 
 // Category icons mapping (matches submission form)
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -21,6 +22,8 @@ interface SubmissionItemProps {
   hasImage?: boolean;
   imageUrl?: string | null;
   hasDrawing?: boolean;
+  drawingData?: string | null;
+  contentType?: string;
   onViewFull: () => void;
   // Bulk selection props
   selectable?: boolean;
@@ -36,7 +39,10 @@ const SubmissionItem = ({
   content,
   status,
   hasImage,
+  imageUrl,
   hasDrawing,
+  drawingData,
+  contentType,
   onViewFull,
   selectable = false,
   selected = false,
@@ -67,6 +73,10 @@ const SubmissionItem = ({
   const categoryIcon = categoryIcons[category] || <Newspaper className="h-4 w-4" />;
   const categoryColor = getCategoryColor(category);
 
+  // Check if media is audio (not image)
+  const isAudio = contentType === 'AUDIO' || (imageUrl && imageUrl.endsWith('.webm'));
+  const hasImagePreview = hasImage && imageUrl && !isAudio;
+
   // Shorter date format
   const formatDate = (dateString: string) => {
     const d = new Date(dateString);
@@ -86,7 +96,7 @@ const SubmissionItem = ({
     <div
       onClick={handleCardClick}
       className={`
-        bg-white border rounded-lg p-4 mb-2 cursor-pointer
+        bg-white border rounded-lg p-3 mb-2 cursor-pointer
         transition-all duration-150
         hover:border-primary/30 hover:shadow-sm
         ${selected ? 'ring-2 ring-primary border-primary bg-primary/5' : 'border-light-gray'}
@@ -146,22 +156,42 @@ const SubmissionItem = ({
           )}
         </div>
 
-        {/* Media indicators */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          {hasImage && (
-            <div className="w-6 h-6 rounded bg-blue-50 flex items-center justify-center" title="Has image">
-              <ImageIcon className="h-3.5 w-3.5 text-blue-500" />
+        {/* Media thumbnails */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Image thumbnail */}
+          {hasImagePreview && (
+            <div className="w-10 h-10 rounded-md overflow-hidden border border-light-gray flex-shrink-0">
+              <Image
+                src={imageUrl}
+                alt=""
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+              />
             </div>
           )}
-          {hasDrawing && (
-            <div className="w-6 h-6 rounded bg-purple-50 flex items-center justify-center" title="Has drawing">
-              <Palette className="h-3.5 w-3.5 text-purple-500" />
+
+          {/* Drawing thumbnail */}
+          {hasDrawing && drawingData && (
+            <div className="w-10 h-10 rounded-md overflow-hidden border border-purple-200 bg-purple-50 flex-shrink-0">
+              <img
+                src={drawingData}
+                alt=""
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
+          {/* Audio indicator */}
+          {isAudio && (
+            <div className="w-10 h-10 rounded-md bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0">
+              <Mic className="h-4 w-4 text-blue-500" />
             </div>
           )}
         </div>
 
         {/* Date */}
-        <span className="text-dark-gray text-xs flex-shrink-0 w-14 text-right">
+        <span className="text-dark-gray text-xs flex-shrink-0 w-12 text-right">
           {formatDate(date)}
         </span>
 
