@@ -18,9 +18,14 @@ interface SubmissionItemProps {
   imageUrl?: string | null;
   hasDrawing?: boolean;
   onViewFull: () => void;
+  // Bulk selection props
+  selectable?: boolean;
+  selected?: boolean;
+  onSelect?: (id: string, selected: boolean) => void;
 }
 
 const SubmissionItem = ({
+  id,
   category,
   author,
   date,
@@ -29,7 +34,10 @@ const SubmissionItem = ({
   hasImage,
   imageUrl,
   hasDrawing,
-  onViewFull
+  onViewFull,
+  selectable = false,
+  selected = false,
+  onSelect
 }: SubmissionItemProps) => {
   const statusConfig = {
     APPROVED: {
@@ -69,9 +77,33 @@ const SubmissionItem = ({
   };
 
   return (
-    <Card className="p-5 mb-4 hover:shadow-lg transition-shadow">
+    <Card className={`p-5 mb-4 hover:shadow-lg transition-shadow ${selected ? 'ring-2 ring-primary bg-primary/5' : ''}`}>
       <div className="flex items-start justify-between gap-4 mb-4">
         <div className="flex items-start gap-4 flex-1">
+          {/* Checkbox for bulk selection */}
+          {selectable && (
+            <label className="flex-shrink-0 relative flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selected}
+                onChange={(e) => onSelect?.(id, e.target.checked)}
+                className="sr-only peer"
+                aria-label={`Select submission by ${author}`}
+              />
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors
+                ${selected
+                  ? 'bg-primary border-primary'
+                  : 'border-dark-gray/40 peer-hover:border-primary/60 peer-focus:ring-2 peer-focus:ring-primary/20'
+                }`}
+              >
+                {selected && (
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+            </label>
+          )}
           <div className="text-4xl flex-shrink-0">
             {categoryEmoji}
           </div>

@@ -24,6 +24,13 @@ import {
   BookOpen,
   Check,
   X,
+  Search,
+  SlidersHorizontal,
+  ArrowUpDown,
+  AlertTriangle,
+  History,
+  Eye,
+  Keyboard,
 } from 'lucide-react';
 
 interface Submission {
@@ -51,6 +58,33 @@ function AdminDashboardContent() {
   const [selectedTab, setSelectedTab] = useState<'APPROVED' | 'PENDING' | 'REJECTED'>('PENDING');
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // P3-1: Bulk selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+
+  // P3-2: Search & filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
+
+  // P3-3 & P3-4: Confirmation dialog & rejection reason
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    action: 'approve' | 'reject' | 'bulk-approve' | 'bulk-reject';
+    submissionId?: string;
+  } | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+
+  // P3-5: Magazine preview
+  const [showMagazinePreview, setShowMagazinePreview] = useState(false);
+
+  // P3-6: Keyboard shortcuts help
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
+  // P3-7: Sorting
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'category' | 'author'>('newest');
 
   // Modal ref for focus trap
   const modalRef = useRef<HTMLDivElement>(null);
@@ -109,10 +143,42 @@ function AdminDashboardContent() {
     }
   }, [selectedSubmission, closeModal]);
 
-  // Memoize filtered submissions
+  // Memoize filtered, searched, and sorted submissions
   const submissions = useMemo(() => {
-    return allSubmissions.filter(s => s.status === selectedTab);
-  }, [selectedTab, allSubmissions]);
+    let filtered = allSubmissions.filter(s => s.status === selectedTab);
+
+    // P3-2: Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(s =>
+        (s.user?.name || 'anonymous').toLowerCase().includes(query) ||
+        (s.textContent || '').toLowerCase().includes(query)
+      );
+    }
+
+    // P3-2: Apply category filter
+    if (categoryFilter) {
+      filtered = filtered.filter(s => s.category === categoryFilter);
+    }
+
+    // P3-7: Apply sorting
+    filtered = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime();
+        case 'oldest':
+          return new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime();
+        case 'category':
+          return a.category.localeCompare(b.category);
+        case 'author':
+          return (a.user?.name || 'Anonymous').localeCompare(b.user?.name || 'Anonymous');
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [selectedTab, allSubmissions, searchQuery, categoryFilter, sortBy]);
 
   // Calculate stats
   const stats = useMemo(() => ({
@@ -199,6 +265,165 @@ function AdminDashboardContent() {
     router.push('/login');
   };
 
+  // P3-1: Bulk selection handlers
+  const handleSelectSubmission = (id: string, selected: boolean) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (selected) {
+        newSet.add(id);
+      } else {
+        newSet.delete(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.size === submissions.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(submissions.map(s => s.id)));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+  };
+
+  // P3-1: Bulk action handlers
+  const handleBulkAction = async (status: 'APPROVED' | 'REJECTED') => {
+    setBulkActionLoading(true);
+    const ids = Array.from(selectedIds);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const id of ids) {
+      try {
+        const response = await fetch(`/api/submissions/${id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ status, reason: status === 'REJECTED' ? rejectReason : undefined }),
+        });
+        if (response.ok) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      } catch {
+        failCount++;
+      }
+    }
+
+    await fetchAllSubmissions();
+    clearSelection();
+    setConfirmDialog(null);
+    setRejectReason('');
+    setBulkActionLoading(false);
+
+    if (failCount === 0) {
+      toast.success(`${successCount} submission${successCount > 1 ? 's' : ''} ${status.toLowerCase()} successfully!`);
+    } else {
+      toast.error(`${successCount} succeeded, ${failCount} failed`);
+    }
+  };
+
+  // P3-3: Confirmation dialog handlers
+  const showConfirmDialog = (action: 'approve' | 'reject' | 'bulk-approve' | 'bulk-reject', submissionId?: string) => {
+    const isBulk = action.startsWith('bulk-');
+    const isReject = action.includes('reject');
+
+    setConfirmDialog({
+      isOpen: true,
+      title: isReject ? 'Confirm Rejection' : 'Confirm Approval',
+      message: isBulk
+        ? `Are you sure you want to ${isReject ? 'reject' : 'approve'} ${selectedIds.size} submission${selectedIds.size > 1 ? 's' : ''}?`
+        : `Are you sure you want to ${isReject ? 'reject' : 'approve'} this submission?`,
+      action,
+      submissionId,
+    });
+  };
+
+  const handleConfirmAction = async () => {
+    if (!confirmDialog) return;
+
+    if (confirmDialog.action === 'bulk-approve') {
+      await handleBulkAction('APPROVED');
+    } else if (confirmDialog.action === 'bulk-reject') {
+      await handleBulkAction('REJECTED');
+    } else if (confirmDialog.submissionId) {
+      const status = confirmDialog.action === 'approve' ? 'APPROVED' : 'REJECTED';
+      await updateSubmissionStatus(confirmDialog.submissionId, status);
+      setConfirmDialog(null);
+      setRejectReason('');
+    }
+  };
+
+  // P3-6: Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts when typing in inputs
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // Show shortcuts help with ?
+      if (e.key === '?' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setShowShortcuts(prev => !prev);
+        return;
+      }
+
+      // Close shortcuts with Escape
+      if (e.key === 'Escape' && showShortcuts) {
+        setShowShortcuts(false);
+        return;
+      }
+
+      // Shortcuts when modal is open
+      if (selectedSubmission) {
+        if (e.key === 'a' && (e.metaKey || e.ctrlKey)) {
+          e.preventDefault();
+          if (selectedSubmission.status !== 'APPROVED') {
+            showConfirmDialog('approve', selectedSubmission.id);
+          }
+        }
+        if (e.key === 'r' && (e.metaKey || e.ctrlKey)) {
+          e.preventDefault();
+          if (selectedSubmission.status !== 'REJECTED') {
+            showConfirmDialog('reject', selectedSubmission.id);
+          }
+        }
+      }
+
+      // Shortcuts for bulk actions
+      if (selectedIds.size > 0 && !selectedSubmission) {
+        if (e.key === 'a' && (e.metaKey || e.ctrlKey)) {
+          e.preventDefault();
+          showConfirmDialog('bulk-approve');
+        }
+        if (e.key === 'r' && (e.metaKey || e.ctrlKey)) {
+          e.preventDefault();
+          showConfirmDialog('bulk-reject');
+        }
+      }
+
+      // Refresh with Cmd+Shift+R
+      if (e.key === 'r' && e.shiftKey && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        fetchAllSubmissions();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedSubmission, selectedIds, showShortcuts]);
+
+  // Clear selection when tab changes
+  useEffect(() => {
+    clearSelection();
+  }, [selectedTab]);
+
   return (
     <div className="pb-8">
       {/* Header Section - Green Gradient */}
@@ -274,6 +499,16 @@ function AdminDashboardContent() {
           >
             Compile Magazine
           </Button>
+          <Button
+            variant="outline"
+            icon={<Keyboard className="h-4 w-4" />}
+            onClick={() => setShowShortcuts(true)}
+            className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40"
+            aria-label="Keyboard shortcuts"
+          >
+            <span className="hidden sm:inline">Shortcuts</span>
+            <span className="sm:hidden">?</span>
+          </Button>
         </div>
       </div>
 
@@ -307,6 +542,132 @@ function AdminDashboardContent() {
           variant="rejected"
         />
       </div>
+
+      {/* P3-2: Search and Filters */}
+      <div className="bg-white rounded-xl shadow-card border border-light-gray p-4 mb-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-gray" />
+            <input
+              type="text"
+              placeholder="Search by author or content..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-light-gray focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-colors"
+              aria-label="Search submissions"
+            />
+          </div>
+
+          {/* Category Filter */}
+          <div className="relative">
+            <SlidersHorizontal className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-gray pointer-events-none" />
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="pl-10 pr-8 py-2.5 rounded-lg border border-light-gray focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none appearance-none bg-white cursor-pointer min-w-[160px]"
+              aria-label="Filter by category"
+            >
+              <option value="">All Categories</option>
+              <option value="MY_NEWS">My News</option>
+              <option value="SAYING_HELLO">Saying Hello</option>
+              <option value="MY_SAY">My Say</option>
+            </select>
+            <ArrowUpDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-gray pointer-events-none" />
+          </div>
+
+          {/* P3-7: Sort Dropdown */}
+          <div className="relative">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              className="pl-4 pr-8 py-2.5 rounded-lg border border-light-gray focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none appearance-none bg-white cursor-pointer min-w-[140px]"
+              aria-label="Sort submissions"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="category">By Category</option>
+              <option value="author">By Author</option>
+            </select>
+            <ArrowUpDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-gray pointer-events-none" />
+          </div>
+        </div>
+
+        {/* Active filters indicator */}
+        {(searchQuery || categoryFilter) && (
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-light-gray">
+            <span className="text-sm text-dark-gray">Active filters:</span>
+            {searchQuery && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs">
+                Search: &quot;{searchQuery}&quot;
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="hover:bg-primary/20 rounded-full p-0.5"
+                  aria-label="Clear search"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+            {categoryFilter && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs">
+                {getCategoryLabel(categoryFilter)}
+                <button
+                  onClick={() => setCategoryFilter('')}
+                  className="hover:bg-primary/20 rounded-full p-0.5"
+                  aria-label="Clear category filter"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+            <button
+              onClick={() => { setSearchQuery(''); setCategoryFilter(''); }}
+              className="text-xs text-dark-gray hover:text-primary ml-auto"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* P3-1: Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="font-medium text-primary">
+              {selectedIds.size} submission{selectedIds.size > 1 ? 's' : ''} selected
+            </span>
+            <button
+              onClick={clearSelection}
+              className="text-sm text-dark-gray hover:text-primary"
+            >
+              Clear selection
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Check className="h-4 w-4" />}
+              onClick={() => showConfirmDialog('bulk-approve')}
+              disabled={bulkActionLoading}
+            >
+              Approve All
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<X className="h-4 w-4" />}
+              onClick={() => showConfirmDialog('bulk-reject')}
+              disabled={bulkActionLoading}
+              className="text-red-600 border-red-600 hover:bg-red-50"
+            >
+              Reject All
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Tabs and Submissions List */}
       <div className="bg-white rounded-xl shadow-card border border-light-gray mb-6">
@@ -355,15 +716,29 @@ function AdminDashboardContent() {
 
         {/* Submissions List */}
         <div className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            {selectedTab === 'APPROVED' && <CheckCircle className="h-6 w-6 text-primary" />}
-            {selectedTab === 'PENDING' && <Clock className="h-6 w-6 text-yellow-600" />}
-            {selectedTab === 'REJECTED' && <XCircle className="h-6 w-6 text-red-600" />}
-            <h2 className="text-xl font-semibold text-charcoal">
-              {selectedTab === 'APPROVED' && 'Approved Submissions'}
-              {selectedTab === 'PENDING' && 'Pending Review'}
-              {selectedTab === 'REJECTED' && 'Rejected Submissions'}
-            </h2>
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-3">
+              {selectedTab === 'APPROVED' && <CheckCircle className="h-6 w-6 text-primary" />}
+              {selectedTab === 'PENDING' && <Clock className="h-6 w-6 text-yellow-600" />}
+              {selectedTab === 'REJECTED' && <XCircle className="h-6 w-6 text-red-600" />}
+              <h2 className="text-xl font-semibold text-charcoal">
+                {selectedTab === 'APPROVED' && 'Approved Submissions'}
+                {selectedTab === 'PENDING' && 'Pending Review'}
+                {selectedTab === 'REJECTED' && 'Rejected Submissions'}
+              </h2>
+            </div>
+            {/* Select All checkbox */}
+            {submissions.length > 0 && (
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-dark-gray hover:text-primary">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size === submissions.length && submissions.length > 0}
+                  onChange={handleSelectAll}
+                  className="w-4 h-4 rounded border-dark-gray/40 text-primary focus:ring-primary"
+                />
+                Select All ({submissions.length})
+              </label>
+            )}
           </div>
           <p className="text-dark-gray mb-6 text-sm leading-relaxed">
             {selectedTab === 'APPROVED' && 'These submissions are ready to be compiled into magazines'}
@@ -391,6 +766,9 @@ function AdminDashboardContent() {
                   imageUrl={submission.mediaUrl}
                   hasDrawing={!!submission.drawingData}
                   onViewFull={() => setSelectedSubmission(submission)}
+                  selectable={true}
+                  selected={selectedIds.has(submission.id)}
+                  onSelect={handleSelectSubmission}
                 />
               ))}
             </div>
@@ -539,11 +917,32 @@ function AdminDashboardContent() {
 
             {/* Sticky action buttons */}
             <div className="p-4 sm:p-6 border-t border-light-gray bg-white flex-shrink-0">
+              {/* P3-5: Preview and P3-8: History links */}
+              <div className="flex gap-2 mb-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={<Eye className="h-4 w-4" />}
+                  onClick={() => setShowMagazinePreview(true)}
+                  className="flex-1"
+                >
+                  Preview in Magazine
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={<History className="h-4 w-4" />}
+                  onClick={() => toast.info('Audit log feature coming soon')}
+                  className="flex-1"
+                >
+                  View History
+                </Button>
+              </div>
               <div className="flex gap-3">
                 <Button
                   variant="primary"
                   icon={<Check className="h-4 w-4" />}
-                  onClick={() => updateSubmissionStatus(selectedSubmission.id, 'APPROVED')}
+                  onClick={() => showConfirmDialog('approve', selectedSubmission.id)}
                   disabled={actionLoading || selectedSubmission.status === 'APPROVED'}
                   className="flex-1"
                 >
@@ -552,13 +951,222 @@ function AdminDashboardContent() {
                 <Button
                   variant="outline"
                   icon={<X className="h-4 w-4" />}
-                  onClick={() => updateSubmissionStatus(selectedSubmission.id, 'REJECTED')}
+                  onClick={() => showConfirmDialog('reject', selectedSubmission.id)}
                   disabled={actionLoading || selectedSubmission.status === 'REJECTED'}
                   className="flex-1 text-red-600 border-red-600 hover:bg-red-50"
                 >
                   Reject
                 </Button>
               </div>
+              {/* Keyboard shortcut hint */}
+              <p className="text-xs text-dark-gray text-center mt-2">
+                Press <kbd className="px-1 py-0.5 bg-background rounded text-xs">⌘A</kbd> to approve or <kbd className="px-1 py-0.5 bg-background rounded text-xs">⌘R</kbd> to reject
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* P3-3 & P3-4: Confirmation Dialog */}
+      {confirmDialog?.isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="confirm-title"
+          aria-describedby="confirm-desc"
+        >
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-start gap-4 mb-4">
+              <div className={`p-2 rounded-full ${confirmDialog.action.includes('reject') ? 'bg-red-100' : 'bg-primary/10'}`}>
+                <AlertTriangle className={`h-6 w-6 ${confirmDialog.action.includes('reject') ? 'text-red-600' : 'text-primary'}`} />
+              </div>
+              <div>
+                <h3 id="confirm-title" className="text-lg font-bold">
+                  {confirmDialog.title}
+                </h3>
+                <p id="confirm-desc" className="text-dark-gray mt-1">
+                  {confirmDialog.message}
+                </p>
+              </div>
+            </div>
+
+            {/* P3-4: Rejection reason input */}
+            {confirmDialog.action.includes('reject') && (
+              <div className="mb-4">
+                <label htmlFor="reject-reason" className="block text-sm font-medium mb-1">
+                  Reason (optional, shared with contributor)
+                </label>
+                <textarea
+                  id="reject-reason"
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="e.g., Please resubmit with a clearer photo"
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-lg border border-light-gray focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none resize-none"
+                />
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => { setConfirmDialog(null); setRejectReason(''); }}
+                className="flex-1"
+                disabled={bulkActionLoading || actionLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant={confirmDialog.action.includes('reject') ? 'outline' : 'primary'}
+                onClick={handleConfirmAction}
+                disabled={bulkActionLoading || actionLoading}
+                className={`flex-1 ${confirmDialog.action.includes('reject') ? 'text-red-600 border-red-600 hover:bg-red-50' : ''}`}
+              >
+                {bulkActionLoading || actionLoading ? 'Processing...' : 'Confirm'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* P3-6: Keyboard Shortcuts Modal */}
+      {showShortcuts && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="shortcuts-title"
+          onClick={(e) => e.target === e.currentTarget && setShowShortcuts(false)}
+        >
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 id="shortcuts-title" className="text-lg font-bold flex items-center gap-2">
+                <Keyboard className="h-5 w-5 text-primary" />
+                Keyboard Shortcuts
+              </h3>
+              <button
+                onClick={() => setShowShortcuts(false)}
+                className="text-dark-gray hover:text-charcoal p-1 rounded-lg"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between py-2 border-b border-light-gray">
+                <span className="text-dark-gray">Approve submission</span>
+                <kbd className="px-2 py-1 bg-background rounded text-sm font-mono">⌘ + A</kbd>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-light-gray">
+                <span className="text-dark-gray">Reject submission</span>
+                <kbd className="px-2 py-1 bg-background rounded text-sm font-mono">⌘ + R</kbd>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-light-gray">
+                <span className="text-dark-gray">Refresh submissions</span>
+                <kbd className="px-2 py-1 bg-background rounded text-sm font-mono">⌘ + ⇧ + R</kbd>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-light-gray">
+                <span className="text-dark-gray">Close modal / dialog</span>
+                <kbd className="px-2 py-1 bg-background rounded text-sm font-mono">Esc</kbd>
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <span className="text-dark-gray">Show this help</span>
+                <kbd className="px-2 py-1 bg-background rounded text-sm font-mono">?</kbd>
+              </div>
+            </div>
+
+            <p className="text-xs text-dark-gray mt-4 text-center">
+              Shortcuts work when reviewing a submission or with items selected
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* P3-5: Magazine Preview Modal */}
+      {showMagazinePreview && selectedSubmission && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="preview-title"
+          onClick={(e) => e.target === e.currentTarget && setShowMagazinePreview(false)}
+        >
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-light-gray flex items-center justify-between sticky top-0 bg-white">
+              <h3 id="preview-title" className="text-lg font-bold flex items-center gap-2">
+                <Eye className="h-5 w-5 text-primary" />
+                Magazine Preview
+              </h3>
+              <button
+                onClick={() => setShowMagazinePreview(false)}
+                className="text-dark-gray hover:text-charcoal p-1 rounded-lg"
+                aria-label="Close preview"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Simulated magazine article */}
+            <div className="p-6">
+              <div className="border border-light-gray rounded-xl overflow-hidden">
+                <div className="p-6">
+                  {/* Category and Author */}
+                  <div className="flex items-center mb-4">
+                    <span className="text-2xl mr-2">{getCategoryEmoji(selectedSubmission.category)}</span>
+                    <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium mr-3">
+                      {getCategoryLabel(selectedSubmission.category)}
+                    </span>
+                    <span className="text-dark-gray text-sm">
+                      By {selectedSubmission.user?.name || 'Anonymous'}
+                    </span>
+                  </div>
+
+                  {/* Content */}
+                  {selectedSubmission.textContent && (
+                    <p className="mb-4 whitespace-pre-wrap">{selectedSubmission.textContent}</p>
+                  )}
+
+                  {/* Image */}
+                  {selectedSubmission.mediaUrl &&
+                   selectedSubmission.contentType !== 'AUDIO' &&
+                   !selectedSubmission.mediaUrl.endsWith('.webm') && (
+                    <div className="mb-4 -mx-6">
+                      <Image
+                        src={selectedSubmission.mediaUrl}
+                        alt={`Photo by ${selectedSubmission.user?.name || 'Anonymous'}`}
+                        width={800}
+                        height={400}
+                        className="w-full h-auto object-cover max-h-96"
+                      />
+                    </div>
+                  )}
+
+                  {/* Drawing */}
+                  {selectedSubmission.drawingData && (
+                    <div className="mb-4">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={selectedSubmission.drawingData}
+                        alt={`Drawing by ${selectedSubmission.user?.name || 'Anonymous'}`}
+                        className="max-w-full h-auto rounded-lg border border-light-gray"
+                      />
+                    </div>
+                  )}
+
+                  {/* Like button placeholder */}
+                  <div className="flex items-center space-x-3 pt-2 border-t border-light-gray">
+                    <button className="flex items-center gap-1 text-dark-gray" disabled>
+                      <span>❤️</span>
+                      <span className="text-sm">0 likes</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-dark-gray text-center mt-4">
+                This is how the submission will appear in the published magazine
+              </p>
             </div>
           </div>
         </div>
