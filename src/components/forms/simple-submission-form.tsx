@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { getAllCategories, SYMBOL_BOARD } from '@/utils/category-helpers';
+import { getAllCategories, SYMBOL_BOARD, getCategoryLabel } from '@/utils/category-helpers';
 import Button from '@/components/ui/Button';
 import Card, { CategoryCard } from '@/components/ui/Card';
 import { Input, TextArea } from '@/components/ui/Input';
@@ -557,7 +557,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
               <div className="mt-4">
                 <img
                   src={imagePreview}
-                  alt="Uploaded image preview"
+                  alt={`Preview of your uploaded image for ${category ? getCategoryLabel(category) : 'submission'}`}
                   className="max-w-full rounded-xl shadow-card"
                 />
               </div>

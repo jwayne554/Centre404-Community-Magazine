@@ -97,7 +97,7 @@ const SubmissionItem = ({
         <div className="mb-4">
           <Image
             src={imageUrl}
-            alt="Submission"
+            alt={`Image submitted by ${author} in ${getCategoryLabel(category)}`}
             width={400}
             height={160}
             className="w-full max-w-xs h-40 object-cover rounded-lg border border-light-gray"
@@ -108,8 +108,8 @@ const SubmissionItem = ({
       {hasDrawing && (
         <div className="mb-4">
           <div className="bg-background p-3 rounded-lg border border-light-gray inline-flex items-center gap-2">
-            <span className="text-2xl">🎨</span>
-            <span className="text-sm text-dark-gray">Contains drawing</span>
+            <span className="text-2xl" aria-hidden="true">🎨</span>
+            <span className="text-sm text-dark-gray">Contains drawing by {author}</span>
           </div>
         </div>
       )}

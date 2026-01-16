@@ -96,7 +96,7 @@ export default function MagazineContent({ magazine, likeCounts }: MagazineConten
                     <div className="mb-4 -mx-6">
                       <Image
                         src={submission.mediaUrl}
-                        alt="Submission image"
+                        alt={`Image shared by ${author} in ${getCategoryLabel(submission.category)}`}
                         width={800}
                         height={400}
                         className="w-full h-64 object-cover"
@@ -110,7 +110,7 @@ export default function MagazineContent({ magazine, likeCounts }: MagazineConten
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={submission.drawingData}
-                        alt="Drawing submission"
+                        alt={`Drawing by ${author} for ${getCategoryLabel(submission.category)}`}
                         className="max-w-full h-auto rounded-lg border border-light-gray"
                       />
                     </div>
@@ -123,13 +123,14 @@ export default function MagazineContent({ magazine, likeCounts }: MagazineConten
                     submission.mediaUrl.endsWith('.webm')) && (
                     <div className="mb-4 bg-background p-4 rounded-lg border border-light-gray">
                       <div className="flex items-center gap-2 mb-2">
-                        <Volume2 className="h-4 w-4 text-primary" />
+                        <Volume2 className="h-4 w-4 text-primary" aria-hidden="true" />
                         <span className="text-sm font-medium text-dark-gray">Audio Recording</span>
                       </div>
                       <audio
                         controls
                         src={submission.mediaUrl}
                         className="w-full"
+                        aria-label={`Audio recording by ${author} for ${getCategoryLabel(submission.category)}`}
                       >
                         Your browser does not support audio playback.
                       </audio>

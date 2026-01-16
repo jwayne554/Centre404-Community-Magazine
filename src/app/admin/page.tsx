@@ -396,7 +396,7 @@ function AdminDashboardContent() {
                   <h3 className="font-semibold mb-2">Image</h3>
                   <Image
                     src={selectedSubmission.mediaUrl}
-                    alt="Submission"
+                    alt={`Image submitted by ${selectedSubmission.user?.name || 'Anonymous'} in ${getCategoryLabel(selectedSubmission.category)}`}
                     width={600}
                     height={400}
                     className="rounded-lg border border-light-gray w-full"
@@ -455,6 +455,7 @@ function AdminDashboardContent() {
                       controls
                       src={selectedSubmission.mediaUrl}
                       className="w-full"
+                      aria-label={`Audio recording by ${selectedSubmission.user?.name || 'Anonymous'} for ${getCategoryLabel(selectedSubmission.category)}`}
                     >
                       Your browser does not support audio playback.
                     </audio>
