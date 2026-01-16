@@ -11,6 +11,10 @@ interface ButtonProps {
   type?: 'button' | 'submit' | 'reset';
   disabled?: boolean;
   icon?: React.ReactNode;
+  // Accessibility props
+  'aria-label'?: string;
+  'aria-pressed'?: boolean;
+  'aria-describedby'?: string;
 }
 
 const Button = ({
@@ -21,7 +25,10 @@ const Button = ({
   onClick,
   type = 'button',
   disabled = false,
-  icon
+  icon,
+  'aria-label': ariaLabel,
+  'aria-pressed': ariaPressed,
+  'aria-describedby': ariaDescribedby,
 }: ButtonProps) => {
   const baseStyles = 'rounded-xl font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
@@ -45,6 +52,9 @@ const Button = ({
       className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
       onClick={onClick}
       disabled={disabled}
+      aria-label={ariaLabel}
+      aria-pressed={ariaPressed}
+      aria-describedby={ariaDescribedby}
     >
       {icon && <span className={children ? 'mr-2 inline-flex items-center' : 'inline-flex items-center'}>{icon}</span>}
       {children}

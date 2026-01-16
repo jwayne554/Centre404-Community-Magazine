@@ -80,5 +80,18 @@ export function getAllCategories(): Array<{
     }));
 }
 
-// Symbol board for quick emoji insertion in forms
-export const SYMBOL_BOARD = ['😊', '❤️', '👍', '🎉', '🌟', '☀️', '🌈', '🎵', '🏠', '🚗', '🍕', '⚽'] as const;
+// Symbol board for quick emoji insertion in forms (with accessible labels)
+export const SYMBOL_BOARD = [
+  { symbol: '😊', label: 'Smiling face' },
+  { symbol: '❤️', label: 'Red heart' },
+  { symbol: '👍', label: 'Thumbs up' },
+  { symbol: '🎉', label: 'Party popper' },
+  { symbol: '🌟', label: 'Glowing star' },
+  { symbol: '☀️', label: 'Sun' },
+  { symbol: '🌈', label: 'Rainbow' },
+  { symbol: '🎵', label: 'Musical note' },
+  { symbol: '🏠', label: 'House' },
+  { symbol: '🚗', label: 'Car' },
+  { symbol: '🍕', label: 'Pizza' },
+  { symbol: '⚽', label: 'Football' },
+] as const;

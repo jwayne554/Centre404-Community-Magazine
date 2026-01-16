@@ -34,6 +34,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
   const [successMessage, setSuccessMessage] = useState('');
   const [imagePreview, setImagePreview] = useState('');  // For preview display only
   const [imageFile, setImageFile] = useState<File | null>(null);  // Actual file for upload
+  const [accessibilityText, setAccessibilityText] = useState('');  // Alt text for images/drawings
   const [audioRecording, setAudioRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -124,6 +125,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
           contentType,
           mediaUrl: audioMediaUrl || imageMediaUrl || null,
           drawingData: drawingData || null,
+          accessibilityText: accessibilityText || null,
           userName: authorName || 'Community Member',
         }),
       });
@@ -144,6 +146,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
         setAuthorName('');
         setImagePreview('');
         setImageFile(null);
+        setAccessibilityText('');
         setDrawingData('');
         setAudioBlob(null);
         setAudioUrl(null);
@@ -514,18 +517,20 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
             {/* Symbol Board */}
             {showSymbols && (
               <Card className="mt-3 p-2">
-                <div className="grid grid-cols-6 gap-2">
-                  {symbols.map((symbol) => (
+                <p className="sr-only">Symbol board - select a symbol to insert into your message</p>
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2" role="group" aria-label="Symbol board">
+                  {symbols.map(({ symbol, label }) => (
                     <button
                       key={symbol}
                       type="button"
-                      className="h-10 w-10 flex items-center justify-center text-xl rounded hover:bg-background transition-colors"
+                      className="h-10 w-10 flex items-center justify-center text-xl rounded hover:bg-background transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
                       onClick={() => {
                         setTextContent(prev => prev + symbol + ' ');
                         setShowSymbols(false);
                       }}
+                      aria-label={`Insert ${label} symbol`}
                     >
-                      {symbol}
+                      <span aria-hidden="true">{symbol}</span>
                     </button>
                   ))}
                 </div>
@@ -560,6 +565,24 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
                   alt={`Preview of your uploaded image for ${category ? getCategoryLabel(category) : 'submission'}`}
                   className="max-w-full rounded-xl shadow-card"
                 />
+                {/* Accessibility text input for images */}
+                <div className="mt-3">
+                  <label htmlFor="imageAltText" className="block text-sm font-medium mb-1">
+                    Describe your image (helps visually impaired readers)
+                  </label>
+                  <textarea
+                    id="imageAltText"
+                    value={accessibilityText}
+                    onChange={(e) => setAccessibilityText(e.target.value)}
+                    placeholder="A photo of my garden with blooming red roses and a blue sky..."
+                    rows={2}
+                    className="w-full px-4 py-3 rounded-xl border border-light-gray bg-white text-charcoal placeholder:text-dark-gray/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
+                    aria-describedby="imageAltTextHelp"
+                  />
+                  <p id="imageAltTextHelp" className="text-sm text-dark-gray mt-1">
+                    This description will be read aloud by screen readers
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -593,7 +616,13 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
                   onTouchMove={draw}
                   onTouchEnd={stopDrawing}
                   className="block w-full h-auto bg-white cursor-crosshair touch-none"
+                  role="img"
+                  tabIndex={0}
+                  aria-label="Drawing canvas. Use mouse or touch to draw. Keyboard users can describe what they would like to illustrate in the text field instead."
                 />
+                <p className="text-sm text-dark-gray text-center py-2 bg-background/50">
+                  Can&apos;t draw? Describe what you&apos;d like to illustrate in the text field above.
+                </p>
                 <div className="flex gap-2 p-3 bg-background justify-center items-center flex-wrap">
                   {['#000000', '#FF0000', '#34A853', '#0000FF', '#FFBB00'].map(color => (
                     <button

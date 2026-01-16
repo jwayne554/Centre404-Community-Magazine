@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -51,6 +51,63 @@ function AdminDashboardContent() {
   const [selectedTab, setSelectedTab] = useState<'APPROVED' | 'PENDING' | 'REJECTED'>('PENDING');
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Modal ref for focus trap
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Close modal function
+  const closeModal = useCallback(() => {
+    setSelectedSubmission(null);
+  }, []);
+
+  // Focus trap and keyboard handling for modal
+  useEffect(() => {
+    if (selectedSubmission && modalRef.current) {
+      // Focus the close button when modal opens
+      closeButtonRef.current?.focus();
+
+      // Store previously focused element
+      const previouslyFocused = document.activeElement as HTMLElement;
+
+      // Handle escape key
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          closeModal();
+          return;
+        }
+
+        // Focus trap: keep focus within modal
+        if (e.key === 'Tab' && modalRef.current) {
+          const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          const firstElement = focusableElements[0];
+          const lastElement = focusableElements[focusableElements.length - 1];
+
+          if (e.shiftKey && document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement?.focus();
+          } else if (!e.shiftKey && document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement?.focus();
+          }
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+        document.body.style.overflow = '';
+        // Return focus to previously focused element
+        previouslyFocused?.focus();
+      };
+    }
+  }, [selectedSubmission, closeModal]);
 
   // Memoize filtered submissions
   const submissions = useMemo(() => {
@@ -355,14 +412,25 @@ function AdminDashboardContent() {
 
       {/* Submission Detail Modal */}
       {selectedSubmission && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+          onClick={(e) => e.target === e.currentTarget && closeModal()}
+        >
+          <div
+            ref={modalRef}
+            className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
             <div className="p-6 border-b border-light-gray">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="text-4xl">{getCategoryEmoji(selectedSubmission.category)}</span>
-                    <h2 className="text-2xl font-bold">{getCategoryLabel(selectedSubmission.category)}</h2>
+                    <span className="text-4xl" aria-hidden="true">{getCategoryEmoji(selectedSubmission.category)}</span>
+                    <h2 id="modal-title" className="text-2xl font-bold">
+                      Review: {getCategoryLabel(selectedSubmission.category)}
+                    </h2>
                   </div>
                   <p className="text-dark-gray text-sm">
                     {selectedSubmission.user?.name || 'Anonymous'} •
@@ -370,10 +438,12 @@ function AdminDashboardContent() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setSelectedSubmission(null)}
-                  className="text-dark-gray hover:text-charcoal p-2"
+                  ref={closeButtonRef}
+                  onClick={closeModal}
+                  className="text-dark-gray hover:text-charcoal p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  aria-label="Close modal"
                 >
-                  <X className="h-6 w-6" />
+                  <X className="h-6 w-6" aria-hidden="true" />
                 </button>
               </div>
             </div>

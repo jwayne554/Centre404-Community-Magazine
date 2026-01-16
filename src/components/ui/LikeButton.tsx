@@ -166,11 +166,14 @@ export default function LikeButton({
       icon={
         <Heart
           className={`h-4 w-4 transition-colors ${liked ? 'fill-red-500 text-red-500' : ''}`}
+          aria-hidden="true"
         />
       }
       onClick={handleLike}
       disabled={isLoading}
       className={`text-sm ${liked ? 'border-red-200 bg-red-50 hover:bg-red-100' : ''}`}
+      aria-label={liked ? `Unlike this article. Currently ${likeCount} ${likeCount === 1 ? 'like' : 'likes'}` : `Like this article. Currently ${likeCount} ${likeCount === 1 ? 'like' : 'likes'}`}
+      aria-pressed={liked}
     >
       {likeCount > 0 ? likeCount : 'Like'}
     </Button>

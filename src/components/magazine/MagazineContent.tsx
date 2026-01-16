@@ -16,6 +16,7 @@ interface MagazineItem {
     textContent: string | null;
     mediaUrl: string | null;
     drawingData: string | null;
+    accessibilityText: string | null;
     user: {
       id: string;
       name: string;
@@ -96,7 +97,7 @@ export default function MagazineContent({ magazine, likeCounts }: MagazineConten
                     <div className="mb-4 -mx-6">
                       <Image
                         src={submission.mediaUrl}
-                        alt={`Image shared by ${author} in ${getCategoryLabel(submission.category)}`}
+                        alt={submission.accessibilityText || `Photo shared by ${author} for ${getCategoryLabel(submission.category)}. No description provided.`}
                         width={800}
                         height={400}
                         className="w-full h-64 object-cover"
@@ -110,7 +111,7 @@ export default function MagazineContent({ magazine, likeCounts }: MagazineConten
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={submission.drawingData}
-                        alt={`Drawing by ${author} for ${getCategoryLabel(submission.category)}`}
+                        alt={submission.accessibilityText || `Drawing by ${author} for ${getCategoryLabel(submission.category)}. No description provided.`}
                         className="max-w-full h-auto rounded-lg border border-light-gray"
                       />
                     </div>

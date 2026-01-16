@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { getCategoryEmoji, getCategoryLabel } from '@/utils/category-helpers';
+import { CheckCircle, Clock, XCircle } from 'lucide-react';
 
 interface SubmissionItemProps {
   id: string;
@@ -34,17 +35,20 @@ const SubmissionItem = ({
     APPROVED: {
       bg: 'bg-primary/10',
       text: 'text-primary',
-      label: 'Approved'
+      label: 'Approved',
+      icon: <CheckCircle className="h-3.5 w-3.5" aria-hidden="true" />
     },
     PENDING: {
       bg: 'bg-yellow-50',
       text: 'text-yellow-700',
-      label: 'Pending'
+      label: 'Pending Review',
+      icon: <Clock className="h-3.5 w-3.5" aria-hidden="true" />
     },
     REJECTED: {
       bg: 'bg-red-50',
       text: 'text-red-700',
-      label: 'Rejected'
+      label: 'Not Published',
+      icon: <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
     }
   };
 
@@ -76,7 +80,8 @@ const SubmissionItem = ({
               <h3 className="font-semibold text-lg text-charcoal">
                 {getCategoryLabel(category)}
               </h3>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium uppercase ${config.bg} ${config.text}`}>
+              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+                {config.icon}
                 {config.label}
               </span>
             </div>
