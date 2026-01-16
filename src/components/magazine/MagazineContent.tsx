@@ -100,7 +100,7 @@ export default function MagazineContent({ magazine, likeCounts }: MagazineConten
                         alt={submission.accessibilityText || `Photo shared by ${author} for ${getCategoryLabel(submission.category)}. No description provided.`}
                         width={800}
                         height={400}
-                        className="w-full h-64 object-cover"
+                        className="w-full h-auto object-cover max-h-96"
                       />
                     </div>
                   )}

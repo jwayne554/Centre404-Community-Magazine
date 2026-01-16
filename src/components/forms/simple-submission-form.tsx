@@ -45,6 +45,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
 
   // Drawing state
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentColor, setCurrentColor] = useState('#000000');
   const [drawingData, setDrawingData] = useState('');
@@ -248,15 +249,27 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
     }
   };
 
-  // Drawing functions (restored from original simple implementation)
+  // Drawing functions - responsive canvas sizing
   useEffect(() => {
-    if (showDrawing && canvasRef.current) {
+    if (showDrawing && canvasRef.current && canvasContainerRef.current) {
       const canvas = canvasRef.current;
+      const container = canvasContainerRef.current;
+
+      // Calculate responsive size based on container width
+      const maxWidth = Math.min(container.offsetWidth - 16, 600); // 16px for padding
+      const height = Math.round(maxWidth * 0.67); // 3:2 aspect ratio
+
+      canvas.width = maxWidth;
+      canvas.height = height;
+
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.lineWidth = 3;
+        // Fill with white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
     }
   }, [showDrawing]);
@@ -406,7 +419,7 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
             <label className="block text-sm font-medium mb-3">
               Select a category for your contribution
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {categories.map((cat) => (
                 <CategoryCard
                   key={cat.value}
@@ -604,22 +617,22 @@ export function SimpleSubmissionForm({ preselectedCategory }: SimpleSubmissionFo
             </Button>
             {showDrawing && (
               <Card className="mt-3 overflow-hidden">
-                <canvas
-                  ref={canvasRef}
-                  width={600}
-                  height={400}
-                  onMouseDown={startDrawing}
-                  onMouseMove={draw}
-                  onMouseUp={stopDrawing}
-                  onMouseLeave={stopDrawing}
-                  onTouchStart={startDrawing}
-                  onTouchMove={draw}
-                  onTouchEnd={stopDrawing}
-                  className="block w-full h-auto bg-white cursor-crosshair touch-none"
-                  role="img"
-                  tabIndex={0}
-                  aria-label="Drawing canvas. Use mouse or touch to draw. Keyboard users can describe what they would like to illustrate in the text field instead."
-                />
+                <div ref={canvasContainerRef} className="w-full p-2">
+                  <canvas
+                    ref={canvasRef}
+                    onMouseDown={startDrawing}
+                    onMouseMove={draw}
+                    onMouseUp={stopDrawing}
+                    onMouseLeave={stopDrawing}
+                    onTouchStart={startDrawing}
+                    onTouchMove={draw}
+                    onTouchEnd={stopDrawing}
+                    className="block w-full h-auto bg-white cursor-crosshair touch-none rounded-lg border border-light-gray"
+                    role="img"
+                    tabIndex={0}
+                    aria-label="Drawing canvas. Use mouse or touch to draw. Keyboard users can describe what they would like to illustrate in the text field instead."
+                  />
+                </div>
                 <p className="text-sm text-dark-gray text-center py-2 bg-background/50">
                   Can&apos;t draw? Describe what you&apos;d like to illustrate in the text field above.
                 </p>

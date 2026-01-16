@@ -413,7 +413,7 @@ function AdminDashboardContent() {
       {/* Submission Detail Modal */}
       {selectedSubmission && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-title"
@@ -421,14 +421,15 @@ function AdminDashboardContent() {
         >
           <div
             ref={modalRef}
-            className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] flex flex-col"
           >
-            <div className="p-6 border-b border-light-gray">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-4xl" aria-hidden="true">{getCategoryEmoji(selectedSubmission.category)}</span>
-                    <h2 id="modal-title" className="text-2xl font-bold">
+            {/* Header - sticky on mobile */}
+            <div className="p-4 sm:p-6 border-b border-light-gray flex-shrink-0">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                    <span className="text-2xl sm:text-4xl" aria-hidden="true">{getCategoryEmoji(selectedSubmission.category)}</span>
+                    <h2 id="modal-title" className="text-lg sm:text-2xl font-bold truncate">
                       Review: {getCategoryLabel(selectedSubmission.category)}
                     </h2>
                   </div>
@@ -440,7 +441,7 @@ function AdminDashboardContent() {
                 <button
                   ref={closeButtonRef}
                   onClick={closeModal}
-                  className="text-dark-gray hover:text-charcoal p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="text-dark-gray hover:text-charcoal p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary flex-shrink-0 -mr-2 -mt-2"
                   aria-label="Close modal"
                 >
                   <X className="h-6 w-6" aria-hidden="true" />
@@ -448,7 +449,8 @@ function AdminDashboardContent() {
               </div>
             </div>
 
-            <div className="p-6">
+            {/* Scrollable content area */}
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1">
               {selectedSubmission.textContent && (
                 <div className="mb-6">
                   <h3 className="font-semibold mb-2">Content</h3>
@@ -533,7 +535,11 @@ function AdminDashboardContent() {
                 </div>
               )}
 
-              <div className="flex gap-3 pt-4 border-t border-light-gray">
+            </div>
+
+            {/* Sticky action buttons */}
+            <div className="p-4 sm:p-6 border-t border-light-gray bg-white flex-shrink-0">
+              <div className="flex gap-3">
                 <Button
                   variant="primary"
                   icon={<Check className="h-4 w-4" />}
