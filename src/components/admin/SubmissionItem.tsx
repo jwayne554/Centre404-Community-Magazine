@@ -1,17 +1,14 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
 import { getCategoryLabel, getCategoryColor } from '@/utils/category-helpers';
-import { CheckCircle, Clock, XCircle, Eye, Palette, Newspaper, Hand, MessageCircle } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, Newspaper, Hand, MessageCircle, ImageIcon, Palette } from 'lucide-react';
 
 // Category icons mapping (matches submission form)
 const categoryIcons: Record<string, React.ReactNode> = {
-  MY_NEWS: <Newspaper className="h-6 w-6" />,
-  SAYING_HELLO: <Hand className="h-6 w-6" />,
-  MY_SAY: <MessageCircle className="h-6 w-6" />,
+  MY_NEWS: <Newspaper className="h-4 w-4" />,
+  SAYING_HELLO: <Hand className="h-4 w-4" />,
+  MY_SAY: <MessageCircle className="h-4 w-4" />,
 };
 
 interface SubmissionItemProps {
@@ -39,7 +36,6 @@ const SubmissionItem = ({
   content,
   status,
   hasImage,
-  imageUrl,
   hasDrawing,
   onViewFull,
   selectable = false,
@@ -56,121 +52,126 @@ const SubmissionItem = ({
     PENDING: {
       bg: 'bg-yellow-50',
       text: 'text-yellow-700',
-      label: 'Pending Review',
+      label: 'Pending',
       icon: <Clock className="h-3.5 w-3.5" aria-hidden="true" />
     },
     REJECTED: {
       bg: 'bg-red-50',
       text: 'text-red-700',
-      label: 'Not Published',
+      label: 'Rejected',
       icon: <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
     }
   };
 
   const config = statusConfig[status];
-  const categoryIcon = categoryIcons[category] || <Newspaper className="h-6 w-6" />;
+  const categoryIcon = categoryIcons[category] || <Newspaper className="h-4 w-4" />;
   const categoryColor = getCategoryColor(category);
 
-  // Format date to match prototype style
+  // Shorter date format
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    const d = new Date(dateString);
+    return d.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
     });
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't trigger if clicking checkbox
+    if ((e.target as HTMLElement).closest('label')) return;
+    onViewFull();
+  };
+
   return (
-    <Card className={`p-6 mb-4 hover:shadow-lg transition-shadow ${selected ? 'ring-2 ring-primary bg-primary/5' : ''}`}>
-      <div className="flex items-start justify-between gap-4 mb-4">
-        <div className="flex items-start gap-4 flex-1">
-          {/* Checkbox for bulk selection */}
-          {selectable && (
-            <label className="flex-shrink-0 relative flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={selected}
-                onChange={(e) => onSelect?.(id, e.target.checked)}
-                className="sr-only peer"
-                aria-label={`Select submission by ${author}`}
-              />
-              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors
-                ${selected
-                  ? 'bg-primary border-primary'
-                  : 'border-dark-gray/40 peer-hover:border-primary/60 peer-focus:ring-2 peer-focus:ring-primary/20'
-                }`}
-              >
-                {selected && (
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </div>
-            </label>
-          )}
-          <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: `${categoryColor}15`, color: categoryColor }}
-          >
-            {categoryIcon}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-bold text-lg text-charcoal">
-                {getCategoryLabel(category)}
-              </h3>
-              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
-                {config.icon}
-                {config.label}
-              </span>
+    <div
+      onClick={handleCardClick}
+      className={`
+        bg-white border rounded-lg p-4 mb-2 cursor-pointer
+        transition-all duration-150
+        hover:border-primary/30 hover:shadow-sm
+        ${selected ? 'ring-2 ring-primary border-primary bg-primary/5' : 'border-light-gray'}
+      `}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onViewFull()}
+      aria-label={`View submission by ${author} in ${getCategoryLabel(category)}`}
+    >
+      <div className="flex items-center gap-3">
+        {/* Checkbox */}
+        {selectable && (
+          <label className="flex-shrink-0 relative flex items-center cursor-pointer" onClick={(e) => e.stopPropagation()}>
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={(e) => onSelect?.(id, e.target.checked)}
+              className="sr-only peer"
+              aria-label={`Select submission by ${author}`}
+            />
+            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors
+              ${selected
+                ? 'bg-primary border-primary'
+                : 'border-dark-gray/40 peer-hover:border-primary/60'
+              }`}
+            >
+              {selected && (
+                <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
             </div>
-            <p className="text-sm text-dark-gray">
-              {author} • {formatDate(date)}
+          </label>
+        )}
+
+        {/* Category icon */}
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: `${categoryColor}15`, color: categoryColor }}
+        >
+          {categoryIcon}
+        </div>
+
+        {/* Main content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-charcoal text-sm">
+              {getCategoryLabel(category)}
+            </span>
+            <span className="text-dark-gray text-sm">·</span>
+            <span className="text-dark-gray text-sm truncate">{author}</span>
+          </div>
+          {content && (
+            <p className="text-dark-gray text-sm truncate mt-0.5">
+              {content}
             </p>
-          </div>
+          )}
         </div>
+
+        {/* Media indicators */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {hasImage && (
+            <div className="w-6 h-6 rounded bg-blue-50 flex items-center justify-center" title="Has image">
+              <ImageIcon className="h-3.5 w-3.5 text-blue-500" />
+            </div>
+          )}
+          {hasDrawing && (
+            <div className="w-6 h-6 rounded bg-purple-50 flex items-center justify-center" title="Has drawing">
+              <Palette className="h-3.5 w-3.5 text-purple-500" />
+            </div>
+          )}
+        </div>
+
+        {/* Date */}
+        <span className="text-dark-gray text-xs flex-shrink-0 w-14 text-right">
+          {formatDate(date)}
+        </span>
+
+        {/* Status badge */}
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${config.bg} ${config.text}`}>
+          {config.icon}
+          <span className="hidden sm:inline">{config.label}</span>
+        </span>
       </div>
-
-      {content && (
-        <p className="text-sm text-charcoal mb-4 line-clamp-2 leading-relaxed">
-          {content}
-        </p>
-      )}
-
-      {hasImage && imageUrl && (
-        <div className="mb-4">
-          <Image
-            src={imageUrl}
-            alt={`Image submitted by ${author} in ${getCategoryLabel(category)}`}
-            width={400}
-            height={160}
-            className="w-full max-w-xs h-40 object-cover rounded-lg border border-light-gray"
-          />
-        </div>
-      )}
-
-      {hasDrawing && (
-        <div className="mb-4">
-          <div className="bg-background p-3 rounded-lg border border-light-gray inline-flex items-center gap-2">
-            <Palette className="h-5 w-5 text-primary" aria-hidden="true" />
-            <span className="text-sm text-dark-gray">Contains drawing by {author}</span>
-          </div>
-        </div>
-      )}
-
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={onViewFull}
-        icon={<Eye className="h-4 w-4" />}
-      >
-        View Full Submission
-      </Button>
-    </Card>
+    </div>
   );
 };
 
