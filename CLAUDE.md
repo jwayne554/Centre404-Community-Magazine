@@ -44,17 +44,19 @@ This is a **full-stack Next.js application** for Centre404 Community Magazine - 
   - **Loading states**: Skeleton screens and spinners during data fetching
   - **Success feedback**: Success banners, toast notifications, form auto-clear
 
-- **Admin Dashboard** (2025-01-14) - ✅ **Redesigned with Modern UI**:
-  - **Green gradient header** with lock icon, admin info, and action buttons
+- **Admin Dashboard** (2026-01-17) - ✅ **Polished & Streamlined UI**:
+  - **Light gray header** with green accents (professional, not overwhelming)
   - **Status cards grid**: Total, Pending (yellow), Approved (green), Rejected (red) metrics
   - **Tabs system**: Filter submissions by Approved/Pending/Rejected status
-  - **Submission cards**: Clean card-based design with category emoji, status badges, content preview
-  - **Detail modal**: Full-screen overlay for reviewing complete submissions
-  - **Media preview**: Images, drawings (canvas rendering), and audio playback
+  - **Compact submission cards**: Single-row layout, clickable cards, inline 40×40 thumbnails
+  - **Lucide icons**: Newspaper, Hand, MessageCircle icons with colored backgrounds (no emojis)
+  - **Reusable Modal component**: Extracted to `src/components/ui/Modal.tsx` with ModalHeader/Body/Footer
+  - **Media indicators**: Image thumbnails, drawing previews, audio mic icon
+  - **Detail modal**: Full-screen overlay with approve/reject workflow
   - **Approve/Reject workflow**: Optimistic updates with error rollback
   - **Role-based access**: ProtectedRoute wrapper (ADMIN, MODERATOR only)
   - **Real-time stats**: Calculated from live submission data
-  - **New components**: StatusCard, SubmissionItem (reusable admin UI)
+  - **Components**: StatusCard, SubmissionItem, Modal (reusable admin UI)
 
 - **Magazine Publishing**: Create and publish magazines from approved submissions
   - Text-to-Speech with Unreal Speech API + browser fallback
@@ -106,7 +108,7 @@ src/
 │   ├── auth/           # ProtectedRoute wrapper
 │   ├── forms/          # Submission forms
 │   ├── skeletons/      # Loading skeleton components
-│   └── ui/             # Reusable UI components (Button, Card, Input, Layout, Accordion, LikeButton)
+│   └── ui/             # Reusable UI components (Button, Card, Input, Layout, Accordion, LikeButton, Modal)
 ├── hooks/              # Custom React hooks (useAuth, useAsyncAction, useMagazineData, useTTSPlayback)
 ├── lib/                # Utilities (prisma, auth, API middleware, error handling, logging)
 ├── services/           # Business logic layer (TTS, repositories)
@@ -372,6 +374,35 @@ The application is configured for deployment to Railway with Docker:
   - Fixes issue where migrations were marked as applied but SQL didn't run
   - Ensures missing tables are created from schema before migrate deploy
 - **Result**: Fully functional like system with cross-user like counts
+
+**Admin Dashboard UI Polish** (2026-01-17) ✅
+- **Icon standardization**: Replaced all category emojis with Lucide icons
+  - MY_NEWS → Newspaper icon (orange background)
+  - SAYING_HELLO → Hand icon (green background)
+  - MY_SAY → MessageCircle icon (purple background)
+- **Header redesign**: Changed from solid green gradient to light gray with green accents
+  - White background with border, professional look
+  - Green accent on lock icon, admin avatar, role badge
+  - Red outline on logout button
+- **Submission cards simplified**: Reduced visual noise for faster scanning
+  - Single-row layout (was multi-row with sections)
+  - 32×32 category icons (was 48×48)
+  - Clickable cards (removed separate "View" button)
+  - Inline 40×40 media thumbnails (image, drawing, audio indicator)
+  - Shorter date format: "Jan 15" (was full timestamp)
+  - Compact padding: p-3 mb-2 (was p-6 mb-4)
+- **Modal component extraction**: Created reusable `src/components/ui/Modal.tsx`
+  - Modal, ModalHeader, ModalBody, ModalFooter components
+  - Supports sizes: sm, md, lg, xl, full
+  - Supports variants: dialog, alertdialog, bottomSheet
+  - Focus management with manageFocus prop
+  - Refactored all 4 admin modals to use shared component
+- **Consistent icons across all pages**:
+  - Magazine viewer (Latest Edition)
+  - Magazine compile page
+  - Magazine edit page
+  - Submission form preview
+- **Result**: Cleaner, faster-to-scan admin interface with consistent design language
 
 **QA Workflow Fixes** (2026-01-16) ✅
 - **Audio playback in admin**: Added `<audio controls>` element to admin submission detail modal
