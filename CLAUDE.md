@@ -13,7 +13,7 @@ This is a **full-stack Next.js application** for Centre404 Community Magazine - 
 - **Styling**: Tailwind CSS 3.4.17 (stable) with prototype-based green theme (#34A853)
 - **Icons**: lucide-react (professional icon library)
 - **Form Handling**: React Hook Form + Zod validation
-- **Media Storage**: Local file system (/public/uploads/)
+- **Media Storage**: Cloudinary (production) / Local filesystem (development)
 - **Authentication**: JWT-based with bcrypt, HTTP-only cookies
 - **Text-to-Speech**: Unreal Speech API with browser fallback
 - **Node.js**: v22 Alpine (Docker)
@@ -153,6 +153,10 @@ NODE_ENV="development"
 # Text-to-Speech (Unreal Speech)
 UNREAL_SPEECH_API_KEY="your-api-key-here"
 NEXT_PUBLIC_ENABLE_PREMIUM_TTS="true"
+
+# Media Storage (Cloudinary - Required for production)
+# Get from: https://cloudinary.com/console
+CLOUDINARY_URL="cloudinary://API_KEY:API_SECRET@CLOUD_NAME"
 ```
 
 **IMPORTANT**: DATABASE_URL must be explicitly set when starting dev server due to Next.js workspace root inference issue.
@@ -256,6 +260,7 @@ The application is configured for deployment to Railway with Docker:
 **Railway Environment Variables** (required):
 - `DATABASE_URL`: PostgreSQL connection string
 - `JWT_SECRET`, `JWT_REFRESH_SECRET`: Authentication secrets
+- `CLOUDINARY_URL`: Cloudinary connection string (required for persistent uploads)
 - `UNREAL_SPEECH_API_KEY`: TTS API key (optional, falls back to browser)
 
 **Production Status**: ✅ Fully operational (last deployment: 2025-11-28)
