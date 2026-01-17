@@ -55,6 +55,9 @@ COPY --from=builder /app/scripts ./scripts
 # Ensure migrations are copied (critical for production deployments)
 COPY --from=builder /app/prisma/migrations ./prisma/migrations
 
+# Create uploads directory with proper permissions for file uploads
+RUN mkdir -p ./public/uploads && chown -R nextjs:nodejs ./public/uploads
+
 USER nextjs
 
 EXPOSE 3000
